@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE extension SYSTEM "../doc/structures.dtd">
+<structures>
+	<structure id="taoDacSimple_main" name="extension-tao-dac-simple" level="15" visible="true">
+		<description />
+		<sections>
+			<section id="taoDacSimple_main" name="extension-tao-dac-simple" url="/taoDacSimple/TaoDacSimple/index" />
+			<section id="taoDacSimple_other" name="Template" url="/taoDacSimple/TaoDacSimple/templateExample" />
+		</sections>
+	</structure>
+</structures>
