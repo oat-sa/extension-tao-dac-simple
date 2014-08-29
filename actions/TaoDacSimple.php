@@ -53,7 +53,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
     public function index() {
         $this->setView('sample.tpl');
         // Mock DATA
-        $this->setData('ressource', array(
+        $this->setData('items', array(
             'http://tao.local/mytao.rdf#i140923366823805' => array (
                 'resource' => array (
                     'id'  => 'http://tao.local/mytao.rdf#i140923366823805',
@@ -63,6 +63,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
                     'http://tao.local/mytao.rdf#superUser' => array (
                         'id' => 'http://tao.local/mytao.rdf#superUser',
                         'name' => 'Me',
+                        'type' => 'User',
                         'permissions' => array (
                             'GRANT' => true,
                             'OWNER' => true,
@@ -71,6 +72,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
                     'http://tao.local/mytao.rdf#i23523452345234' => array (
                         'id' => 'http://tao.local/mytao.rdf#i23523452345234',
                         'name' => 'John Doe',
+                        'type' => 'User',
                         'permissions' => array (
                             'GRANT' => false,
                             'OWNER' => false,
