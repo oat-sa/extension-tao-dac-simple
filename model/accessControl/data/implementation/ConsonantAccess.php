@@ -42,7 +42,7 @@ class ConsonantAccess
     public function __construct() {
     }
     
-    public function getPrivileges($user, $resourceIds) {
+    public function getPrivileges($user, array $resourceIds) {
         $privileges = array();
         foreach ($resourceIds as $id) {
             $resource = new \core_kernel_classes_Resource($id);
@@ -53,15 +53,5 @@ class ConsonantAccess
                 : array();
         }
         return $privileges;
-    }
-
-    public function addPrivileges($user, $resourceIds, $privileges)
-    {
-        // TODO: Implement addPrivileges() method.
-    }
-
-    public function removePrivileges($user, $resourceIds)
-    {
-        // TODO: Implement removePrivileges() method.
     }
 }
