@@ -51,7 +51,7 @@ class DataBaseAccess
     public function getUsersWithPrivilege($resourceIds)
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "SELECT resource_id, privilege, user_id FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
+        $query = "SELECT resource_id, privilege, user_id, user_type FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
 
         /** @var \PDOStatement $statement */
         $statement = $this->persistence->query($query, $resourceIds);
@@ -129,7 +129,7 @@ class DataBaseAccess
             // add a line with user URI, resource Id and privilege
             $this->persistence->insert(
                 self::TABLE_PRIVILEGES_NAME,
-                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege)
+                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege, 'user_type' => 'user')
             );
         }
         return true;

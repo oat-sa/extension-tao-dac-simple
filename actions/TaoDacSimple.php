@@ -192,7 +192,8 @@ class TaoDacSimple extends \tao_actions_CommonModule
             if (!isset($returnValue[$item->getUri()]['users'][$user->getUri()])) {
                 $returnValue[$item->getUri()]['users'][$user->getUri()] = array(
                     'id' => $user->getUri(),
-                    'name' => $user->getUri()
+                    'name' => $user->getUri(),
+                    'type' => $result['user_type']
                 );
             }
             if (!isset($returnValue[$item->getUri()]['users'][$user->getUri()]['permissions'][$result['privilege']])) {
