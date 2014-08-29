@@ -50,15 +50,35 @@ class TaoDacSimple extends \tao_actions_CommonModule
     /**
      * A possible entry point to tao
      */
-    public function index()
-    {
-        echo __("Hello World");
-    }
-
-    public function templateExample()
-    {
-        $this->setData('author', 'Open Assessment Technologies SA');
+    public function index() {
         $this->setView('sample.tpl');
+        // Mock DATA
+        $this->setData('ressource', array(
+            'http://tao.local/mytao.rdf#i140923366823805' => array (
+                'resource' => array (
+                    'id'  => 'http://tao.local/mytao.rdf#i140923366823805',
+                    'label'  => 'my Item'
+                ),
+                'users' => array (
+                    'http://tao.local/mytao.rdf#superUser' => array (
+                        'id' => 'http://tao.local/mytao.rdf#superUser',
+                        'name' => 'Me',
+                        'permissions' => array (
+                            'GRANT' => true,
+                            'OWNER' => true,
+                            'WRITE' => true )
+                    ),
+                    'http://tao.local/mytao.rdf#i23523452345234' => array (
+                        'id' => 'http://tao.local/mytao.rdf#i23523452345234',
+                        'name' => 'John Doe',
+                        'permissions' => array (
+                            'GRANT' => false,
+                            'OWNER' => false,
+                            'WRITE' => true )
+                    ),
+                )
+            )
+        ));
     }
 
     /**
@@ -191,4 +211,5 @@ class TaoDacSimple extends \tao_actions_CommonModule
         return $returnValue;
 
     }
+    public function templateExample(){}
 }
