@@ -1,14 +1,14 @@
 <div class="main-container tao-scope">
     <?php $items = get_data('items');
     foreach ($items as $item):?>
-    <h1>Access Permissions for <em><?=$item['resource']['label']?></em></h1>
+    <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
     <table class="matrix">
         <thead>
             <tr>
                 <th>&nbsp;</th>
-                <th>Type</th>
-                <th>Can Write</th>
-                <th>Can Share</th>
+                <th><?= __('Type');?></th>
+                <th><?= __('Can Write')?></th>
+                <th><?= __('Can Share')?></th>
                 <th>&nbsp;</th>
             </tr>
         </thead>
@@ -30,44 +30,50 @@
                     </label>
                 </td>
                 <td>
-                    <?php if($user['permissions']['OWNER'] == true) :?>
-                    <button class="small"<?= (count($item['users']) == 1) ? 'disabled' : '' ?>>Owner <span class="icon-edit r"></span></a>
-                    <?php else:?>
-                    <button class="small"><span class="icon-bin r"></span></button>
+                    <?php
+                    // [TODO] : Check if the current user has GRANT permissions
+                    if(true) :?>
+                    <button class="small"<?= ((count($item['users']) == 1) || ($user['permissions']['OWNER'] == true)) ? 'disabled' : '' ?> data-modal="#ownership-transfert"><?= __('Transfert ownership')?></button>
                     <?php endif;?>
+                    &nbsp;
+                    <button class="small" <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : '' ?>><span class="icon-bin"></span><?= __('Delete')?></button>
                 </td>
             </tr>
             <?php endforeach;?>
         </tbody>
     </table>
     <div class="grid-row">
-        <div class="col-11">
-            <button class="btn-info" type="button" data-modal="#add-user">Add user(s)</button>
-            <button class="btn-info" type="button" data-modal="#add-role">Add role(s)</button>
+        <div class="col-4">
+            <select name="new_user" class="select2" data-placeholder="<?= __('Select a user to add')?>">
+                <option value="1">User 1</option>
+                <option value="2">User 2</option>
+                <option value="3">User 3</option>
+                <option value="4">User 4</option>
+                <option value="5">User 5</option>
+            </select>
+            <button class="btn-info small" type="button"><?= __('Add user(s)')?></button>
+        </div>
+        <div class="col-7">
+            <select name="new_role" class="select2" data-placeholder="<?= __('Select a role to add')?>">
+                <option value="1">Role 1</option>
+                <option value="2">Role 2</option>
+                <option value="3">Role 3</option>
+            </select>
+            <button class="btn-info small" type="button"><?= __('Add role(s)')?></button>
         </div>
         <div class="col-1">
-            <button class="btn-info" type="button">Close</button>
+            <button class="btn-info small" type="button"><?= __('Close')?></button>
         </div>
     </div>
     <?php endforeach;?>
 
 
-    <div id="add-user" class="modal">
-        <h1>Select users to share with</h1>
-        <p>
-        scotch ale attenuation bottle conditioning gravity attenuation dextrin? <br>
-        seidel cold filter becher chocolate malt aroma hops, balthazar pub bock racking.<br>
-        aerobic length sparge lager brewhouse bitter hefe? trappist,<br>
-        microbrewery pitching abbey berliner weisse chocolate malt, wit infusion. <br>
-        seidel aerobic tulip glass wort aerobic final gravity, biere de garde.</p>
-    </div>
-    <div id="add-role" class="modal">
-        <h1>Select roles to share with</h1>
-        <p>
-        scotch ale attenuation bottle conditioning gravity attenuation dextrin? <br>
-        seidel cold filter becher chocolate malt aroma hops, balthazar pub bock racking.<br>
-        aerobic length sparge lager brewhouse bitter hefe? trappist,<br>
-        microbrewery pitching abbey berliner weisse chocolate malt, wit infusion. <br>
-        seidel aerobic tulip glass wort aerobic final gravity, biere de garde.</p>
+    <div id="ownership-transfert" class="modal">
+        <h1><?= __('Be carefull')?></h1>
+        <p><?= __('You are about to transfert the ownership of the ressource')?> <em><?=$item['resource']['label']?></em>. <?= __('Once you have transfert the ownership, you will not be able to manage the ownership anymore')?>.</p>
+        <div class="rgt">
+            <button class=""><?= __('Cancel')?></button>
+            <button class="btn-success"><?= __('Proceed')?></button>
+        </div>
     </div>
 </div>
