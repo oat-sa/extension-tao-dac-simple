@@ -202,6 +202,11 @@ class TaoDacSimple extends \tao_actions_CommonModule
         $resourceIds = (array)$this->getRequest()->getParameter('resource');
         $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
 
+        // Check if there is still a owner on this resource
+        if($this->resourceHaveOwner($users)){
+            return false;
+        }
+
         // we check if the current user can add or remove privileges
         $currentUserPrivileges = $this->getCurrentUserPrivileges($resourceIds,$resourceClassIds);
 
@@ -220,7 +225,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
         try {
             // First of all, let's begin a transaction
 
-            $this->dataAccess->getPersistence()->getDriver()->beginTransaction();
+//            $this->dataAccess->getPersistence()->getDriver()->beginTransaction();
 
             $this->dataAccess->removeAllPrivilegesExceptOwner($resourceIds);
 
@@ -239,11 +244,11 @@ class TaoDacSimple extends \tao_actions_CommonModule
             }
             // If we arrive here, it means that no exception was thrown
             // i.e. no query has failed, and we can commit the transaction
-            $this->dataAccess->getPersistence()->getDriver()->commit();
+//            $this->dataAccess->getPersistence()->getDriver()->commit();
         } catch (\Exception $e) {
             // An exception has been thrown
             // We must rollback the transaction
-            $this->dataAccess->getPersistence()->getDriver()->rollback();
+//            $this->dataAccess->getPersistence()->getDriver()->rollback();
         }
 
         return true;
@@ -268,45 +273,18 @@ class TaoDacSimple extends \tao_actions_CommonModule
 
         if($this->isCurrentUserOwner($resourceIds,$resourceClassIds)){
             try{
-                $this->dataAccess->getPersistence()->getDriver()->beginTransaction();
+//                $this->dataAccess->getPersistence()->getDriver()->beginTransaction();
 
                 $this->dataAccess->removePrivileges($user->getUri(),$resourceIds, array('OWNER'));
                 $this->dataAccess->addPrivileges($newOwner, $resourceIds, array('OWNER'), $user_type);
 
-                $this->dataAccess->getPersistence()->getDriver()->commit();
+//                $this->dataAccess->getPersistence()->getDriver()->commit();
             }
             catch(\Exception $e){
-                $this->dataAccess->getPersistence()->getDriver()->rollback();
+//                $this->dataAccess->getPersistence()->getDriver()->rollback();
             }
         }
 
-    }
-
-    /**
-     * Remove all privileges for a list of users on a list of resources
-     * @return bool
-     */
-    public function removePrivileges(){
-
-        $users = (array)$this->getRequest()->getParameter('users');
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
-
-        if (empty($resourceIds)) {
-            $resourceIds = $resourceClassIds;
-        }
-
-        foreach($users as $user){
-            $resourcePrivileges = $this->getUserPrivileges($user,$resourceIds,$resourceClassIds);
-            foreach($resourcePrivileges as $resourcePrivilege){
-                if(in_array('OWNER',$resourcePrivilege)){
-                    return false;
-                }
-            }
-            $this->dataAccess->removeUserPrivileges($user, $resourceIds);
-        }
-
-        return true;
     }
 
 
@@ -355,5 +333,19 @@ class TaoDacSimple extends \tao_actions_CommonModule
         return $returnValue;
 
     }
-    public function templateExample(){}
+
+    /**
+     * Check if the array to save contains a owner
+     * @param array $usersPrivileges
+     * @return bool
+     */
+    public function resourceHaveOwner($usersPrivileges){
+
+        foreach($usersPrivileges as $user => $options){
+            if(in_array('OWNER', $options)){
+                return true;
+            }
+        }
+        return false;
+    }
 }
