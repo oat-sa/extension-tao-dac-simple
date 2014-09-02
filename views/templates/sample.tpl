@@ -80,8 +80,8 @@
         <h1><?= __('Be carefull')?></h1>
         <p><?= __('You are about to transfert the ownership of the ressource')?> <em><?=$item['resource']['label']?></em>. <?= __('Once you have transfert the ownership, you will not be able to manage the ownership anymore')?>.</p>
         <div class="rgt">
-            <button class=""><?= __('Cancel')?></button>
-            <button class="btn-success"><?= __('Proceed')?></button>
+            <button class="cancel"><?= __('Cancel')?></button>
+            <button class="btn-success confirm"><?= __('Proceed')?></button>
         </div>
     </div>
 </div>
