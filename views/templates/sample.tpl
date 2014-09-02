@@ -3,7 +3,7 @@
     foreach ($items as $item):?>
     <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
     <form action="#" method="POST">
-        <input type="hidden" name="ressource_id" value="<?= $item['ressource']['id']?>">
+        <input type="hidden" name="ressource_id" value="<?= $item['resource']['id']?>">
         <table class="matrix">
             <thead>
                 <tr>
@@ -50,19 +50,17 @@
         <div class="grid-row">
             <div class="col-4">
                 <select name="new_user" class="select2" data-placeholder="<?= __('Select a user to add')?>">
-                    <option value="1">User 1</option>
-                    <option value="2">User 2</option>
-                    <option value="3">User 3</option>
-                    <option value="4">User 4</option>
-                    <option value="5">User 5</option>
+                    <?php foreach ($users as $userId => $username):?>
+                    <option value="<?=$userId?>"><?=$username?></option>
+                    <?php endforeach;?>
                 </select>
                 <button class="btn-info small" type="button"><?= __('Add user(s)')?></button>
             </div>
             <div class="col-7">
                 <select name="new_role" class="select2" data-placeholder="<?= __('Select a role to add')?>">
-                    <option value="1">Role 1</option>
-                    <option value="2">Role 2</option>
-                    <option value="3">Role 3</option>
+                    <?php foreach ($roles as $roleId => $roleLabel):?>
+                    <option value="<?=$roleId?>"><?=$roleLabel?></option>
+                    <?php endforeach;?>
                 </select>
                 <button class="btn-info small" type="button"><?= __('Add role(s)')?></button>
             </div>

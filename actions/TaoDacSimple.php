@@ -52,44 +52,29 @@ class TaoDacSimple extends \tao_actions_CommonModule
      */
     public function index() {
         $this->setView('sample.tpl');
-        // Mock DATA
-        $this->setData('items', array(
-            'http://tao.local/mytao.rdf#i140923366823805' => array (
-                'resource' => array (
-                    'id'  => 'http://tao.local/mytao.rdf#i140923366823805',
-                    'label'  => 'my Item'
-                ),
-                'users' => array (
-                    'http://tao.local/mytao.rdf#superUser' => array (
-                        'id' => 'http://tao.local/mytao.rdf#superUser',
-                        'name' => 'Me',
-                        'type' => 'User',
-                        'permissions' => array (
-                            'GRANT' => true,
-                            'OWNER' => true,
-                            'WRITE' => true )
-                    ),
-                    'http://tao.local/mytao.rdf#i23523452345234' => array (
-                        'id' => 'http://tao.local/mytao.rdf#i23523452345234',
-                        'name' => 'John Doe',
-                        'type' => 'User',
-                        'permissions' => array (
-                            'GRANT' => false,
-                            'OWNER' => false,
-                            'WRITE' => true )
-                    ),
-                )
-            )
-        ));
+
+        $resourceIds = (array)$this->getRequest()->getParameter('resource');
+        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
+
+        // we will get privileges of a class we we haven't got any resourceIds
+        if (empty($resourceIds)) {
+            $resourceIds = $resourceClassIds;
+        }
+
+        //Mocked Data
+        $this->setData('users', $this->getUserList(array('http://tao.local/mytao.rdf#i140923366823805')));
+        $this->setData('roles', $this->getRoleList(array('http://tao.local/mytao.rdf#i140923366823805')));
+        $this->setData('items', $this->getUsersPrivileges(array('http://tao.local/mytao.rdf#i140923366823805')));
     }
+
 
     /**
      * get the list of users that have no privileges on resources
+     * @param array $resourceIds
      * @return array key => value with key = user Uri and value = user Label
      */
-    public function getUserList()
+    public function getUserList($resourceIds)
     {
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
         $userService = \tao_models_classes_UserService::singleton();
         $users = $userService->getAllUsers();
 
@@ -98,11 +83,11 @@ class TaoDacSimple extends \tao_actions_CommonModule
 
     /**
      * get the list of roles that have no privileges on resources
-     * @return array key => value with key = role Uri and value = role Label
+     * @param array $resourceIds
+     * @return array key => value with key = user Uri and value = user Label
      */
-    public function getRoleList()
+    public function getRoleList($resourceIds)
     {
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
         $roleService = \tao_models_classes_RoleService::singleton();
         $roles = $roleService->getAllRoles();
 
@@ -324,18 +309,14 @@ class TaoDacSimple extends \tao_actions_CommonModule
         return true;
     }
 
+
     /**
      * Get a list of users with their privileges for a list of resources
+     * @param array $resourceIds
      * @return array
      */
-    public function getUsersPrivileges()
+    public function getUsersPrivileges($resourceIds)
     {
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
-
-        if (empty($resourceIds)) {
-            $resourceIds = $resourceClassIds;
-        }
 
         $results = $this->dataAccess->getUsersWithPrivilege($resourceIds);
 
@@ -352,7 +333,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
             if (!isset($returnValue[$item->getUri()]['users'][$user->getUri()])) {
                 $returnValue[$item->getUri()]['users'][$user->getUri()] = array(
                     'id' => $user->getUri(),
-                    'name' => $user->getUri(),
+                    'name' => $user->getLabel(),
                     'type' => $result['user_type']
                 );
             }
