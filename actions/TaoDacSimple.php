@@ -63,9 +63,9 @@ class TaoDacSimple extends \tao_actions_CommonModule
         }
 
         //Mocked Data
-        $this->setData('users', $this->getUserList(array('http://tao.local/mytao.rdf#i140923366823805')));
-        $this->setData('roles', $this->getRoleList(array('http://tao.local/mytao.rdf#i140923366823805')));
-        $this->setData('items', $this->getUsersPrivileges(array('http://tao.local/mytao.rdf#i140923366823805')));
+        $this->setData('users', $this->getUserList(array('http://tao.local/mytao.rdf#i140966777892535')));
+        $this->setData('roles', $this->getRoleList(array('http://tao.local/mytao.rdf#i140966777892535')));
+        $this->setData('items', $this->getUsersPrivileges(array('http://tao.local/mytao.rdf#i140966777892535')));
     }
 
 
@@ -121,13 +121,12 @@ class TaoDacSimple extends \tao_actions_CommonModule
 
     /**
      * We can know if the current user have the ownership on resources
+     * @param $resourceIds
+     * @param $resourceClassIds
      * @return bool
      */
-    public function isCurrentUserOwner()
+    protected function isCurrentUserOwner($resourceIds, $resourceClassIds)
     {
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
-
         $privileges = $this->getCurrentUserPrivileges($resourceIds, $resourceClassIds);
 
         $ownership = true;
@@ -152,27 +151,6 @@ class TaoDacSimple extends \tao_actions_CommonModule
         $user = $userService->getCurrentUser();
 
         return $this->getUserPrivileges($user->getUri(), $resourceIds, $resourceClassIds);
-    }
-
-    /**
-     * set privileges to some resources to the current user
-     * @param $resourceIds
-     * @param $resourceClassIds
-     * @param $privileges
-     * @return array
-     */
-    protected function setCurrentUserPrivileges($resourceIds, $resourceClassIds, $privileges)
-    {
-        // get the current user
-        $userService = \tao_models_classes_UserService::singleton();
-        $user = $userService->getCurrentUser();
-
-        // we will get privileges of a class we we haven't got any resourceIds
-        if (empty($resourceIds)) {
-            $resourceIds = $resourceClassIds;
-        }
-
-        return $this->dataAccess->addPrivileges($user->getUri(), $resourceIds, $privileges, 'user');
     }
 
     /**
@@ -205,6 +183,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
 
         // Check if there is still a owner on this resource
         if ($this->resourceHasOwner($users)) {
+            \common_Logger::e('Cannot save a list of privilege without owner');
             return false;
         }
 
