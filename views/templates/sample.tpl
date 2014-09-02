@@ -11,7 +11,7 @@
                     <th><?= __('Type');?></th>
                     <th><?= __('Can Write')?></th>
                     <th><?= __('Can Share')?></th>
-                    <th>&nbsp;</th>
+                    <th><?= __('Actions')?></th>
                 </tr>
             </thead>
             <tbody>
@@ -48,20 +48,24 @@
             </tbody>
         </table>
         <div class="grid-row">
-            <div class="col-4">
-                <select name="new_user" class="select2" data-placeholder="<?= __('Select a user to add')?>">
+            <div class="col-3">
+                <select name="new_user" class="select2" multiple style="width:100%">
                     <?php foreach ($users as $userId => $username):?>
                     <option value="<?=$userId?>"><?=$username?></option>
                     <?php endforeach;?>
                 </select>
+            </div>
+            <div class="col-2">
                 <button class="btn-info small" type="button"><?= __('Add user(s)')?></button>
             </div>
-            <div class="col-7">
-                <select name="new_role" class="select2" data-placeholder="<?= __('Select a role to add')?>">
+            <div class="col-3">
+                <select name="new_role" class="select2" multiple style="width:100%">
                     <?php foreach ($roles as $roleId => $roleLabel):?>
                     <option value="<?=$roleId?>"><?=$roleLabel?></option>
                     <?php endforeach;?>
                 </select>
+            </div>
+            <div class="col-3">
                 <button class="btn-info small" type="button"><?= __('Add role(s)')?></button>
             </div>
             <div class="col-1">
