@@ -50,11 +50,12 @@ class TaoDacSimple extends \tao_actions_CommonModule
     /**
      * A possible entry point to tao
      */
-    public function index() {
+    public function index()
+    {
         $this->setView('sample.tpl');
 
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
+        $resourceIds = (array)$this->getRequest()->getParameter('uri');
+        $resourceClassIds = (array)$this->getRequest()->getParameter('classUri');
 
         // we will get privileges of a class we we haven't got any resourceIds
         if (empty($resourceIds)) {
@@ -73,7 +74,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * @param array $resourceIds
      * @return array key => value with key = user Uri and value = user Label
      */
-    public function getUserList($resourceIds)
+    protected function getUserList($resourceIds)
     {
         $userService = \tao_models_classes_UserService::singleton();
         $users = $userService->getAllUsers();
@@ -86,7 +87,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * @param array $resourceIds
      * @return array key => value with key = user Uri and value = user Label
      */
-    public function getRoleList($resourceIds)
+    protected function getRoleList($resourceIds)
     {
         $roleService = \tao_models_classes_RoleService::singleton();
         $roles = $roleService->getAllRoles();
@@ -102,10 +103,11 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * @param $userType
      * @return array users or roles
      */
-    public function getCleanedList($list, $resourceIds, $userType){
+    protected function getCleanedList($list, $resourceIds, $userType)
+    {
         $usersWithPrivileges = $this->dataAccess->getUsersWithPrivilege($resourceIds, $userType);
-        foreach($usersWithPrivileges as $row){
-            if(array_key_exists($row['user_id'], $list)){
+        foreach ($usersWithPrivileges as $row) {
+            if (array_key_exists($row['user_id'], $list)) {
                 unset($list[$row['user_id']]);
             }
         }
@@ -121,15 +123,16 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * We can know if the current user have the ownership on resources
      * @return bool
      */
-    public function isCurrentUserOwner(){
+    public function isCurrentUserOwner()
+    {
         $resourceIds = (array)$this->getRequest()->getParameter('resource');
         $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
 
-        $privileges = $this->getCurrentUserPrivileges($resourceIds,$resourceClassIds);
+        $privileges = $this->getCurrentUserPrivileges($resourceIds, $resourceClassIds);
 
         $ownership = true;
-        foreach($privileges as $privilege){
-            if(!in_array('OWNER', $privilege)){
+        foreach ($privileges as $privilege) {
+            if (!in_array('OWNER', $privilege)) {
                 $ownership = false;
             }
         }
@@ -142,12 +145,11 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * @param resourceClassIds
      * @return array
      */
-    public function getCurrentUserPrivileges($resourceIds, $resourceClassIds)
+    protected function getCurrentUserPrivileges($resourceIds, $resourceClassIds)
     {
         // get the current user
         $userService = \tao_models_classes_UserService::singleton();
         $user = $userService->getCurrentUser();
-
 
         return $this->getUserPrivileges($user->getUri(), $resourceIds, $resourceClassIds);
     }
@@ -159,7 +161,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * @param $privileges
      * @return array
      */
-    public function setCurrentUserPrivileges($resourceIds, $resourceClassIds, $privileges)
+    protected function setCurrentUserPrivileges($resourceIds, $resourceClassIds, $privileges)
     {
         // get the current user
         $userService = \tao_models_classes_UserService::singleton();
@@ -175,14 +177,13 @@ class TaoDacSimple extends \tao_actions_CommonModule
 
     /**
      * Get the list of privileges of an user on a list of resources
+     * @param $user
+     * @param $resourceIds
+     * @param $resourceClassIds
      * @return mixed
      */
-    public function getUserPrivileges(){
-
-        $user = (array)$this->getRequest()->getParameter('user');
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
-
+    protected function getUserPrivileges($user, $resourceIds, $resourceClassIds)
+    {
         // we will get privileges of a class we we haven't got any resourceIds
         if (empty($resourceIds)) {
             $resourceIds = $resourceClassIds;
@@ -198,91 +199,60 @@ class TaoDacSimple extends \tao_actions_CommonModule
     public function savePrivileges()
     {
 
-        $users = $this->getRequest()->getParameter('user');
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
+        $users = $this->getRequest()->getParameter('users');
+        $resourceIds = (array)$this->getRequest()->getParameter('resource_id');
         $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
 
         // Check if there is still a owner on this resource
-        if($this->resourceHaveOwner($users)){
+        if ($this->resourceHasOwner($users)) {
             return false;
         }
-
-        // we check if the current user can add or remove privileges
-        $currentUserPrivileges = $this->getCurrentUserPrivileges($resourceIds,$resourceClassIds);
 
         // we will add privileges to a class we we haven't got any resourceIds
         if (empty($resourceIds)) {
             $resourceIds = $resourceClassIds;
         }
 
-        foreach($resourceIds as $resourceId){
-            if(! $currentUserPrivileges[$resourceId]['GRANT'] && !$currentUserPrivileges[$resourceId]['OWNER']){
-                throw new \Exception("The user can't give privileges to another");
-            }
+        $this->dataAccess->removeAllPrivilegesExceptOwner($resourceIds);
 
-        }
-
-        try {
-            // First of all, let's begin a transaction
-
-//            $this->dataAccess->getPersistence()->getDriver()->beginTransaction();
-
-            $this->dataAccess->removeAllPrivilegesExceptOwner($resourceIds);
-
-            foreach ($users as $user_id => $options) {
-                $user_type = $options['type'];
-                unset($options['type']);
-                foreach($resourceIds as $resourceId){
-                    if(!empty($options)){
-                        $addCompleted = $this->dataAccess->addPrivileges($user_id, $resourceId, array_keys($options), $user_type);
-                        if (!$addCompleted) {
-                            return false;
-                        }
-
+        foreach ($users as $user_id => $options) {
+            $user_type = $options['type'];
+            unset($options['type']);
+            foreach ($resourceIds as $resourceId) {
+                if (!empty($options)) {
+                    $privileges = array_intersect(AclProxy::getExistingPrivileges(),array_keys($options));
+                    if (!$this->dataAccess->addPrivileges($user_id, $resourceId, $privileges, $user_type)) {
+                        \common_Logger::e('Unable to add privileges');
                     }
                 }
             }
-            // If we arrive here, it means that no exception was thrown
-            // i.e. no query has failed, and we can commit the transaction
-//            $this->dataAccess->getPersistence()->getDriver()->commit();
-        } catch (\Exception $e) {
-            // An exception has been thrown
-            // We must rollback the transaction
-//            $this->dataAccess->getPersistence()->getDriver()->rollback();
         }
 
-        return true;
+        $this->index();
     }
 
 
     /**
      * Method that allow only the owner to transfer it to another user
      */
-    public function transferOwnership(){
+    public function transferOwnership()
+    {
         $newOwner = (array)$this->getRequest()->getParameter('user');
         $resourceIds = (array)$this->getRequest()->getParameter('resource');
         $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
         $user_type = $this->getRequest()->getParameter('user_type');
 
-        $userService = \tao_models_classes_UserService::singleton();
-        $user = $userService->getCurrentUser();
-
         if (empty($resourceIds)) {
             $resourceIds = $resourceClassIds;
         }
 
-        if($this->isCurrentUserOwner($resourceIds,$resourceClassIds)){
-            try{
-//                $this->dataAccess->getPersistence()->getDriver()->beginTransaction();
+        if ($this->isCurrentUserOwner($resourceIds, $resourceClassIds)) {
+            $userService = \tao_models_classes_UserService::singleton();
+            $user = $userService->getCurrentUser();
 
-                $this->dataAccess->removePrivileges($user->getUri(),$resourceIds, array('OWNER'));
-                $this->dataAccess->addPrivileges($newOwner, $resourceIds, array('OWNER'), $user_type);
+            $this->dataAccess->removePrivileges($user->getUri(), $resourceIds, array('OWNER'));
+            $this->dataAccess->addPrivileges($newOwner, $resourceIds, array('OWNER'), $user_type);
 
-//                $this->dataAccess->getPersistence()->getDriver()->commit();
-            }
-            catch(\Exception $e){
-//                $this->dataAccess->getPersistence()->getDriver()->rollback();
-            }
         }
 
     }
@@ -293,7 +263,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * @param array $resourceIds
      * @return array
      */
-    public function getUsersPrivileges($resourceIds)
+    protected function getUsersPrivileges($resourceIds)
     {
 
         $results = $this->dataAccess->getUsersWithPrivilege($resourceIds);
@@ -339,13 +309,15 @@ class TaoDacSimple extends \tao_actions_CommonModule
      * @param array $usersPrivileges
      * @return bool
      */
-    public function resourceHaveOwner($usersPrivileges){
+    protected function resourceHasOwner($usersPrivileges)
+    {
 
-        foreach($usersPrivileges as $user => $options){
-            if(in_array('OWNER', $options)){
+        foreach ($usersPrivileges as $user => $options) {
+            if (in_array('OWNER', $options)) {
                 return true;
             }
         }
         return false;
     }
+
 }

@@ -214,22 +214,9 @@ class DataBaseAccess
         //get all entries that match (resourceId) and remove them
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
         $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery) AND privilege <> 'OWNER'";
-        $this->persistence->exec($query, $resourceIds);
+        return $this->persistence->exec($query, $resourceIds);
 
-        return true;
     }
-
-
-
-    /**
-     * @return \common_persistence_Persistence|null
-     */
-    public function getPersistence()
-    {
-        return $this->persistence;
-    }
-
-
 
 }
 

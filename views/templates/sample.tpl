@@ -2,8 +2,8 @@
     <?php $items = get_data('items');
     foreach ($items as $item):?>
     <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
-    <form action="#" method="POST">
-        <input type="hidden" name="ressource_id" value="<?= $item['resource']['id']?>">
+    <form action="<?=_url('savePrivileges','taoDacSimple','taoDacSimple')?>" method="POST">
+        <input type="hidden" name="resource_id" value="<?= $item['resource']['id']?>">
         <table class="matrix">
             <thead>
                 <tr>
@@ -20,17 +20,17 @@
                     <td><?= $user['name']?></td>
                     <td>
                         <?= $user['type']?>
-                        <input type="hidden" name="[<?= $user['id']?>][type]" value="<?= $user['type']?>">
+                        <input type="hidden" name="users[<?= $user['id']?>][type]" value="<?= $user['type']?>">
                     </td>
                     <td>
                         <label>
-                            <input type="checkbox" name="[<?= $user['id']?>]['write']" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?>>
+                            <input type="checkbox" name="users[<?= $user['id']?>][WRITE]" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
                     <td>
                         <label>
-                            <input type="checkbox" name="[<?= $user['id']?>]['grant']" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?>>
+                            <input type="checkbox" name="users[<?= $user['id']?>][GRANT]" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
