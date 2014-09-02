@@ -46,14 +46,15 @@ class DataBaseAccess
     /**
      * We can know which users have a privilege on a resource
      * @param array $resourceIds
+     * @param string $userType ('role' or 'user')
      * @return array list of users
      */
-    public function getUsersWithPrivilege($resourceIds)
+    public function getUsersWithPrivilege($resourceIds, $userType = 'user')
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "SELECT resource_id, privilege, user_id, user_type FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
-
+        $query = "SELECT resource_id, user_id, privilege, user_type FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery) AND user_type = ?";
         /** @var \PDOStatement $statement */
+        $resourceIds[] = $userType;
         $statement = $this->persistence->query($query, $resourceIds);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -92,15 +93,20 @@ class DataBaseAccess
     public function getPrivileges($user, array $resourceIds)
     {
         // get User roles
+//        $userService = \tao_models_classes_UserService::singleton();
+//        $userObj = $userService->getOneUser($user);
+//        $roles = $userService->getUserRoles($userObj);
+        $roles[] = $user;
         // get privileges for a user/roles and a resource
         $returnValue = array();
 
-        $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "SELECT resource_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery) AND user_id = ?";
+        $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
+        $inQueryUser = implode(',', array_fill(0, count($roles), '?'));
+        $query = "SELECT resource_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
         /** @var \PDOStatement $statement */
-        $resourceIds[] = $user;
-        $statement = $this->persistence->query($query, $resourceIds);
+        $params = array_merge($resourceIds,$roles);
+        $statement = $this->persistence->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($results as $result) {
@@ -118,18 +124,17 @@ class DataBaseAccess
      * @param  string $user
      * @param  string $resourceId
      * @param array $privileges
+     * @param string $user_type
      * @return boolean
      */
-    public function addPrivileges($user, $resourceId, $privileges)
+    public function addPrivileges($user, $resourceId, $privileges, $user_type)
     {
-        // remove all user privileges on this resource to have a clean start
-        $this->removePrivileges($user, $resourceId);
 
         foreach ($privileges as $privilege) {
             // add a line with user URI, resource Id and privilege
             $this->persistence->insert(
                 self::TABLE_PRIVILEGES_NAME,
-                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege, 'user_type' => 'user')
+                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege, 'user_type' => $user_type)
             );
         }
         return true;
@@ -141,15 +146,39 @@ class DataBaseAccess
      * @access public
      * @author Antoine Robin <antoine.robin@vesperiagroup.com
      * @param  string $user
-     * @param  string resourceId
+     * @param  array $resourceIds
      * @return boolean
      */
-    public function removePrivileges($user, $resourceId)
+    public function removeUserPrivileges($user, $resourceIds)
     {
         //get all entries that match (user,resourceId) and remove them
-        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE user_id = ? AND resource_id = ?";
-        $params = array($user, $resourceId);
-        $this->persistence->exec($query, $params);
+        $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
+        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery) AND user_id = ?";
+        $resourceIds[] = $user;
+        $this->persistence->exec($query, $resourceIds);
+
+        return true;
+    }
+
+    /**
+     * Short description of method removePrivileges
+     *
+     * @access public
+     * @author Antoine Robin <antoine.robin@vesperiagroup.com
+     * @param  string $user
+     * @param  array $resourceIds
+     * @param  array $privileges
+     * @return boolean
+     */
+    public function removePrivileges($user, $resourceIds, $privileges)
+    {
+        //get all entries that match (user,resourceId) and remove them
+        $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
+        $inQueryPrivilege = implode(',', array_fill(0, count($resourceIds), '?'));
+        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND privilege IN ($inQueryPrivilege) AND user_id = ?";
+        $params = array_merge($resourceIds,$privileges);
+        $params[] = $user;
+        $this->persistence->exec($query, $resourceIds);
 
         return true;
     }
@@ -164,13 +193,43 @@ class DataBaseAccess
      */
     public function removeAllPrivileges($resourceIds)
     {
-        //get all entries that match (user,resourceId) and remove them
+        //get all entries that match (resourceId) and remove them
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
         $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
         $this->persistence->exec($query, $resourceIds);
 
         return true;
     }
+
+    /**
+     * Short description of method removeAllPrivilegesExceptOwner
+     *
+     * @access public
+     * @author Antoine Robin <antoine.robin@vesperiagroup.com
+     * @param  array $resourceIds
+     * @return boolean
+     */
+    public function removeAllPrivilegesExceptOwner($resourceIds)
+    {
+        //get all entries that match (resourceId) and remove them
+        $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
+        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery) AND privilege <> 'OWNER'";
+        $this->persistence->exec($query, $resourceIds);
+
+        return true;
+    }
+
+
+
+    /**
+     * @return \common_persistence_Persistence|null
+     */
+    public function getPersistence()
+    {
+        return $this->persistence;
+    }
+
+
 
 }
 
