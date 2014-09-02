@@ -19,6 +19,12 @@
  */
 
 define(function(){
+    'user strict';
     return {
+        'TaoDacSimple' : {
+            'actions' : {
+                'index' : 'controller/main'
+            }
+        }
     };
 });
