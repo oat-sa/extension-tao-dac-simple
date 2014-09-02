@@ -24,13 +24,13 @@
                     </td>
                     <td>
                         <label>
-                            <input type="checkbox" name="users[<?= $user['id']?>][WRITE]" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?>>
+                            <input type="checkbox" name="users[<?= $user['id']?>][WRITE]" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?> <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : ''?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
                     <td>
                         <label>
-                            <input type="checkbox" name="users[<?= $user['id']?>][GRANT]" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?>>
+                            <input type="checkbox" name="users[<?= $user['id']?>][GRANT]" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?> <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : ''?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
