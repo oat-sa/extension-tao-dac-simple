@@ -10,32 +10,35 @@ define([
             roleSelect;
 
         /**
-         * Confirm to save the item
+         * Confirm and transfert ownership with XHR call
+         * @param  {array} data Datas contained by the dataStore of the button clicked
          */
-        var _confirmTransfertOwnership = function () {
+        var _confirmTransfertOwnership = function (data) {
 
             var confirmBox = $('#ownership-transfert'),
                 cancel = confirmBox.find('.cancel'),
                 confirm = confirmBox.find('.confirm'),
-                close = confirmBox.find('.modal-close');
+                close = confirmBox.find('.modal-close'),
+                ressourceId = $('#resource_id').val();
 
             confirmBox.modal({ width: 500 });
 
             confirm.on('click', function () {
                 $.ajax({
-                    url: '/path/to/file',
+                    url: context.root_url + 'taoDacSimple/taoDacSimple/transferOwnership',
                     type: 'POST',
-                    dataType: 'default: Intelligent Guess (Other values: xml, json, script, or html)',
-                    data: {ressourceID: 'value1', userID: '', userType: ''}, // How to get that ?
+                    //dataType: '',
+                    data: {ressource: ressourceId, user: data.user, userType: data.type}, // How to get that ?
                 })
                 .done(function() {
                     // 1. Activate all transfert ownership buttons & all delete buttons
                     // 2. De-activate the new owner "Transfer ownershop" button
                     // 3. De-activate the new owner "Delete" button
                     // 4. Display success ??
+                    createInfoMessage('YEAH');
                 })
                 .fail(function() {
-                    // Display Error Message Alert
+                    createErrorMessage("NAY !");
                 })
                 .always(function() {
                     confirmBox.modal('close');
@@ -77,7 +80,10 @@ define([
                 }
             }
         }
-
+        /**
+         * Add a new lines into the permissions table regarding what is selected into the add-* select
+         * @param {string} type role/user regarding what it will be added.
+         */
         var _addPermission = function(type) {
             var $table = $('#permissions-table'),
                 body = $table.find('tbody')[0],
@@ -149,6 +155,11 @@ define([
                 $('#add-role-btn').on('click', function(event) {
                     event.preventDefault();
                     _addPermission('role');
+                });
+
+                $('.transfert_ownership').on('click', function(event) {
+                    event.preventDefault();
+                    _confirmTransfertOwnership($(this).data());
                 });
             }
         }

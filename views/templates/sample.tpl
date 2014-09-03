@@ -3,7 +3,7 @@
     foreach ($items as $item):?>
     <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
     <form action="<?=_url('savePrivileges','taoDacSimple','taoDacSimple')?>" method="POST" class="grid-container">
-        <input type="hidden" name="resource_id" value="<?= $item['resource']['id']?>">
+        <input type="hidden" name="resource_id" id="resource_id" value="<?= $item['resource']['id']?>">
         <table class="matrix" id="permissions-table">
             <thead>
                 <tr>
@@ -38,7 +38,7 @@
                         <?php
                         // [TODO] : Check if the current user has GRANT permissions
                         if(true) :?>
-                        <button class="small"<?= ((count($item['users']) == 1) || ($user['permissions']['OWNER'] == true)) ? 'disabled' : '' ?> data-modal="#ownership-transfert"><?= __('Transfert ownership')?></button>
+                        <button class="small transfert_ownership" data-user="<?= $user['id']?>" data-type="<?= $user['type']?>" <?= ((count($item['users']) == 1) || ($user['permissions']['OWNER'] == true)) ? 'disabled' : '' ?>><?= __('Transfert ownership')?></button>
                         <?php endif;?>
                         &nbsp;
                         <button class="small delete_permission" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : '' ?>>
