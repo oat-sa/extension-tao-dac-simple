@@ -200,8 +200,11 @@ class TaoDacSimple extends \tao_actions_CommonModule
             foreach ($resourceIds as $resourceId) {
                 if (!empty($options)) {
                     $privileges = array_intersect(AclProxy::getExistingPrivileges(),array_keys($options));
-                    if (!$this->dataAccess->addPrivileges($user_id, $resourceId, $privileges, $user_type)) {
-                        \common_Logger::e('Unable to add privileges');
+                    try{
+                        $this->dataAccess->addPrivileges($user_id, $resourceId, $privileges, $user_type);
+                    }
+                    catch (\PDOException $e) {
+                        \common_Logger::e('Unable to add privileges : '. $e->getMessage());
                     }
                 }
             }

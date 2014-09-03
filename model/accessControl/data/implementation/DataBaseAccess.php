@@ -87,7 +87,7 @@ class DataBaseAccess
      * @access public
      * @author Antoine Robin <antoine.robin@vesperiagroup.com>
      * @param  string $user
-     * @param  array $resourceId
+     * @param  array $resourceIds
      * @return mixed
      */
     public function getPrivileges($user, array $resourceIds)
@@ -213,8 +213,11 @@ class DataBaseAccess
     {
         //get all entries that match (resourceId) and remove them
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery) AND privilege <> 'OWNER'";
-        return $this->persistence->exec($query, $resourceIds);
+        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)
+        AND user_id NOT IN (SELECT user_id FROM (SELECT * FROM " . self::TABLE_PRIVILEGES_NAME . ") AS d
+        WHERE d.privilege = 'OWNER' AND d.resource_id IN ($inQuery))";
+        $params = array_merge($resourceIds, $resourceIds);
+        return $this->persistence->exec($query, $params);
 
     }
 
