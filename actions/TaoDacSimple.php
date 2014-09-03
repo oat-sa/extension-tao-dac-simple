@@ -105,7 +105,7 @@ class TaoDacSimple extends \tao_actions_CommonModule
      */
     protected function getCleanedList($list, $resourceIds, $userType)
     {
-        $usersWithPrivileges = $this->dataAccess->getUsersWithPrivilege($resourceIds, $userType);
+        $usersWithPrivileges = $this->dataAccess->getUsersWithPrivilege($resourceIds, (array)$userType);
         foreach ($usersWithPrivileges as $row) {
             if (array_key_exists($row['user_id'], $list)) {
                 unset($list[$row['user_id']]);

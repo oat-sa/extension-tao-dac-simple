@@ -46,16 +46,18 @@ class DataBaseAccess
     /**
      * We can know which users have a privilege on a resource
      * @param array $resourceIds
-     * @param string $userType ('role' or 'user')
+     * @param array $userType ('role' or 'user' or both)
      * @return array list of users
      */
-    public function getUsersWithPrivilege($resourceIds, $userType = 'user')
+    public function getUsersWithPrivilege($resourceIds, $userType = array('user','role'))
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "SELECT resource_id, user_id, privilege, user_type FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery) AND user_type = ?";
+        $inQueryType = implode(',', array_fill(0, count($userType), '?'));
+        $query = "SELECT resource_id, user_id, privilege, user_type FROM " . self::TABLE_PRIVILEGES_NAME . "
+        WHERE resource_id IN ($inQuery) AND user_type IN ($inQueryType)";
         /** @var \PDOStatement $statement */
-        $resourceIds[] = $userType;
-        $statement = $this->persistence->query($query, $resourceIds);
+        $params = array_merge($resourceIds, $userType);
+        $statement = $this->persistence->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
         return $results;
