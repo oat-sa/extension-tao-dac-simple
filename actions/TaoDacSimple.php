@@ -228,14 +228,22 @@ class TaoDacSimple extends \tao_actions_CommonModule
             $resourceIds = $resourceClassIds;
         }
 
-        if ($this->isCurrentUserOwner($resourceIds, $resourceClassIds)) {
-            $userService = \tao_models_classes_UserService::singleton();
-            $user = $userService->getCurrentUser();
+        $userService = \tao_models_classes_UserService::singleton();
+        $user = $userService->getCurrentUser();
 
-            $this->dataAccess->removePrivileges($user->getUri(), $resourceIds, array('OWNER'));
-            $this->dataAccess->addPrivileges($newOwner, $resourceIds, array('OWNER'), $user_type);
+        if ($this->isCurrentUserOwner($resourceIds, $resourceClassIds) && $user->getUri() != $newOwner) {
+
+            try{
+                $this->dataAccess->removePrivileges($user->getUri(), $resourceIds, array('OWNER'));
+                $this->dataAccess->addPrivileges($newOwner, $resourceIds, array('OWNER'), $user_type);
+                http_response_code(200);
+            }
+            catch(\PDOException $e){
+                \common_Logger::e('Unable to transfert ownership : ' . $e->getMessage());
+            }
 
         }
+        http_response_code(403);
 
     }
 
