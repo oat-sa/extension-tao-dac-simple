@@ -41,7 +41,9 @@
                         <button class="small"<?= ((count($item['users']) == 1) || ($user['permissions']['OWNER'] == true)) ? 'disabled' : '' ?> data-modal="#ownership-transfert"><?= __('Transfert ownership')?></button>
                         <?php endif;?>
                         &nbsp;
-                        <button class="small" <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : '' ?>><span class="icon-bin"></span><?= __('Delete')?></button>
+                        <button class="small delete_permission" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : '' ?>>
+                            <span class="icon-bin"></span><?= __('Delete')?>
+                        </button>
                     </td>
                 </tr>
                 <?php endforeach;?>

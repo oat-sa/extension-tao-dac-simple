@@ -46,26 +46,35 @@ define([
             });
         };
 
-
+        /**
+         * Delete a permission row for a user/role
+         * @param  {DOM Element} element DOM element that triggered the function
+         */
         var _deletePermission = function(element) {
             // 1. Get the user / role
             var $this = $(element),
                 type = $this.data('acl-type'),
                 user = $this.data('acl-user'),
                 label = $this.data('acl-label');
-            // 2. Add it to the select
-            switch(type){
-                case 'user':
-                    $('#add-user').append($('<option/>',{ text : label , value : user }));
-                    break;
-                case 'role':
-                    $('#add-role').append($('<option/>',{ text : label , value : user }));
-                    break;
-                default:
-                    break;
+
+            if( typeof type !== "undefined" &&
+                typeof user !== "undefined" &&
+                typeof label !== "undefined" &&
+                type !== "" && user !== "" && label !== ""){
+                // 2. Add it to the select & remove the line
+                switch(type){
+                    case 'user':
+                        $('#add-user').append($('<option/>',{ text : label , value : user }));
+                        $this.closest('tr').remove();
+                        break;
+                    case 'role':
+                        $('#add-role').append($('<option/>',{ text : label , value : user }));
+                        $this.closest('tr').remove();
+                        break;
+                    default:
+                        break;
+                }
             }
-            // 3. Remove the line
-            $this.closest('tr').remove();
         }
 
 
@@ -75,6 +84,14 @@ define([
 
                 userSelect = $('#add-user').select2();
                 roleSelect = $('#add-role').select2();
+
+                /**
+                 * Listen all clicks on delete buttons to call the _deletePersmission function
+                 */
+                $('.delete_permission').on('click', function(event) {
+                    event.preventDefault();
+                    _deletePermission(this);
+                });
             }
         }
         return mainCtrl;
