@@ -49,7 +49,7 @@
         </table>
         <div class="grid-row">
             <div class="col-3">
-                <select name="new_user" class="select2" multiple style="width:100%">
+                <select id="add-user" multiple style="width:100%">
                     <?php foreach ($users as $userId => $username):?>
                     <option value="<?=$userId?>"><?=$username?></option>
                     <?php endforeach;?>
@@ -59,7 +59,7 @@
                 <button class="btn-info small" type="button"><?= __('Add user(s)')?></button>
             </div>
             <div class="col-3">
-                <select name="new_role" class="select2" multiple style="width:100%">
+                <select id="add-role" multiple style="width:100%">
                     <?php foreach ($roles as $roleId => $roleLabel):?>
                     <option value="<?=$roleId?>"><?=$roleLabel?></option>
                     <?php endforeach;?>

@@ -5,6 +5,9 @@ define([
     ], function($, __){
         'use strict';
 
+        var userSelect,
+            roleSelect;
+
         /**
          * Confirm to save the item
          */
@@ -42,9 +45,36 @@ define([
                 confirmBox.modal('close');
             });
         };
+
+
+        var _deletePermission = function(element) {
+            // 1. Get the user / role
+            var $this = $(element),
+                type = $this.data('acl-type'),
+                user = $this.data('acl-user'),
+                label = $this.data('acl-label');
+            // 2. Add it to the select
+            switch(type){
+                case 'user':
+                    $('#add-user').append($('<option/>',{ text : label , value : user }));
+                    break;
+                case 'role':
+                    $('#add-role').append($('<option/>',{ text : label , value : user }));
+                    break;
+                default:
+                    break;
+            }
+            // 3. Remove the line
+            $this.closest('tr').remove();
+        }
+
+
         var mainCtrl = {
             'start' : function(){
-                console.log('started')
+                console.log('started');
+
+                userSelect = $('#add-user').select2();
+                roleSelect = $('#add-role').select2();
             }
         }
         return mainCtrl;
