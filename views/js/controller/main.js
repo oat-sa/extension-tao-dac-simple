@@ -1,8 +1,9 @@
 define([
     'jquery',
     'i18n',
+    'tpl!taoDacSimple/controller/line',
     'select2'
-    ], function($, __){
+    ], function($, __, lineTpl){
         'use strict';
 
         var userSelect,
@@ -77,6 +78,49 @@ define([
             }
         }
 
+        var _addPermission = function(type) {
+            var $table = $('#permissions-table'),
+                body = $table.find('tbody')[0],
+                selection = [];
+            //1. Get a list of all elements to add
+            switch(type){
+                case 'user':
+                    $.each(userSelect.select2("data"), function(index, val) {
+                        // Push each selected element into an array
+                        selection.push({
+                            type : 'user',
+                            user : val.id,
+                            label : val.text
+                        });
+                        // Remove them from DOM
+                        userSelect.find('option[value="' + val.id + '"]').remove();
+                    });
+                    // Reset Select2 tag display
+                    userSelect.select2("val","");
+                    break;
+                case 'role':
+                    $.each(roleSelect.select2("data"), function(index, val) {
+                        // Push each selected element into an array
+                        selection.push({
+                            type : 'role',
+                            user : val.id,
+                            label : val.text
+                        });
+                        // Remove them from DOM
+                        roleSelect.find('option[value="' + val.id + '"]').remove();
+                    });
+                    // Reset Select2 tag display
+                    roleSelect.select2("val","");
+                    break;
+                default:
+                    break;
+            }
+            // 2. Inject them into the table
+            $.each(selection, function(index,val) {
+                $(body).append(lineTpl(val));
+            });
+        }
+
 
         var mainCtrl = {
             'start' : function(){
@@ -91,6 +135,20 @@ define([
                 $('.delete_permission').on('click', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
+                });
+                /**
+                 * Listen clicks on add user button
+                 */
+                $('#add-user-btn').on('click', function(event) {
+                    event.preventDefault();
+                    _addPermission('user');
+                });
+                /**
+                 * Listen clicks on add role button
+                 */
+                $('#add-role-btn').on('click', function(event) {
+                    event.preventDefault();
+                    _addPermission('role');
                 });
             }
         }

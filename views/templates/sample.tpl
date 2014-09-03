@@ -4,7 +4,7 @@
     <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
     <form action="<?=_url('savePrivileges','taoDacSimple','taoDacSimple')?>" method="POST" class="grid-container">
         <input type="hidden" name="resource_id" value="<?= $item['resource']['id']?>">
-        <table class="matrix">
+        <table class="matrix" id="permissions-table">
             <thead>
                 <tr>
                     <th>&nbsp;</th>
@@ -58,7 +58,7 @@
                 </select>
             </div>
             <div class="col-2">
-                <button class="btn-info small" type="button"><?= __('Add user(s)')?></button>
+                <button class="btn-info small" id="add-user-btn" type="button"><?= __('Add user(s)')?></button>
             </div>
             <div class="col-3">
                 <select id="add-role" multiple style="width:100%">
@@ -68,7 +68,7 @@
                 </select>
             </div>
             <div class="col-3">
-                <button class="btn-info small" type="button"><?= __('Add role(s)')?></button>
+                <button class="btn-info small" id="add-role-btn" type="button"><?= __('Add role(s)')?></button>
             </div>
             <div class="col-1">
                 <button type="submit" class="btn-info small" type="button"><?= __('Save')?></button>
