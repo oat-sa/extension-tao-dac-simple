@@ -27,10 +27,10 @@ define([
 
             $confirm.on('click', function () {
                 $.ajax({
-                    url: helpers._url('transferOwnership','taoDacSimple','taoDacSimple'),
+                    url: helpers._url('transferOwnership','TaoDacSimple','taoDacSimple'),
                     type: 'POST',
                     //dataType: '',
-                    data: {resource: ressourceId, user: data.user, user_type: data.type},
+                    data: {uri: ressourceId, user: data.user, user_type: data.type},
                 })
                 .done(function() {
                     // 1. Activate all transfert ownership buttons & all delete buttons
@@ -136,7 +136,6 @@ define([
 
         var mainCtrl = {
             'start' : function(){
-                console.log('started');
 
                 userSelect = $('#add-user').select2();
                 roleSelect = $('#add-role').select2();
