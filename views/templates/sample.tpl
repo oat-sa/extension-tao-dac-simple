@@ -1,8 +1,10 @@
 <div class="main-container tao-scope">
-    <?php $items = get_data('items');
-    foreach ($items as $item):?>
+    <?php
+        $items = get_data('items');
+        $item = current($items);
+    ?>
     <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
-    <form action="<?=_url('savePrivileges','taoDacSimple','taoDacSimple')?>" method="POST" class="grid-container">
+    <form action="<?=_url('savePrivileges','TaoDacSimple','taoDacSimple')?>" method="POST" class="grid-container">
         <input type="hidden" name="resource_id" id="resource_id" value="<?= $item['resource']['id']?>">
         <table class="matrix" id="permissions-table">
             <thead>
@@ -75,8 +77,6 @@
             </div>
         </div>
     </form>
-    <?php endforeach;?>
-
 
     <div id="ownership-transfert" class="modal">
         <h1><?= __('Be carefull')?></h1>
