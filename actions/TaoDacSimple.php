@@ -216,37 +216,20 @@ class TaoDacSimple extends \tao_actions_CommonModule
 
     /**
      * Method that allow only the owner to transfer it to another user
+     * @requiresPrivilege uri OWNER
      */
     public function transferOwnership()
     {
-        $newOwner = (array)$this->getRequest()->getParameter('user');
-        $resourceIds = (array)$this->getRequest()->getParameter('resource');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
+        $resourceUri = $this->getRequestParameter('uri');
+        $newOwner = $this->getRequest()->getParameter('user');
         $user_type = $this->getRequest()->getParameter('user_type');
-
-        if (empty($resourceIds)) {
-            $resourceIds = $resourceClassIds;
-        }
-
-        $userService = \tao_models_classes_UserService::singleton();
-        $user = $userService->getCurrentUser();
-
-        if ($this->isCurrentUserOwner($resourceIds, $resourceClassIds) && $user->getUri() != $newOwner) {
-
-            try{
-                $this->dataAccess->removePrivileges($user->getUri(), $resourceIds, array('OWNER'));
-                $this->dataAccess->addPrivileges($newOwner, $resourceIds, array('OWNER'), $user_type);
-                http_response_code(200);
-            }
-            catch(\PDOException $e){
-                \common_Logger::e('Unable to transfert ownership : ' . $e->getMessage());
-            }
-
-        }
-        http_response_code(403);
-
+    
+        $success = AdminService::setOwner($resourceUri, $newOwner, $user_type);
+    
+        $this->returnJson(array(
+            'success' => $success
+        ), $success ? 200 : 403);
     }
-
 
     /**
      * Get a list of users with their privileges for a list of resources
