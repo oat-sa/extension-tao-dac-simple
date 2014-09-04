@@ -42,12 +42,14 @@ class AdminService
         
         $db = new DataBaseAccess();
         
-        // should remove all other owners
-        $users = $db->getUsersWithPrivilege(array($resourceUri));
-        foreach ($users as $oldOwner) {
-            $db->removePrivileges($oldOwner, array($resourceUri), array('OWNER'));
+        // Needs better abstraction
+        $dbRow = $db->getUsersWithPrivilege(array($resourceUri));
+        foreach ($dbRow as $row) {
+            if ($row['resource_id'] == $resourceUri && $row['privilege'] == 'OWNER') {
+                $db->removePrivileges($row['user_id'], array($resourceUri), array('OWNER'));
+            }
         }
         
-        return $db->addPrivileges($userUri, array($resourceUri), array('OWNER'), $userType);
+        return $db->addPrivileges($userUri, $resourceUri, array('OWNER'), $userType);
     }
 }

@@ -22,6 +22,9 @@
 namespace oat\taoDacSimple\model\accessControl\data\implementation;
 
 use oat\tao\model\accessControl\data\DataAccessControl;
+use common_session_SessionManager;
+use common_Logger;
+use tao_models_classes_UserService;
 
 class DataBaseAccess
     implements DataAccessControl
@@ -95,10 +98,16 @@ class DataBaseAccess
     public function getPrivileges($user, array $resourceIds)
     {
         // get User roles
-//        $userService = \tao_models_classes_UserService::singleton();
-//        $userObj = $userService->getOneUser($user);
-//        $roles = $userService->getUserRoles($userObj);
+        if (common_session_SessionManager::getSession()->getUserUri() == $user){
+            $roles = common_session_SessionManager::getSession()->getUserRoles();
+        } else {
+            // After introducing remote users, we can no longer guarantee that any user and his roles are available
+            common_Logger::w('Roles of non current user ('.$user->getUri().') checked, trying fallback to local ontology');
+            $userResource = new \core_kernel_classes_Resource($user);
+            $roles = array_keys(\tao_models_classes_UserService::singleton()->getUserRoles($userResource));
+        }
         $roles[] = $user;
+        
         // get privileges for a user/roles and a resource
         $returnValue = array();
 
@@ -107,7 +116,10 @@ class DataBaseAccess
         $query = "SELECT resource_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
         /** @var \PDOStatement $statement */
-        $params = array_merge($resourceIds,$roles);
+        $params = $resourceIds;
+        foreach ($roles as $roleUri) {
+            $params[] = $roleUri;
+        }
         $statement = $this->persistence->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -176,11 +188,15 @@ class DataBaseAccess
     {
         //get all entries that match (user,resourceId) and remove them
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
-        $inQueryPrivilege = implode(',', array_fill(0, count($resourceIds), '?'));
+        $inQueryPrivilege = implode(',', array_fill(0, count($privileges), '?'));
         $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND privilege IN ($inQueryPrivilege) AND user_id = ?";
-        $params = array_merge($resourceIds,$privileges);
+        $params = $resourceIds;
+        foreach ($privileges as $privilege) {
+            $params[] = $privilege;
+        }
         $params[] = $user;
-        $this->persistence->exec($query, $resourceIds);
+        
+        $this->persistence->exec($query, $params);
 
         return true;
     }
