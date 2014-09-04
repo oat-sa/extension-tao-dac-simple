@@ -16,15 +16,16 @@ define([
          */
         var _confirmTransfertOwnership = function (data) {
 
-            var confirmBox = $('#ownership-transfert'),
-                cancel = confirmBox.find('.cancel'),
-                confirm = confirmBox.find('.confirm'),
-                close = confirmBox.find('.modal-close'),
+            var $confirmBox = $('#ownership-transfert'),
+                $cancel = $confirmBox.find('.cancel'),
+                $confirm = $confirmBox.find('.confirm'),
+                $transfertButtons = $('button.transfert_ownership'),
+                $deleteButtons = $('button.delete_permission'),
                 ressourceId = $('#resource_id').val();
 
-            confirmBox.modal({ width: 500 });
+            $confirmBox.modal({ width: 500 });
 
-            confirm.on('click', function () {
+            $confirm.on('click', function () {
                 $.ajax({
                     url: helpers._url('transferOwnership','taoDacSimple','taoDacSimple'),
                     type: 'POST',
@@ -33,8 +34,12 @@ define([
                 })
                 .done(function() {
                     // 1. Activate all transfert ownership buttons & all delete buttons
+                    $transfertButtons.removeAttr('disabled');
+                    $deleteButtons.removeAttr('disabled');
                     // 2. De-activate the new owner "Transfer ownershop" button
+                    $transfertButtons.has('[data-user="' + data.user + '"]').attr("disabled");
                     // 3. De-activate the new owner "Delete" button
+                    $deleteButtons.has('[data-acl-user="' + data.user + '"]').attr("disabled");
                     // 4. Display success ??
                     helpers.createInfoMessage('YEAH');
                 })
@@ -42,12 +47,12 @@ define([
                     helpers.createErrorMessage("NAY !");
                 })
                 .always(function() {
-                    confirmBox.modal('close');
+                    $confirmBox.modal('close');
                 });
             });
 
-            cancel.on('click', function () {
-                confirmBox.modal('close');
+            $cancel.on('click', function () {
+                $confirmBox.modal('close');
             });
         };
 
