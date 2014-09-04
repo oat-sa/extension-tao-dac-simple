@@ -50,7 +50,6 @@ $dataImpl = new DataBaseAccess();
 DataProxy::setImplementation($dataImpl);
 
 $class = new core_kernel_classes_Class(TAO_ITEM_CLASS);
-$userUri = LOCAL_NAMESPACE.'#superUser';
 foreach ($class->getInstances(true) as $item) {
-    $dataImpl->addPrivileges($userUri, $item->getUri(), array('WRITE', 'GRANT', 'OWNER'), 'user');
+    $dataImpl->addPrivileges(INSTANCE_ROLE_BACKOFFICE, $item->getUri(), array('WRITE', 'GRANT', 'OWNER'), 'role');
 }
