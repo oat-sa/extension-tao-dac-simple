@@ -50,23 +50,20 @@ class TaoDacSimple extends \tao_actions_CommonModule
 
     /**
      * A possible entry point to tao
+     * @todo enable requiresPrivilege uri GRANT
      */
     public function index()
     {
         $this->setView('sample.tpl');
-
-        $resourceIds = (array)$this->getRequest()->getParameter('uri');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('classUri');
-
-        // we will get privileges of a class we we haven't got any resourceIds
-        if (empty($resourceIds)) {
-            $resourceIds = $resourceClassIds;
-        }
+        
+        $resourceUri = $this->hasRequestParameter('uri') 
+            ? \tao_helpers_Uri::decode($this->getRequestParameter('uri'))
+            : \tao_helpers_Uri::decode($this->getRequestParameter('classUri'));
 
         //Mocked Data
-        $this->setData('users', $this->getUserList(array('http://tao.local/mytao.rdf#i140966777892535')));
-        $this->setData('roles', $this->getRoleList(array('http://tao.local/mytao.rdf#i140966777892535')));
-        $this->setData('items', $this->getUsersPrivileges(array('http://tao.local/mytao.rdf#i140966777892535')));
+        $this->setData('users', $this->getUserList(array($resourceUri)));
+        $this->setData('roles', $this->getRoleList(array($resourceUri)));
+        $this->setData('items', $this->getUsersPrivileges(array($resourceUri)));
     }
 
 
