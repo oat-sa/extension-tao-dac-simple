@@ -23,6 +23,7 @@ namespace oat\taoDacSimple\actions;
 
 use oat\taoDacSimple\model\accessControl\data\implementation\DataBaseAccess;
 use oat\tao\model\accessControl\data\AclProxy;
+use oat\taoDacSimple\model\AdminService;
 
 /**
  * Sample controller
