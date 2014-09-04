@@ -2,8 +2,9 @@ define([
     'jquery',
     'i18n',
     'tpl!taoDacSimple/controller/line',
+    'helpers',
     'select2'
-    ], function($, __, lineTpl){
+    ], function($, __, lineTpl, helpers){
         'use strict';
 
         var userSelect,
@@ -25,20 +26,20 @@ define([
 
             confirm.on('click', function () {
                 $.ajax({
-                    url: context.root_url + 'taoDacSimple/taoDacSimple/transferOwnership',
+                    url: helpers._url('transferOwnership','taoDacSimple','taoDacSimple'),
                     type: 'POST',
                     //dataType: '',
-                    data: {ressource: ressourceId, user: data.user, userType: data.type}, // How to get that ?
+                    data: {resource: ressourceId, user: data.user, user_type: data.type},
                 })
                 .done(function() {
                     // 1. Activate all transfert ownership buttons & all delete buttons
                     // 2. De-activate the new owner "Transfer ownershop" button
                     // 3. De-activate the new owner "Delete" button
                     // 4. Display success ??
-                    createInfoMessage('YEAH');
+                    helpers.createInfoMessage('YEAH');
                 })
                 .fail(function() {
-                    createErrorMessage("NAY !");
+                    helpers.createErrorMessage("NAY !");
                 })
                 .always(function() {
                     confirmBox.modal('close');
