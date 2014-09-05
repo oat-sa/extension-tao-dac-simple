@@ -21,6 +21,7 @@
 
 use oat\tao\model\accessControl\data\AclProxy as DataProxy;
 use oat\taoDacSimple\model\accessControl\data\implementation\DataBaseAccess;
+use oat\tao\model\accessControl\data\AclProxy;
 
 
 $schemaManager = common_persistence_Manager::getPersistence('default')->getDriver()->getSchemaManager();
@@ -51,5 +52,5 @@ DataProxy::setImplementation($dataImpl);
 
 $class = new core_kernel_classes_Class(TAO_ITEM_CLASS);
 foreach ($class->getInstances(true) as $item) {
-    $dataImpl->addPrivileges(INSTANCE_ROLE_BACKOFFICE, $item->getUri(), array('WRITE', 'GRANT', 'OWNER'), 'role');
+    $dataImpl->addPrivileges(INSTANCE_ROLE_BACKOFFICE, $item->getUri(), AclProxy::getExistingPrivileges(), 'role');
 }
