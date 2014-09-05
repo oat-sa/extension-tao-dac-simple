@@ -11,52 +11,6 @@ define([
             roleSelect;
 
         /**
-         * Confirm and transfert ownership with XHR call
-         * @param  {array} data Datas contained by the dataStore of the button clicked
-         */
-        var _confirmTransfertOwnership = function (data) {
-
-            var $confirmBox = $('#ownership-transfert'),
-                $cancel = $confirmBox.find('.cancel'),
-                $confirm = $confirmBox.find('.confirm'),
-                $transfertButtons = $('button.transfert_ownership'),
-                $deleteButtons = $('button.delete_permission'),
-                ressourceId = $('#resource_id').val();
-
-            $confirmBox.modal({ width: 500 });
-
-            $confirm.on('click', function () {
-                $.ajax({
-                    url: helpers._url('transferOwnership','TaoDacSimple','taoDacSimple'),
-                    type: 'POST',
-                    //dataType: '',
-                    data: {uri: ressourceId, user: data.user, user_type: data.type},
-                })
-                .done(function() {
-                    // 1. Activate all transfert ownership buttons & all delete buttons
-                    $transfertButtons.removeAttr('disabled');
-                    $deleteButtons.removeAttr('disabled');
-                    // 2. De-activate the new owner "Transfer ownershop" button
-                    $transfertButtons.has('[data-user="' + data.user + '"]').attr("disabled");
-                    // 3. De-activate the new owner "Delete" button
-                    $deleteButtons.has('[data-acl-user="' + data.user + '"]').attr("disabled");
-                    // 4. Display success ??
-                    helpers.createInfoMessage('YEAH');
-                })
-                .fail(function() {
-                    helpers.createErrorMessage("NAY !");
-                })
-                .always(function() {
-                    $confirmBox.modal('close');
-                });
-            });
-
-            $cancel.on('click', function () {
-                $confirmBox.modal('close');
-            });
-        };
-
-        /**
          * Delete a permission row for a user/role
          * @param  {DOM Element} element DOM element that triggered the function
          */

@@ -26,24 +26,18 @@
                     </td>
                     <td>
                         <label>
-                            <input type="checkbox" class="can-access" name="users[<?= $user['id']?>][WRITE]" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?> <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : ''?>>
+                            <input type="checkbox" class="can-access" name="users[<?= $user['id']?>][WRITE]" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
                     <td>
                         <label>
-                            <input type="checkbox" class="can-manage" name="users[<?= $user['id']?>][GRANT]" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?> <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : ''?>>
+                            <input type="checkbox" class="can-manage" name="users[<?= $user['id']?>][GRANT]" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
                     <td>
-                        <?php
-                        // [TODO] : Check if the current user has GRANT permissions
-                        if(true) :?>
-                        <button class="small transfert_ownership" data-user="<?= $user['id']?>" data-type="<?= $user['type']?>" <?= ((count($item['users']) == 1) || ($user['permissions']['OWNER'] == true)) ? 'disabled' : '' ?>><?= __('Transfert ownership')?></button>
-                        <?php endif;?>
-                        &nbsp;
-                        <button class="small delete_permission" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" <?= ($user['permissions']['OWNER'] == true) ? 'disabled' : '' ?>>
+                        <button class="small delete_permission" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" >
                             <span class="icon-bin"></span><?= __('Delete')?>
                         </button>
                     </td>
@@ -77,13 +71,4 @@
             </div>
         </div>
     </form>
-
-    <div id="ownership-transfert" class="modal">
-        <h1><?= __('Be carefull')?></h1>
-        <p><?= __('You are about to transfert the ownership of the ressource')?> <em><?=$item['resource']['label']?></em>. <?= __('Once you have transfert the ownership, you will not be able to manage the ownership anymore')?>.</p>
-        <div class="rgt">
-            <button class="cancel"><?= __('Cancel')?></button>
-            <button class="btn-success confirm"><?= __('Proceed')?></button>
-        </div>
-    </div>
 </div>
