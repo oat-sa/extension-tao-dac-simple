@@ -18,11 +18,11 @@ define([
                 $deleteButtons = $managers.closest('tr').find('.delete_permission');
 
             if($managers.length > 1){
-                $deleteButtons.removeProp("disabled");
-                $managers.removeProp("disabled")
+                $deleteButtons.removeClass("disabled");
+                $managers.removeClass("disabled")
             }else{
-                $deleteButtons.prop('disabled', true);
-                $managers.prop('disabled', true);
+                $deleteButtons.addClass('disabled');
+                $managers.addClass('disabled');
             }
         }
 
