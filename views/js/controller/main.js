@@ -166,6 +166,17 @@ define([
                     event.preventDefault();
                     _confirmTransfertOwnership($(this).data());
                 });
+                /**
+                 * Ensure that if you give the manage (GRANT) permission, access (WRITE) persmission is given too
+                 */
+                $('.can-manage').on('click', function() {
+                    console.log(this);
+                    console.log($(this).not(':checked'));
+                    if ($(this).is(':checked') != []) {
+                        var accessCheckbox = $(this).closest('tr').find('.can-access').not(':checked')[0];
+                        $(accessCheckbox).click();
+                    };
+                });
             }
         }
         return mainCtrl;
