@@ -11,6 +11,22 @@ define([
             roleSelect;
 
         /**
+         * Provide a method the deactivate UI component that provide manager deletation
+         */
+        var _preventManagerRemoval = function(){
+            var $managers = $('#permissions-table').find('.can-manage:checked'),
+                $deleteButtons = $managers.closest('tr').find('.delete_permission');
+
+            if($managers.length > 1){
+                $deleteButtons.removeProp("disabled");
+                $managers.removeProp("disabled")
+            }else{
+                $deleteButtons.prop('disabled', true);
+                $managers.prop('disabled', true);
+            }
+        }
+
+        /**
          * Delete a permission row for a user/role
          * @param  {DOM Element} element DOM element that triggered the function
          */
@@ -24,7 +40,9 @@ define([
             if( typeof type !== "undefined" &&
                 typeof user !== "undefined" &&
                 typeof label !== "undefined" &&
-                type !== "" && user !== "" && label !== ""){
+                type !== "" &&
+                user !== "" &&
+                label !== ""){
                 // 2. Add it to the select & remove the line
                 switch(type){
                     case 'user':
@@ -39,6 +57,7 @@ define([
                         break;
                 }
             }
+            _preventManagerRemoval();
         }
         /**
          * Add a new lines into the permissions table regarding what is selected into the add-* select
@@ -124,12 +143,11 @@ define([
                  * Ensure that if you give the manage (GRANT) permission, access (WRITE) persmission is given too
                  */
                 $('.can-manage').on('click', function() {
-                    console.log(this);
-                    console.log($(this).not(':checked'));
                     if ($(this).is(':checked') != []) {
                         var accessCheckbox = $(this).closest('tr').find('.can-access').not(':checked')[0];
                         $(accessCheckbox).click();
                     };
+                    _preventManagerRemoval();
                 });
             }
         }
