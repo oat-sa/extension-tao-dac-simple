@@ -110,6 +110,7 @@ define([
         var mainCtrl = {
             'start' : function(){
 
+                _preventManagerRemoval();
                 userSelect = $('#add-user').select2();
                 roleSelect = $('#add-role').select2();
 
