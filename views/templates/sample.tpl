@@ -11,8 +11,8 @@
                 <tr>
                     <th>&nbsp;</th>
                     <th><?= __('Type');?></th>
-                    <th><?= __('Can Write')?></th>
-                    <th><?= __('Can Share')?></th>
+                    <th><?= __('Access')?></th>
+                    <th><?= __('Manage Access')?></th>
                     <th><?= __('Actions')?></th>
                 </tr>
             </thead>
@@ -38,7 +38,7 @@
                     </td>
                     <td>
                         <button class="small delete_permission" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" >
-                            <span class="icon-bin"></span><?= __('Delete')?>
+                            <span class="icon-bin"></span><?= __('Remove')?>
                         </button>
                     </td>
                 </tr>
