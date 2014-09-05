@@ -208,7 +208,8 @@ class TaoDacSimple extends \tao_actions_CommonModule
             }
         }
 
-        $this->index();
+        $this->redirect(_url('index', null, null, array('uri' => reset($resourceIds))));
+        //$this->index();
     }
 
 
