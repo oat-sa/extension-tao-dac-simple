@@ -117,7 +117,7 @@ define([
                 /**
                  * Listen all clicks on delete buttons to call the _deletePersmission function
                  */
-                $('.delete_permission').on('click', function(event) {
+                $('#permissions-table').on('click', '.delete_permission', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
                 });
@@ -136,14 +136,10 @@ define([
                     _addPermission('role');
                 });
 
-                $('.transfert_ownership').on('click', function(event) {
-                    event.preventDefault();
-                    _confirmTransfertOwnership($(this).data());
-                });
                 /**
                  * Ensure that if you give the manage (GRANT) permission, access (WRITE) persmission is given too
                  */
-                $('.can-manage').on('click', function() {
+                $('#permissions-table').on('click', '.can-manage', function() {
                     if ($(this).is(':checked') != []) {
                         var accessCheckbox = $(this).closest('tr').find('.can-access').not(':checked')[0];
                         $(accessCheckbox).click();

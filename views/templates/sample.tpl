@@ -4,6 +4,7 @@
         $item = current($items);
     ?>
     <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
+
     <form action="<?=_url('savePrivileges','TaoDacSimple','taoDacSimple')?>" method="POST" class="grid-container">
         <input type="hidden" name="resource_id" id="resource_id" value="<?= $item['resource']['id']?>">
         <table class="matrix" id="permissions-table">
