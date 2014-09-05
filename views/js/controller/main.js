@@ -114,13 +114,7 @@ define([
                 userSelect = $('#add-user').select2();
                 roleSelect = $('#add-role').select2();
 
-                /**
-                 * Listen all clicks on delete buttons to call the _deletePersmission function
-                 */
-                $('#permissions-table').on('click', '.delete_permission', function(event) {
-                    event.preventDefault();
-                    _deletePermission(this);
-                });
+
                 /**
                  * Listen clicks on add user button
                  */
@@ -138,6 +132,8 @@ define([
 
                 /**
                  * Ensure that if you give the manage (GRANT) permission, access (WRITE) persmission is given too
+                 * &
+                 * Listen all clicks on delete buttons to call the _deletePersmission function
                  */
                 $('#permissions-table').on('click', '.can-manage', function() {
                     if ($(this).is(':checked') != []) {
@@ -145,7 +141,10 @@ define([
                         $(accessCheckbox).click();
                     };
                     _preventManagerRemoval();
-                });
+                }).on('click', '.delete_permission', function(event) {
+                    event.preventDefault();
+                    _deletePermission(this);
+                });;
             }
         }
         return mainCtrl;
