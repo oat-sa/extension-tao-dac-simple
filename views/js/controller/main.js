@@ -135,13 +135,13 @@ define([
                  * &
                  * Listen all clicks on delete buttons to call the _deletePersmission function
                  */
-                $('#permissions-table').on('click', '.can-manage', function() {
+                $('#permissions-table').on('click', '.can-manage:not(.disabled)', function() {
                     if ($(this).is(':checked') != []) {
                         var accessCheckbox = $(this).closest('tr').find('.can-access').not(':checked')[0];
                         $(accessCheckbox).click();
                     };
                     _preventManagerRemoval();
-                }).on('click', '.delete_permission:not(".disabled")', function(event) {
+                }).on('click', '.delete_permission:not(.disabled)', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
                 });;
