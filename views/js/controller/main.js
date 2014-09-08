@@ -141,7 +141,7 @@ define([
                         $(accessCheckbox).click();
                     };
                     _preventManagerRemoval();
-                }).on('click', '.delete_permission', function(event) {
+                }).on('click', '.delete_permission:not(".disabled")', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
                 });;
