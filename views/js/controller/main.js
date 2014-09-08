@@ -20,8 +20,8 @@ define([
          * Provide a method the deactivate UI component that provide manager deletation
          */
         var _preventManagerRemoval = function(){
-            var $managers = $('#permissions-table').find('.can-manage:checked'),
-                $canAccess = $managers.closest('tr').find('.can-access'),
+            var $managers = $('#permissions-table').find('.privilege-GRANT:checked'),
+                $canAccess = $managers.closest('tr').find('.privilege-WRITE'),
                 $deleteButtons = $managers.closest('tr').find('.delete_permission');
 
             $('.tooltip').tooltipster(tooltipConfig).tooltipster('disable');
@@ -150,9 +150,9 @@ define([
                  * &
                  * Listen all clicks on delete buttons to call the _deletePersmission function
                  */
-                $('#permissions-table').on('click', '.can-manage:not(.disabled) ', function() {
+                $('#permissions-table').on('click', '.privilege-GRANT:not(.disabled) ', function() {
                     if ($(this).is(':checked') != []) {
-                        var accessCheckbox = $(this).closest('tr').find('.can-access').not(':checked')[0];
+                        var accessCheckbox = $(this).closest('tr').find('.privilege-WRITE').not(':checked')[0];
                         $(accessCheckbox).click();
                     };
                     _preventManagerRemoval();

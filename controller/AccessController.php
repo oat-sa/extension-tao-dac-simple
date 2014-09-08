@@ -19,7 +19,7 @@
  *
  */
 
-namespace oat\taoDacSimple\actions;
+namespace oat\taoDacSimple\controller;
 
 use oat\taoDacSimple\model\accessControl\data\implementation\DataBaseAccess;
 use oat\tao\model\accessControl\data\AclProxy;
@@ -34,7 +34,7 @@ use oat\taoDacSimple\model\AdminService;
  * @license GPL-2.0
  *
  */
-class TaoDacSimple extends \tao_actions_CommonModule
+class AccessController extends \tao_actions_CommonModule
 {
 
     private $dataAccess = null;
@@ -54,67 +54,82 @@ class TaoDacSimple extends \tao_actions_CommonModule
      */
     public function index()
     {
-        $this->setView('sample.tpl');
         
         $resourceUri = $this->hasRequestParameter('uri') 
             ? \tao_helpers_Uri::decode($this->getRequestParameter('uri'))
             : \tao_helpers_Uri::decode($this->getRequestParameter('classUri'));
-
-        //Mocked Data
-        $this->setData('users', $this->getUserList(array($resourceUri)));
-        $this->setData('roles', $this->getRoleList(array($resourceUri)));
-        $this->setData('items', $this->getUsersPrivileges(array($resourceUri)));
-    }
-
-
-    /**
-     * get the list of users that have no privileges on resources
-     * @param array $resourceIds
-     * @return array key => value with key = user Uri and value = user Label
-     */
-    protected function getUserList($resourceIds)
-    {
-        $userService = \tao_models_classes_UserService::singleton();
-        $users = $userService->getAllUsers();
-
-        return $this->getCleanedList($users, $resourceIds, 'user');
-    }
-
-    /**
-     * get the list of roles that have no privileges on resources
-     * @param array $resourceIds
-     * @return array key => value with key = user Uri and value = user Label
-     */
-    protected function getRoleList($resourceIds)
-    {
-        $roleService = \tao_models_classes_RoleService::singleton();
-        $roles = $roleService->getAllRoles();
-
-        return $this->getCleanedList($roles, $resourceIds, 'role');
-    }
-
-
-    /**
-     * Clean a list of users or roles / return only users or roles that have no privileges on resources
-     * @param $list
-     * @param $resourceIds
-     * @param $userType
-     * @return array users or roles
-     */
-    protected function getCleanedList($list, $resourceIds, $userType)
-    {
-        $usersWithPrivileges = $this->dataAccess->getUsersWithPrivilege($resourceIds, (array)$userType);
-        foreach ($usersWithPrivileges as $row) {
-            if (array_key_exists($row['user_id'], $list)) {
-                unset($list[$row['user_id']]);
+        $resource = new \core_kernel_classes_Resource($resourceUri);
+        
+        $accessRights = AdminService::getUsersPrivileges($resourceUri);
+        $userList = $this->getUserList();
+        $roleList = $this->getRoleList();
+        
+        $this->setData('privileges', AclProxy::getPrivilegeOptions());
+        
+        $userData = array();
+        foreach (array_keys($accessRights) as $uri) {
+            if (isset($userList[$uri])) {
+                $userData[$uri] = array(
+                    'label' => $userList[$uri],
+                    'isRole' => false
+                );
+                unset($userList[$uri]);
+            } elseif (isset($roleList[$uri])) {
+                $userData[$uri] = array(
+                    'label' => $roleList[$uri],
+                    'isRole' => true
+                );
+                unset($roleList[$uri]);
+            } else {
+                \common_Logger::d('unknown user '.$uri);
             }
         }
-        $returnList = array();
-        foreach ($list as $l) {
-            $returnList[$l->getUri()] = $l->getLabel();
+        
+        $this->setData('users', $userList);
+        $this->setData('roles', $roleList);
+        
+        $this->setData('userPrivileges', $accessRights);
+        $this->setData('userData', $userData);
+        
+        
+        $this->setData('uri', $resourceUri);
+        $this->setData('label', $resource->getLabel());
+        
+        $this->setView('AccessController/index.tpl');
+    }
+
+
+    /**
+     * get the list of users
+     * @param array $resourceIds
+     * @return array key => value with key = user Uri and value = user Label
+     */
+    protected function getUserList()
+    {
+        $userService = \tao_models_classes_UserService::singleton();
+        $users = array();
+        foreach ($userService->getAllUsers() as $user) {
+            $users[$user->getUri()] = $user->getLabel();
+        }
+        
+        return $users;
+    }
+
+    /**
+     * get the list of roles
+     * @param array $resourceIds
+     * @return array key => value with key = user Uri and value = user Label
+     */
+    protected function getRoleList()
+    {
+        $roleService = \tao_models_classes_RoleService::singleton();
+        
+        $roles = array();
+        foreach ($roleService->getAllRoles() as $role) {
+            $roles[$role->getUri()] = $role->getLabel();
         }
 
-        return $returnList;
+        return $roles;
     }
 
     /**

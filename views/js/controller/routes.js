@@ -21,7 +21,7 @@
 define(function(){
     'user strict';
     return {
-        'TaoDacSimple' : {
+        'AccessController' : {
             'actions' : {
                 'index' : 'controller/main'
             }
