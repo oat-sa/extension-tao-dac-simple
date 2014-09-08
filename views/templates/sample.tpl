@@ -26,19 +26,19 @@
                         <input type="hidden" name="users[<?= $user['id']?>][type]" value="<?= $user['type']?>">
                     </td>
                     <td>
-                        <label>
+                        <label class="tooltip">
                             <input type="checkbox" class="can-access" name="users[<?= $user['id']?>][WRITE]" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
                     <td>
-                        <label>
+                        <label class="tooltip">
                             <input type="checkbox" class="can-manage" name="users[<?= $user['id']?>][GRANT]" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?>>
                             <span class="icon-checkbox"></span>
                         </label>
                     </td>
                     <td>
-                        <button class="small delete_permission" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" >
+                        <button class="small delete_permission tooltip" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" >
                             <span class="icon-bin"></span><?= __('Remove')?>
                         </button>
                     </td>
