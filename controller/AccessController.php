@@ -64,7 +64,7 @@ class AccessController extends \tao_actions_CommonModule
         $userList = $this->getUserList();
         $roleList = $this->getRoleList();
         
-        $this->setData('privileges', AclProxy::getPrivilegeOptions());
+        $this->setData('privileges', AclProxy::getPrivilegeLabels());
         
         $userData = array();
         foreach (array_keys($accessRights) as $uri) {
