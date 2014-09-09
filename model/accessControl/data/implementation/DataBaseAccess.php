@@ -52,15 +52,13 @@ class DataBaseAccess
      * @param array $userType ('role' or 'user' or both)
      * @return array list of users
      */
-    public function getUsersWithPrivilege($resourceIds, $userType = array('user','role'))
+    public function getUsersWithPrivilege($resourceIds)
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $inQueryType = implode(',', array_fill(0, count($userType), '?'));
-        $query = "SELECT resource_id, user_id, privilege, user_type FROM " . self::TABLE_PRIVILEGES_NAME . "
-        WHERE resource_id IN ($inQuery) AND user_type IN ($inQueryType)";
+        $query = "SELECT resource_id, user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . "
+        WHERE resource_id IN ($inQuery)";
         /** @var \PDOStatement $statement */
-        $params = array_merge($resourceIds, $userType);
-        $statement = $this->persistence->query($query, $params);
+        $statement = $this->persistence->query($query, $resourceIds);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
         return $results;
@@ -138,17 +136,16 @@ class DataBaseAccess
      * @param  string $user
      * @param  string $resourceId
      * @param array $privileges
-     * @param string $user_type
      * @return boolean
      */
-    public function addPrivileges($user, $resourceId, $privileges, $user_type)
+    public function addPrivileges($user, $resourceId, $privileges)
     {
 
         foreach ($privileges as $privilege) {
             // add a line with user URI, resource Id and privilege
             $this->persistence->insert(
                 self::TABLE_PRIVILEGES_NAME,
-                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege, 'user_type' => $user_type)
+                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege)
             );
         }
         return true;
@@ -217,26 +214,6 @@ class DataBaseAccess
         $this->persistence->exec($query, $resourceIds);
 
         return true;
-    }
-
-    /**
-     * Short description of method removeAllPrivilegesExceptOwner
-     *
-     * @access public
-     * @author Antoine Robin <antoine.robin@vesperiagroup.com
-     * @param  array $resourceIds
-     * @return boolean
-     */
-    public function removeAllPrivilegesExceptOwner($resourceIds)
-    {
-        //get all entries that match (resourceId) and remove them
-        $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)
-        AND user_id NOT IN (SELECT user_id FROM (SELECT * FROM " . self::TABLE_PRIVILEGES_NAME . ") AS d
-        WHERE d.privilege = 'OWNER' AND d.resource_id IN ($inQuery))";
-        $params = array_merge($resourceIds, $resourceIds);
-        return $this->persistence->exec($query, $params);
-
     }
 
 }

@@ -39,7 +39,7 @@ class AdminService
      * @param string $userType
      * @return boolean
      */
-    public static function setOwner($resourceUri, $userUri, $userType) {
+    public static function setOwner($resourceUri, $userUri) {
         
         $db = new DataBaseAccess();
         
@@ -51,7 +51,7 @@ class AdminService
             }
         }
         
-        return $db->addPrivileges($userUri, $resourceUri, array('OWNER'), $userType);
+        return $db->addPrivileges($userUri, $resourceUri, array('OWNER'));
     }
     
     /**

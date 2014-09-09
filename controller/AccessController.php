@@ -133,57 +133,6 @@ class AccessController extends \tao_actions_CommonModule
     }
 
     /**
-     * We can know if the current user have the ownership on resources
-     * @param $resourceIds
-     * @param $resourceClassIds
-     * @return bool
-     */
-    protected function isCurrentUserOwner($resourceIds, $resourceClassIds)
-    {
-        $privileges = $this->getCurrentUserPrivileges($resourceIds, $resourceClassIds);
-
-        $ownership = true;
-        foreach ($privileges as $privilege) {
-            if (!in_array('OWNER', $privilege)) {
-                $ownership = false;
-            }
-        }
-        return $ownership;
-    }
-
-    /**
-     * retrieve all privileges of the current user on an array of resources
-     * @param resourceIds
-     * @param resourceClassIds
-     * @return array
-     */
-    protected function getCurrentUserPrivileges($resourceIds, $resourceClassIds)
-    {
-        // get the current user
-        $userService = \tao_models_classes_UserService::singleton();
-        $user = $userService->getCurrentUser();
-
-        return $this->getUserPrivileges($user->getUri(), $resourceIds, $resourceClassIds);
-    }
-
-    /**
-     * Get the list of privileges of an user on a list of resources
-     * @param $user
-     * @param $resourceIds
-     * @param $resourceClassIds
-     * @return mixed
-     */
-    protected function getUserPrivileges($user, $resourceIds, $resourceClassIds)
-    {
-        // we will get privileges of a class we we haven't got any resourceIds
-        if (empty($resourceIds)) {
-            $resourceIds = $resourceClassIds;
-        }
-
-        return $this->dataAccess->getPrivileges($user, $resourceIds);
-    }
-
-    /**
      * add privileges for a group of users on resources. It works for add or modify privileges
      * @return bool
      */
@@ -192,115 +141,56 @@ class AccessController extends \tao_actions_CommonModule
 
         $users = $this->getRequest()->getParameter('users');
         $resourceIds = (array)$this->getRequest()->getParameter('resource_id');
-        $resourceClassIds = (array)$this->getRequest()->getParameter('resource_class');
+        
+        // cleanup uri param
+        if ($this->hasRequestParameter('uri')) {
+            $resourceId = $this->getRequest()->getParameter('uri');
+        } else {
+            $resourceId = (string)$this->getRequest()->getParameter('resource_id');
+        }
 
+        // cleanup privilege param
+        if ($this->hasRequestParameter('privileges')) {
+            $privileges = $this->getRequestParameter('privileges');
+        } else {
+            $privileges = array();
+            foreach ($this->getRequest()->getParameter('users') as $userId => $data) {
+                unset($data['type']);
+                $privileges[$userId] = array_keys($data);
+            }
+        }
+        
         // Check if there is still a owner on this resource
-        if ($this->resourceHasOwner($users)) {
-            \common_Logger::e('Cannot save a list of privilege without owner');
-            return false;
+        if (!$this->validateRights($privileges)) {
+            \common_Logger::e('Cannot save a list without a fully privileged user');
+            return $this->returnJson(array(
+            	'success' => false
+            ), 500);
         }
 
-        // we will add privileges to a class we we haven't got any resourceIds
-        if (empty($resourceIds)) {
-            $resourceIds = $resourceClassIds;
+        
+        $this->dataAccess->removeAllPrivileges(array($resourceId));
+        foreach ($privileges as $userId => $privilegeIds) {
+            $this->dataAccess->addPrivileges($userId, $resourceId, $privilegeIds);
         }
-
-        $this->dataAccess->removeAllPrivilegesExceptOwner($resourceIds);
-
-        foreach ($users as $user_id => $options) {
-            $user_type = $options['type'];
-            unset($options['type']);
-            foreach ($resourceIds as $resourceId) {
-                if (!empty($options)) {
-                    $privileges = array_intersect(AclProxy::getExistingPrivileges(),array_keys($options));
-                    try{
-                        $this->dataAccess->addPrivileges($user_id, $resourceId, $privileges, $user_type);
-                    }
-                    catch (\PDOException $e) {
-                        \common_Logger::e('Unable to add privileges : '. $e->getMessage());
-                    }
-                }
-            }
-        }
-
-        $this->redirect(_url('index', null, null, array('uri' => reset($resourceIds))));
-        //$this->index();
-    }
-
-
-    /**
-     * Method that allow only the owner to transfer it to another user
-     * @requiresPrivilege uri OWNER
-     */
-    public function transferOwnership()
-    {
-        $resourceUri = $this->getRequestParameter('uri');
-        $newOwner = $this->getRequest()->getParameter('user');
-        $user_type = $this->getRequest()->getParameter('user_type');
-    
-        $success = AdminService::setOwner($resourceUri, $newOwner, $user_type);
-    
-        $this->returnJson(array(
-            'success' => $success
-        ), $success ? 200 : 403);
+        
+        return $this->returnJson(array(
+        	'success' => true
+        ));
+        
     }
 
     /**
-     * Get a list of users with their privileges for a list of resources
-     * @param array $resourceIds
-     * @return array
-     */
-    protected function getUsersPrivileges($resourceIds)
-    {
-
-        $results = $this->dataAccess->getUsersWithPrivilege($resourceIds);
-
-        $returnValue = array();
-        foreach ($results as $result) {
-            $item = new \core_kernel_classes_Resource($result['resource_id']);
-            $user = new \core_kernel_classes_Resource($result['user_id']);
-            if (!isset($returnValue[$item->getUri()]['resource'])) {
-                $returnValue[$item->getUri()]['resource'] = array(
-                    'id' => $item->getUri(),
-                    'label' => $item->getLabel()
-                );
-            }
-            if (!isset($returnValue[$item->getUri()]['users'][$user->getUri()])) {
-                $returnValue[$item->getUri()]['users'][$user->getUri()] = array(
-                    'id' => $user->getUri(),
-                    'name' => $user->getLabel(),
-                    'type' => $result['user_type']
-                );
-            }
-            if (!isset($returnValue[$item->getUri()]['users'][$user->getUri()]['permissions'][$result['privilege']])) {
-                $returnValue[$item->getUri()]['users'][$user->getUri()]['permissions'][$result['privilege']] = true;
-            }
-        }
-
-        foreach ($returnValue as $resourceId => $value) {
-            foreach ($value['users'] as $userId => $user) {
-                $nonExistingkeys = array_diff(AclProxy::getExistingPrivileges(), array_keys($user['permissions']));
-                foreach ($nonExistingkeys as $key) {
-                    $returnValue[$resourceId]['users'][$userId]['permissions'][$key] = false;
-                }
-            }
-
-        }
-
-        return $returnValue;
-
-    }
-
-    /**
-     * Check if the array to save contains a owner
+     * Check if the array to save contains a user that has all privileges
+     * 
      * @param array $usersPrivileges
      * @return bool
      */
-    protected function resourceHasOwner($usersPrivileges)
+    protected function validateRights($usersPrivileges)
     {
 
         foreach ($usersPrivileges as $user => $options) {
-            if (in_array('OWNER', $options)) {
+            if ($options == AclProxy::getExistingPrivileges()) {
                 return true;
             }
         }
