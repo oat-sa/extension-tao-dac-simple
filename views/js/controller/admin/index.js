@@ -1,11 +1,12 @@
 define([
     'jquery',
     'i18n',
-    'tpl!taoDacSimple/controller/line',
+    'tpl!taoDacSimple/controller/admin/line',
     'helpers',
+    'ui/feedback',
     'select2',
     'tooltipster'
-    ], function($, __, lineTpl, helpers){
+    ], function($, __, lineTpl, helpers, feedback){
         'use strict';
 
         var userSelect,
@@ -26,7 +27,7 @@ define([
 
             $('.tooltip').tooltipster(tooltipConfig).tooltipster('disable');
             $managers.closest('label').tooltipster('enable');
-            $canAccess.closest('label').tooltipster('enable'),
+            $canAccess.closest('label').tooltipster('enable');
             $deleteButtons.tooltipster('enable');
 
 
@@ -39,7 +40,7 @@ define([
                 $canAccess.addClass('disabled').closest('label').tooltipster('enable');
                 $managers.addClass("disabled").closest('label').tooltipster('enable');
             }
-        }
+        };
 
         /**
          * Delete a permission row for a user/role
@@ -73,7 +74,7 @@ define([
                 }
             }
             _preventManagerRemoval();
-        }
+        };
         /**
          * Add a new lines into the permissions table regarding what is selected into the add-* select
          * @param {string} type role/user regarding what it will be added.
@@ -119,11 +120,15 @@ define([
             $.each(selection, function(index,val) {
                 $(body).append(lineTpl(val));
             });
-        }
+        };
 
 
         var mainCtrl = {
             'start' : function(){
+
+                var $container = $('.permission-container');
+                var $form      = $('form', $container);
+                var $submiter  = $(':submit', $form);
 
                 _preventManagerRemoval();
                 userSelect = $('#add-user').select2();
@@ -154,14 +159,36 @@ define([
                     if ($(this).is(':checked') != []) {
                         var accessCheckbox = $(this).closest('tr').find('.privilege-WRITE').not(':checked')[0];
                         $(accessCheckbox).click();
-                    };
+                    }
                     _preventManagerRemoval();
                 }).on('click', '.delete_permission:not(.disabled)', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
                 });
+                
+                $form.on('submit', function(e){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                });
+                $submiter.on('click', function(e){
+                    e.preventDefault();
 
+                    $submiter.addClass('disabled');
+
+                    $.post($form.attr('action'), $form.serialize())
+                        .done(function(res){
+                            if(res && res.success){
+                                feedback().success(__("Permissions saved"));
+                            } else {
+                                feedback().error(__("Something went wrong..."));
+                            }
+                        })
+                        .complete(function(){
+                            $submiter.removeClass('disabled');
+                        });
+                });
             }
-        }
+        };
+
         return mainCtrl;
     })

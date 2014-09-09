@@ -26,7 +26,7 @@ use oat\tao\model\accessControl\data\AclProxy;
 use oat\taoDacSimple\model\AdminService;
 
 /**
- * Sample controller
+ * This controller is used to manage permission administration
  *
  * @author Open Assessment Technologies SA
  * @package taoDacSimple
@@ -34,7 +34,7 @@ use oat\taoDacSimple\model\AdminService;
  * @license GPL-2.0
  *
  */
-class AccessController extends \tao_actions_CommonModule
+class AdminAccessController extends \tao_actions_CommonModule
 {
 
     private $dataAccess = null;
@@ -95,7 +95,7 @@ class AccessController extends \tao_actions_CommonModule
         $this->setData('uri', $resourceUri);
         $this->setData('label', $resource->getLabel());
         
-        $this->setView('AccessController/index.tpl');
+        $this->setView('AdminAccessController/index.tpl');
     }
 
 

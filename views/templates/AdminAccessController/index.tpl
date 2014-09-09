@@ -1,6 +1,5 @@
 <?php use oat\tao\helpers\Template;?>
-<link rel="stylesheet" type="text/css" href="<?= Template::css('dacSimple.css')?>" />
-<div>
+<div class="permission-container">
     <?php
         $userData = get_data('userData');
     ?>
