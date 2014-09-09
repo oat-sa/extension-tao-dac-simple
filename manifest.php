@@ -46,7 +46,7 @@ return array(
         )
     ),
     'routes' => array(
-        '/taoDacSimple' => 'oat\\taoDacSimple\\actions'
+        '/taoDacSimple' => 'oat\\taoDacSimple\\controller'
     ),
 	'constants' => array(
 	    # views directory

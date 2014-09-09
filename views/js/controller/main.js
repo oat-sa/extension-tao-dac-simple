@@ -3,26 +3,41 @@ define([
     'i18n',
     'tpl!taoDacSimple/controller/line',
     'helpers',
-    'select2'
+    'select2',
+    'tooltipster'
     ], function($, __, lineTpl, helpers){
         'use strict';
 
         var userSelect,
-            roleSelect;
+            roleSelect,
+            tooltipConfig = {
+                content : __('You must have one role or user that have the manage permission on this element.'),
+                theme : 'tao-info-tooltip',
+                trigger: 'hover'
+            } ;
 
         /**
          * Provide a method the deactivate UI component that provide manager deletation
          */
         var _preventManagerRemoval = function(){
-            var $managers = $('#permissions-table').find('.can-manage:checked'),
+            var $managers = $('#permissions-table').find('.privilege-GRANT:checked'),
+                $canAccess = $managers.closest('tr').find('.privilege-WRITE'),
                 $deleteButtons = $managers.closest('tr').find('.delete_permission');
 
+            $('.tooltip').tooltipster(tooltipConfig).tooltipster('disable');
+            $managers.closest('label').tooltipster('enable');
+            $canAccess.closest('label').tooltipster('enable'),
+            $deleteButtons.tooltipster('enable');
+
+
             if($managers.length > 1){
-                $deleteButtons.removeClass("disabled");
-                $managers.removeClass("disabled")
+                $deleteButtons.removeClass("disabled").tooltipster('disable');
+                $canAccess.removeClass('disabled').closest('label').tooltipster('disable');
+                $managers.removeClass('disabled').closest('label').tooltipster('disable');
             }else{
-                $deleteButtons.addClass('disabled');
-                $managers.addClass('disabled');
+                $deleteButtons.addClass("disabled").tooltipster('enable');
+                $canAccess.addClass('disabled').closest('label').tooltipster('enable');
+                $managers.addClass("disabled").closest('label').tooltipster('enable');
             }
         }
 
@@ -135,16 +150,17 @@ define([
                  * &
                  * Listen all clicks on delete buttons to call the _deletePersmission function
                  */
-                $('#permissions-table').on('click', '.can-manage:not(.disabled)', function() {
+                $('#permissions-table').on('click', '.privilege-GRANT:not(.disabled) ', function() {
                     if ($(this).is(':checked') != []) {
-                        var accessCheckbox = $(this).closest('tr').find('.can-access').not(':checked')[0];
+                        var accessCheckbox = $(this).closest('tr').find('.privilege-WRITE').not(':checked')[0];
                         $(accessCheckbox).click();
                     };
                     _preventManagerRemoval();
                 }).on('click', '.delete_permission:not(.disabled)', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
-                });;
+                });
+
             }
         }
         return mainCtrl;

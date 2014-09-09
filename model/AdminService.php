@@ -22,6 +22,7 @@
 namespace oat\taoDacSimple\model;
 
 use oat\taoDacSimple\model\accessControl\data\implementation\DataBaseAccess;
+use oat\tao\model\accessControl\data\AclProxy;
 
 /**
  * Service to administer the privileges
@@ -38,7 +39,7 @@ class AdminService
      * @param string $userType
      * @return boolean
      */
-    public static function setOwner($resourceUri, $userUri, $userType) {
+    public static function setOwner($resourceUri, $userUri) {
         
         $db = new DataBaseAccess();
         
@@ -50,6 +51,35 @@ class AdminService
             }
         }
         
-        return $db->addPrivileges($userUri, $resourceUri, array('OWNER'), $userType);
+        return $db->addPrivileges($userUri, $resourceUri, array('OWNER'));
+    }
+    
+    /**
+     * Get a list of users with their privileges for a resource
+     * with userid as key and an array of privileges as value
+     * 
+     * @param string $resourceIds
+     * @return array
+     */
+    public static function getUsersPrivileges($resourceUri)
+    {
+        $db = new DataBaseAccess();
+        $results = $db->getUsersWithPrivilege(array($resourceUri));
+    
+        $privileges = array();
+        foreach ($results as $result) {
+            $user = $result['user_id'];
+            
+            if (!isset($privileges[$user])) {
+                $privileges[$user] = array();
+            }
+            $privileges[$user][] = $result['privilege'];
+        }
+        
+        foreach (array_keys($privileges) as $userId) {
+            $privileges[$userId] = array_unique(array_intersect(AclProxy::getExistingPrivileges(), $privileges[$userId]));
+        }
+        
+        return $privileges;
     }
 }

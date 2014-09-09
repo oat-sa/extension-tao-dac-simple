@@ -31,7 +31,6 @@ $table = $schema->createtable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
 $table->addColumn('user_id',"string",array("notnull" => null,"length" => 255));
 $table->addColumn('resource_id',"string",array("notnull" => null,"length" => 255));
 $table->addColumn('privilege',"string",array("notnull" => null,"length" => 255));
-$table->addColumn('user_type',"string",array("notnull" => null,"length" => 255));
 $table->setPrimaryKey(array("user_id","resource_id","privilege"));
 
 $generis = common_ext_ExtensionsManager::singleton()->getExtensionById('generis');
@@ -52,5 +51,5 @@ DataProxy::setImplementation($dataImpl);
 
 $class = new core_kernel_classes_Class(TAO_ITEM_CLASS);
 foreach ($class->getInstances(true) as $item) {
-    $dataImpl->addPrivileges(INSTANCE_ROLE_BACKOFFICE, $item->getUri(), AclProxy::getExistingPrivileges(), 'role');
+    $dataImpl->addPrivileges(INSTANCE_ROLE_BACKOFFICE, $item->getUri(), AclProxy::getExistingPrivileges());
 }

@@ -1,44 +1,42 @@
-<div class="tao-scope">
+<?php use oat\tao\helpers\Template;?>
+<link rel="stylesheet" type="text/css" href="<?= Template::css('dacSimple.css')?>" />
+<div class="main-container tao-scope">
     <?php
-        $items = get_data('items');
-        $item = current($items);
+        $userData = get_data('userData');
     ?>
-    <h1><?= __('Access Permissions for')?> <em><?=$item['resource']['label']?></em></h1>
+    <h1><?= __('Access Permissions for')?> <em><?= get_data('label')?></em></h1>
 
-    <form action="<?=_url('savePrivileges','TaoDacSimple','taoDacSimple')?>" method="POST" class="grid-container">
-        <input type="hidden" name="resource_id" id="resource_id" value="<?= $item['resource']['id']?>">
+    <form action="<?=_url('savePrivileges')?>" method="POST" class="grid-container">
+        <input type="hidden" name="resource_id" id="resource_id" value="<?= get_data('uri')?>">
         <table class="matrix" id="permissions-table">
             <thead>
                 <tr>
                     <th>&nbsp;</th>
                     <th><?= __('Type');?></th>
-                    <th><?= __('Access')?></th>
-                    <th><?= __('Manage Access')?></th>
+                    <?php foreach (get_data('privileges') as $privilegeLabel):?>
+                        <th><?= $privilegeLabel?></th>
+                    <?php endforeach;?>
                     <th><?= __('Actions')?></th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($item['users'] as $user):?>
+                <?php foreach (get_data('userPrivileges') as $userUri => $privileges):?>
                 <tr>
-                    <td><?= $user['name']?></td>
+                    <td><?= $userData[$userUri]['label']?></td>
                     <td>
-                        <?= $user['type']?>
-                        <input type="hidden" name="users[<?= $user['id']?>][type]" value="<?= $user['type']?>">
+                        <?= $userData[$userUri]['isRole'] ? 'role' : 'user' ?>
+                        <input type="hidden" name="users[<?= $userUri?>][type]" value="<?=  $userData[$userUri]['isRole'] ? 'role' : 'user'?>">
                     </td>
+                    <?php foreach (get_data('privileges') as $privilege => $privilegeLabel):?>
+                        <td>
+                            <label class="tooltip">
+                                <input type="checkbox" class="privilege-<?= $privilege?>" name="users[<?= $userUri?>][<?= $privilege?>]" value="1" <?= (in_array($privilege, $privileges)) ? 'checked' : '' ?>>
+                                <span class="icon-checkbox"></span>
+                            </label>
+                        </td>
+                    <?php endforeach;?>
                     <td>
-                        <label>
-                            <input type="checkbox" class="can-access" name="users[<?= $user['id']?>][WRITE]" value="1" <?= ($user['permissions']['WRITE'] == true) ? 'checked' : '' ?>>
-                            <span class="icon-checkbox"></span>
-                        </label>
-                    </td>
-                    <td>
-                        <label>
-                            <input type="checkbox" class="can-manage" name="users[<?= $user['id']?>][GRANT]" value="1" <?= ($user['permissions']['GRANT'] == true) ? 'checked' : '' ?>>
-                            <span class="icon-checkbox"></span>
-                        </label>
-                    </td>
-                    <td>
-                        <button class="small delete_permission" data-acl-user="<?= $user['id']?>" data-acl-type="<?= $user['type']?>" data-acl-label="<?= $user['name']?>" >
+                        <button class="small delete_permission tooltip btn-link" data-acl-user="<?= $userUri?>" data-acl-type="<?= $userData[$userUri]['isRole'] ? 'role' : 'user'?>" data-acl-label="<?= $userData[$userUri]['label']?>" >
                             <span class="icon-bin"></span><?= __('Remove')?>
                         </button>
                     </td>
