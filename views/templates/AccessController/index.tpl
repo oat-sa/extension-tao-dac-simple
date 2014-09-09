@@ -1,3 +1,5 @@
+<?php use oat\tao\helpers\Template;?>
+<link rel="stylesheet" type="text/css" href="<?= Template::css('dacSimple.css')?>" />
 <div class="main-container tao-scope">
     <?php
         $userData = get_data('userData');
@@ -34,7 +36,7 @@
                         </td>
                     <?php endforeach;?>
                     <td>
-                        <button class="small delete_permission tooltip" data-acl-user="<?= $userUri?>" data-acl-type="<?= $userData[$userUri]['isRole'] ? 'role' : 'user'?>" data-acl-label="<?= $userData[$userUri]['label']?>" >
+                        <button class="small delete_permission tooltip btn-link" data-acl-user="<?= $userUri?>" data-acl-type="<?= $userData[$userUri]['isRole'] ? 'role' : 'user'?>" data-acl-label="<?= $userData[$userUri]['label']?>" >
                             <span class="icon-bin"></span><?= __('Remove')?>
                         </button>
                     </td>
