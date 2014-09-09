@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE extension SYSTEM "../../tao/doc/structures.dtd">
+<structures>
+	<structure id="test" name="Access Control" level="12" visible="false">
+		<description />
+		<sections>
+			<section id="taoDacSimple_ac" name="Access Controll" url="/taoDacSimple/AccessController/index" />
+		</sections>
+	</structure>
+</structures>
