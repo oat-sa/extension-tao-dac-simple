@@ -1,6 +1,6 @@
 <?php use oat\tao\helpers\Template;?>
 <link rel="stylesheet" type="text/css" href="<?= Template::css('dacSimple.css')?>" />
-<div class="main-container tao-scope">
+<div>
     <?php
         $userData = get_data('userData');
     ?>
