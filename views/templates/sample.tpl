@@ -1,4 +1,4 @@
-<div class="main-container tao-scope">
+<div class="tao-scope">
     <?php
         $items = get_data('items');
         $item = current($items);
