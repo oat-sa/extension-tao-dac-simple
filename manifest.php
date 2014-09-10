@@ -39,6 +39,9 @@ return array(
         )
     ),
     'uninstall' => array(
+        'php' => array(
+            dirname(__FILE__).'/scripts/uninstall/unsetDataAccess.php',
+        )
     ),
     'autoload' => array (
         'psr-4' => array(
