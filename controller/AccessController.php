@@ -21,9 +21,9 @@
 
 namespace oat\taoDacSimple\controller;
 
-use oat\taoDacSimple\model\accessControl\data\implementation\DataBaseAccess;
-use oat\tao\model\accessControl\data\AclProxy;
+use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\AdminService;
+use oat\taoDacSimple\model\PermissionProvider;
 
 /**
  * Sample controller
@@ -50,21 +50,22 @@ class AccessController extends \tao_actions_CommonModule
 
     /**
      * A possible entry point to tao
-     * @todo enable requiresPrivilege uri GRANT
+     * @todo enable requiresRight uri GRANT
      */
     public function index()
     {
         
-        $resourceUri = $this->hasRequestParameter('uri') 
+        $resourceUri = ($this->hasRequestParameter('uri') && strlen($this->getRequestParameter('uri')) > 0) 
             ? \tao_helpers_Uri::decode($this->getRequestParameter('uri'))
             : \tao_helpers_Uri::decode($this->getRequestParameter('classUri'));
+        
         $resource = new \core_kernel_classes_Resource($resourceUri);
         
-        $accessRights = AdminService::getUsersPrivileges($resourceUri);
+        $accessRights = AdminService::getUsersPermissions($resourceUri);
         $userList = $this->getUserList();
         $roleList = $this->getRoleList();
         
-        $this->setData('privileges', AclProxy::getPrivilegeLabels());
+        $this->setData('privileges', PermissionProvider::getRightLabels());
         
         $userData = array();
         foreach (array_keys($accessRights) as $uri) {
@@ -136,7 +137,7 @@ class AccessController extends \tao_actions_CommonModule
      * add privileges for a group of users on resources. It works for add or modify privileges
      * @return bool
      */
-    public function savePrivileges()
+    public function savePermissions()
     {
 
         $users = $this->getRequest()->getParameter('users');
@@ -161,7 +162,7 @@ class AccessController extends \tao_actions_CommonModule
         }
         
         // Check if there is still a owner on this resource
-        if (!$this->validateRights($privileges)) {
+        if (!$this->validatePermissions($privileges)) {
             \common_Logger::e('Cannot save a list without a fully privileged user');
             return $this->returnJson(array(
             	'success' => false
@@ -169,9 +170,9 @@ class AccessController extends \tao_actions_CommonModule
         }
 
         
-        $this->dataAccess->removeAllPrivileges(array($resourceId));
+        $this->dataAccess->removeAllPermissions(array($resourceId));
         foreach ($privileges as $userId => $privilegeIds) {
-            $this->dataAccess->addPrivileges($userId, $resourceId, $privilegeIds);
+            $this->dataAccess->addPermissions($userId, $resourceId, $privilegeIds);
         }
         
         return $this->returnJson(array(
@@ -186,11 +187,11 @@ class AccessController extends \tao_actions_CommonModule
      * @param array $usersPrivileges
      * @return bool
      */
-    protected function validateRights($usersPrivileges)
+    protected function validatePermissions($usersPrivileges)
     {
-
+        $pp = new PermissionProvider();
         foreach ($usersPrivileges as $user => $options) {
-            if ($options == AclProxy::getExistingPrivileges()) {
+            if ($options == $pp->getSupportedRights()) {
                 return true;
             }
         }

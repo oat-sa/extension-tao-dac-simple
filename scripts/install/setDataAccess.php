@@ -19,12 +19,15 @@
  *
  */
 
-use oat\tao\model\accessControl\data\AclProxy as DataProxy;
-use oat\taoDacSimple\model\accessControl\data\implementation\DataBaseAccess;
-use oat\tao\model\accessControl\data\AclProxy;
+use oat\taoDacSimple\model\DataBaseAccess;
+use oat\generis\model\data\permission\PermissionManager;
+use oat\taoDacSimple\model\PermissionProvider;
+use oat\taoDacSimple\model\AdminService;
 
 
-$schemaManager = common_persistence_Manager::getPersistence('default')->getDriver()->getSchemaManager();
+$persistence = common_persistence_Manager::getPersistence('default');
+
+$schemaManager = $persistence->getDriver()->getSchemaManager();
 $schema = $schemaManager->createSchema();
 $fromSchema = clone $schema;
 $table = $schema->createtable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
@@ -33,23 +36,13 @@ $table->addColumn('resource_id',"string",array("notnull" => null,"length" => 255
 $table->addColumn('privilege',"string",array("notnull" => null,"length" => 255));
 $table->setPrimaryKey(array("user_id","resource_id","privilege"));
 
-$generis = common_ext_ExtensionsManager::singleton()->getExtensionById('generis');
-if ($generis->hasConfig('persistences')) {
-    $configs = $generis->getConfig('persistences');
-    $connection = \Doctrine\DBAL\DriverManager::getConnection($configs['default'], new Doctrine\DBAL\Configuration());
-    $platform = $connection->getDatabasePlatform();
-    $comparator = new \Doctrine\DBAL\Schema\Comparator();
-    $schemaDiff = $comparator->compare($fromSchema, $schema);
-    $queries = $schemaDiff->toSql($platform); // queries to get from one to another schema.
-    foreach ($queries as $query){
-        $connection->executeUpdate($query);
-    }
+$queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
+foreach ($queries as $query){
+    $persistence->exec($query);
 }
 
-$dataImpl = new DataBaseAccess();
-DataProxy::setImplementation($dataImpl);
+$impl = new PermissionProvider();
+PermissionManager::setPermissionModel($impl);
 
 $class = new core_kernel_classes_Class(TAO_ITEM_CLASS);
-foreach ($class->getInstances(true) as $item) {
-    $dataImpl->addPrivileges(INSTANCE_ROLE_BACKOFFICE, $item->getUri(), AclProxy::getExistingPrivileges());
-}
+AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());

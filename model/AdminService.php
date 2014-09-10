@@ -21,8 +21,7 @@
 
 namespace oat\taoDacSimple\model;
 
-use oat\taoDacSimple\model\accessControl\data\implementation\DataBaseAccess;
-use oat\tao\model\accessControl\data\AclProxy;
+use oat\taoDacSimple\model\DataBaseAccess;
 
 /**
  * Service to administer the privileges
@@ -44,42 +43,53 @@ class AdminService
         $db = new DataBaseAccess();
         
         // Needs better abstraction
-        $dbRow = $db->getUsersWithPrivilege(array($resourceUri));
+        $dbRow = $db->getUsersWithPermissions(array($resourceUri));
         foreach ($dbRow as $row) {
             if ($row['resource_id'] == $resourceUri && $row['privilege'] == 'OWNER') {
-                $db->removePrivileges($row['user_id'], array($resourceUri), array('OWNER'));
+                $db->removePermissions($row['user_id'], $resourceUri, array('OWNER'));
             }
         }
         
-        return $db->addPrivileges($userUri, $resourceUri, array('OWNER'));
+        return $db->addPermissions($userUri, $resourceUri, array('OWNER'));
     }
     
     /**
-     * Get a list of users with their privileges for a resource
-     * with userid as key and an array of privileges as value
+     * Get a list of users with permissions for a given resource
+     * 
+     * Returns an associativ array  with userid as key and an array of rights as value
      * 
      * @param string $resourceIds
      * @return array
      */
-    public static function getUsersPrivileges($resourceUri)
+    public static function getUsersPermissions($resourceUri)
     {
         $db = new DataBaseAccess();
-        $results = $db->getUsersWithPrivilege(array($resourceUri));
+        $results = $db->getUsersWithPermissions(array($resourceUri));
     
-        $privileges = array();
+        $permissions = array();
         foreach ($results as $result) {
             $user = $result['user_id'];
             
-            if (!isset($privileges[$user])) {
-                $privileges[$user] = array();
+            if (!isset($permissions[$user])) {
+                $permissions[$user] = array();
             }
-            $privileges[$user][] = $result['privilege'];
+            $permissions[$user][] = $result['privilege'];
         }
         
-        foreach (array_keys($privileges) as $userId) {
-            $privileges[$userId] = array_unique(array_intersect(AclProxy::getExistingPrivileges(), $privileges[$userId]));
+        return $permissions;
+    }
+    
+    /**
+     * recursivly add permissions to a class and all instances
+     */
+    public static function addPermissionToClass(\core_kernel_classes_Class $class, $userUri, $rights) {
+        $dbAccess = new DataBaseAccess();
+        $dbAccess->addPermissions($userUri, $class->getUri(), $rights);
+        foreach ($class->getInstances(false) as $instance) {
+            $dbAccess->addPermissions($userUri, $instance->getUri(), $rights);
         }
-        
-        return $privileges;
+        foreach ($class->getSubClasses(false) as $subclass) {
+            self::addPermissionToClass($subclass, $userUri, $rights);
+        }
     }
 }

@@ -6,7 +6,7 @@
     ?>
     <h1><?= __('Access Permissions for')?> <em><?= get_data('label')?></em></h1>
 
-    <form action="<?=_url('savePrivileges')?>" method="POST" class="grid-container">
+    <form action="<?=_url('savePermissions')?>" method="POST" class="grid-container">
         <input type="hidden" name="resource_id" id="resource_id" value="<?= get_data('uri')?>">
         <table class="matrix" id="permissions-table">
             <thead>
