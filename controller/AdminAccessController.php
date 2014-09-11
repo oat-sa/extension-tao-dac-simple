@@ -50,7 +50,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 
     /**
      * A possible entry point to tao
-     * @todo enable requiresRight uri GRANT
+     * @requiresRight uri GRANT
      */
     public function index()
     {
