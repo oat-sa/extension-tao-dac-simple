@@ -22,6 +22,7 @@ namespace oat\taoDacSimple\model;
 
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\oatbox\user\User;
 
 /**
  * Simple permissible Permission model
@@ -45,9 +46,11 @@ class PermissionProvider
      * (non-PHPdoc)
      * @see \oat\generis\model\data\PermissionInterface::getPermissions()
      */
-    public function getPermissions($user, array $resourceIds) {
+    public function getPermissions(User $user, array $resourceIds) {
         $dbAccess = new DataBaseAccess();
-        return $dbAccess->getPermissions($user, $resourceIds);
+        $userIds = $user->getRoles();
+        $userIds[] = $user->getIdentifier();
+        return $dbAccess->getPermissions($userIds, $resourceIds);
     }
     
     /**

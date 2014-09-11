@@ -72,34 +72,23 @@ class DataBaseAccess
      * Get the permissions a user has on a list of ressources
      *
      * @access public
-     * @param  string $user
+     * @param  array $userIds
      * @param  array $resourceIds
      * @return array()
      */
-    public function getPermissions($user, array $resourceIds)
+    public function getPermissions($userIds, array $resourceIds)
     {
-        // get User roles
-        if (common_session_SessionManager::getSession()->getUserUri() == $user){
-            $roles = common_session_SessionManager::getSession()->getUserRoles();
-        } else {
-            // After introducing remote users, we can no longer guarantee that any user and his roles are available
-            common_Logger::w('Roles of non current user ('.$user->getUri().') checked, trying fallback to local ontology');
-            $userResource = new \core_kernel_classes_Resource($user);
-            $roles = array_keys(\tao_models_classes_UserService::singleton()->getUserRoles($userResource));
-        }
-        $roles[] = $user;
-        
         // get privileges for a user/roles and a resource
         $returnValue = array();
 
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
-        $inQueryUser = implode(',', array_fill(0, count($roles), '?'));
+        $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
         $query = "SELECT resource_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
         /** @var \PDOStatement $statement */
         $params = $resourceIds;
-        foreach ($roles as $roleUri) {
-            $params[] = $roleUri;
+        foreach ($userIds as $userId) {
+            $params[] = $userId;
         }
         $statement = $this->persistence->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
