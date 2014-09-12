@@ -58,15 +58,14 @@ class PermissionProvider
      * @see \oat\generis\model\data\PermissionInterface::onResourceCreated()
      */
     public function onResourceCreated(\core_kernel_classes_Resource $resource) {
-        // @todo
-        $parentIds = array();
         $dbAccess = new DataBaseAccess();
-        foreach ($resource->getTypes() as $parent) {
+        // test if class
+        $class = new \core_kernel_classes_Class($resource);
+        foreach (array_merge($resource->getTypes(), $class->getParentClasses()) as $parent) {
             foreach (AdminService::getUsersPermissions($parent->getUri()) as $userUri => $rights) {
                 $dbAccess->addPermissions($userUri, $resource->getUri(), $rights);
             }
         }
-        
     }
     
     /**
