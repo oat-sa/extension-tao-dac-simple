@@ -5,14 +5,14 @@
         <input type="hidden" name="users[{{user}}][type]" value="{{type}}">
     </td>
     <td>
-        <label>
-            <input type="checkbox" class="can-share" name="users[{{user}}][WRITE]" value="1" checked>
+        <label class="tooltip">
+            <input type="checkbox" class="privilege-GRANT" name="users[{{user}}][GRANT]" value="1">
             <span class="icon-checkbox"></span>
         </label>
     </td>
     <td>
-        <label>
-            <input type="checkbox" class="can-manage" name="users[{{user}}][GRANT]" value="1">
+        <label class="tooltip">
+            <input type="checkbox" class="privilege-WRITE" name="users[{{user}}][WRITE]" value="1" checked>
             <span class="icon-checkbox"></span>
         </label>
     </td>
