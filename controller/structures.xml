@@ -5,7 +5,10 @@
         <sections>
             <section id="manage_items">
 				<actions>
-					<action name="Access control" url="/taoDacSimple/AdminAccessController/index" group="tree" context="resource">
+					<action name="Access control" url="/taoDacSimple/AdminAccessController/instancePermissions" group="tree" context="instance">
+                        <icon id="icon-unlock" />
+                    </action>
+					<action name="Access control" url="/taoDacSimple/AdminAccessController/classPermissions" group="tree" context="class">
                         <icon id="icon-unlock" />
                     </action>
                 </actions>

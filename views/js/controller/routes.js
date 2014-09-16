@@ -24,7 +24,8 @@ define(function(){
         'AdminAccessController' : {
             'css': 'admin', 
             'actions' : {
-                'index' : 'controller/admin/index'
+                'instancePermissions' : 'controller/admin/index',
+                'classPermissions' : 'controller/admin/index'
             }
         }
     };

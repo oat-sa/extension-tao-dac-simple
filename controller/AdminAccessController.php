@@ -52,7 +52,24 @@ class AdminAccessController extends \tao_actions_CommonModule
      * A possible entry point to tao
      * @requiresRight uri GRANT
      */
-    public function index()
+    public function instancePermissions()
+    {
+        return $this->adminPermissions();
+    }
+
+    /**
+     * A possible entry point to tao
+     * @requiresRight classUri GRANT
+     */
+    public function classPermissions()
+    {
+        return $this->adminPermissions();
+    }
+
+    /**
+     * Manage permissions
+     */
+    protected function adminPermissions()
     {
         
         $resourceUri = ($this->hasRequestParameter('uri') && strlen($this->getRequestParameter('uri')) > 0) 
