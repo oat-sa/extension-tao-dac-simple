@@ -191,7 +191,7 @@ class AdminAccessController extends \tao_actions_CommonModule
     {
         $pp = new PermissionProvider();
         foreach ($usersPrivileges as $user => $options) {
-            if ($options == $pp->getSupportedRights()) {
+            if (array_diff($options, $pp->getSupportedRights()) === array_diff($pp->getSupportedRights(), $options)) {
                 return true;
             }
         }

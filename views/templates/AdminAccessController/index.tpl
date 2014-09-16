@@ -35,7 +35,7 @@
                         </td>
                     <?php endforeach;?>
                     <td>
-                        <button class="small delete_permission tooltip btn-link" data-acl-user="<?= $userUri?>" data-acl-type="<?= $userData[$userUri]['isRole'] ? 'role' : 'user'?>" data-acl-label="<?= $userData[$userUri]['label']?>" >
+                        <button type="button" class="small delete_permission tooltip btn-link" data-acl-user="<?= $userUri?>" data-acl-type="<?= $userData[$userUri]['isRole'] ? 'role' : 'user'?>" data-acl-label="<?= $userData[$userUri]['label']?>" >
                             <span class="icon-bin"></span><?= __('Remove')?>
                         </button>
                     </td>

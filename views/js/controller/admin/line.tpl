@@ -17,7 +17,7 @@
         </label>
     </td>
     <td>
-        <button class="small delete_permission tooltip btn-link" data-acl-user="{{user}}" data-acl-type="{{type}}" data-acl-label="{{label}}" >
+        <button type="button" class="small delete_permission tooltip btn-link" data-acl-user="{{user}}" data-acl-type="{{type}}" data-acl-label="{{label}}" >
             <span class="icon-bin"></span>{{__ "Remove"}}
         </button>
     </td>
