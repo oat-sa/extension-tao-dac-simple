@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE extension SYSTEM "../doc/structures.dtd">
+<!DOCTYPE structures SYSTEM "../doc/structures.dtd">
 <structures>
-    <structure id="items" visible="false">
+    <structure id="items" group="invisible">
         <sections>
             <section id="manage_items">
 				<actions>
