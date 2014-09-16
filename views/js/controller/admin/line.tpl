@@ -6,13 +6,13 @@
     </td>
     <td>
         <label>
-            <input type="checkbox" class="can-share" name="users[{{user}}][WRITE]" value="1" checked>
+            <input type="checkbox" class="can-share" name="users[{{user}}][GRANT]" value="1">
             <span class="icon-checkbox"></span>
         </label>
     </td>
     <td>
         <label>
-            <input type="checkbox" class="can-manage" name="users[{{user}}][GRANT]" value="1">
+            <input type="checkbox" class="can-manage" name="users[{{user}}][WRITE]" value="1" checked>
             <span class="icon-checkbox"></span>
         </label>
     </td>
