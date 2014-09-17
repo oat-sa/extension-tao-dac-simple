@@ -33,7 +33,6 @@ define([
 
             if($managers.length > 1){
                 $deleteButtons.removeClass("disabled").tooltipster('disable');
-                $canAccess.removeClass('disabled').closest('label').tooltipster('disable');
                 $managers.removeClass('disabled').closest('label').tooltipster('disable');
             }else{
                 $deleteButtons.addClass("disabled").tooltipster('enable');
@@ -121,6 +120,18 @@ define([
                 $(body).append(lineTpl(val));
             });
         };
+        /**
+         * Allow to enable / disable the access checkbox based on the state of the grant privilege
+         */
+        var _disableAccessOnGrant = function(){
+            var $managersChecked = $('#permissions-table').find('.privilege-GRANT:checked'),
+                $cantAccess = $managersChecked.closest('tr').find('.privilege-WRITE'),
+                $managers = $('#permissions-table').find('.privilege-GRANT').not(':checked'),
+                $canAccess = $managers.closest('tr').find('.privilege-WRITE');
+
+            $canAccess.removeClass('disabled').closest('label').tooltipster('disable');
+            $cantAccess.addClass('disabled').closest('label').tooltipster('disable');
+        };
 
 
         var mainCtrl = {
@@ -131,6 +142,7 @@ define([
                 var $submiter  = $(':submit', $form);
 
                 _preventManagerRemoval();
+                _disableAccessOnGrant();
                 userSelect = $('#add-user').select2();
                 roleSelect = $('#add-role').select2();
 
@@ -161,6 +173,7 @@ define([
                         $(accessCheckbox).click();
                     }
                     _preventManagerRemoval();
+                    _disableAccessOnGrant();
                 }).on('click', '.delete_permission:not(.disabled)', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
