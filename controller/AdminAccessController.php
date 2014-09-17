@@ -26,7 +26,7 @@ use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 
 /**
- * Sample controller
+ * This controller is used to manage permission administration
  *
  * @author Open Assessment Technologies SA
  * @package taoDacSimple
@@ -34,7 +34,7 @@ use oat\taoDacSimple\model\PermissionProvider;
  * @license GPL-2.0
  *
  */
-class AccessController extends \tao_actions_CommonModule
+class AdminAccessController extends \tao_actions_CommonModule
 {
 
     private $dataAccess = null;
@@ -50,9 +50,26 @@ class AccessController extends \tao_actions_CommonModule
 
     /**
      * A possible entry point to tao
-     * @todo enable requiresRight uri GRANT
+     * @requiresRight uri GRANT
      */
-    public function index()
+    public function instancePermissions()
+    {
+        return $this->adminPermissions();
+    }
+
+    /**
+     * A possible entry point to tao
+     * @requiresRight classUri GRANT
+     */
+    public function classPermissions()
+    {
+        return $this->adminPermissions();
+    }
+
+    /**
+     * Manage permissions
+     */
+    protected function adminPermissions()
     {
         
         $resourceUri = ($this->hasRequestParameter('uri') && strlen($this->getRequestParameter('uri')) > 0) 
@@ -96,7 +113,7 @@ class AccessController extends \tao_actions_CommonModule
         $this->setData('uri', $resourceUri);
         $this->setData('label', $resource->getLabel());
         
-        $this->setView('AccessController/index.tpl');
+        $this->setView('AdminAccessController/index.tpl');
     }
 
 
@@ -191,7 +208,7 @@ class AccessController extends \tao_actions_CommonModule
     {
         $pp = new PermissionProvider();
         foreach ($usersPrivileges as $user => $options) {
-            if ($options == $pp->getSupportedRights()) {
+            if (array_diff($options, $pp->getSupportedRights()) === array_diff($pp->getSupportedRights(), $options)) {
                 return true;
             }
         }

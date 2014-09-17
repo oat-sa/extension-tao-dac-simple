@@ -28,7 +28,7 @@ return array(
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array('tao' => '>=2.6'),
 	// for compatibility
-	'dependencies' => array('tao'),
+	'dependencies' => array('tao', 'taoItems'),
 	'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager',
     'acl' => array(
         array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager', array('ext'=>'taoDacSimple')),

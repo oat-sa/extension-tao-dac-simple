@@ -21,9 +21,11 @@
 define(function(){
     'user strict';
     return {
-        'AccessController' : {
+        'AdminAccessController' : {
+            'css': 'admin', 
             'actions' : {
-                'index' : 'controller/main'
+                'instancePermissions' : 'controller/admin/index',
+                'classPermissions' : 'controller/admin/index'
             }
         }
     };

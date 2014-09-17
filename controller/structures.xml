@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE extension SYSTEM "../../tao/doc/structures.dtd">
+<!DOCTYPE structures SYSTEM "../doc/structures.dtd">
 <structures>
-	<structure id="test" name="Access Control" level="12" visible="false">
-		<description />
-		<sections>
-			<section id="taoDacSimple_ac" name="Access Controll" url="/taoDacSimple/AccessController/index" />
-		</sections>
-	</structure>
+    <structure id="items" group="invisible">
+        <sections>
+            <section id="manage_items">
+				<actions>
+					<action name="Access control" url="/taoDacSimple/AdminAccessController/instancePermissions" group="tree" context="instance">
+                        <icon id="icon-unlock" />
+                    </action>
+					<action name="Access control" url="/taoDacSimple/AdminAccessController/classPermissions" group="tree" context="class">
+                        <icon id="icon-unlock" />
+                    </action>
+                </actions>
+            </section>
+        </sections>
+    </structure>
 </structures>

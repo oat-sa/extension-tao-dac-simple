@@ -1,11 +1,12 @@
 define([
     'jquery',
     'i18n',
-    'tpl!taoDacSimple/controller/line',
+    'tpl!taoDacSimple/controller/admin/line',
     'helpers',
+    'ui/feedback',
     'select2',
     'tooltipster'
-    ], function($, __, lineTpl, helpers){
+    ], function($, __, lineTpl, helpers, feedback){
         'use strict';
 
         var userSelect,
@@ -26,20 +27,19 @@ define([
 
             $('.tooltip').tooltipster(tooltipConfig).tooltipster('disable');
             $managers.closest('label').tooltipster('enable');
-            $canAccess.closest('label').tooltipster('enable'),
+            $canAccess.closest('label').tooltipster('enable');
             $deleteButtons.tooltipster('enable');
 
 
             if($managers.length > 1){
                 $deleteButtons.removeClass("disabled").tooltipster('disable');
-                $canAccess.removeClass('disabled').closest('label').tooltipster('disable');
                 $managers.removeClass('disabled').closest('label').tooltipster('disable');
             }else{
                 $deleteButtons.addClass("disabled").tooltipster('enable');
                 $canAccess.addClass('disabled').closest('label').tooltipster('enable');
                 $managers.addClass("disabled").closest('label').tooltipster('enable');
             }
-        }
+        };
 
         /**
          * Delete a permission row for a user/role
@@ -73,7 +73,7 @@ define([
                 }
             }
             _preventManagerRemoval();
-        }
+        };
         /**
          * Add a new lines into the permissions table regarding what is selected into the add-* select
          * @param {string} type role/user regarding what it will be added.
@@ -119,13 +119,30 @@ define([
             $.each(selection, function(index,val) {
                 $(body).append(lineTpl(val));
             });
-        }
+        };
+        /**
+         * Allow to enable / disable the access checkbox based on the state of the grant privilege
+         */
+        var _disableAccessOnGrant = function(){
+            var $managersChecked = $('#permissions-table').find('.privilege-GRANT:checked'),
+                $cantAccess = $managersChecked.closest('tr').find('.privilege-WRITE'),
+                $managers = $('#permissions-table').find('.privilege-GRANT').not(':checked'),
+                $canAccess = $managers.closest('tr').find('.privilege-WRITE');
+
+            $canAccess.removeClass('disabled').closest('label').tooltipster('disable');
+            $cantAccess.addClass('disabled').closest('label').tooltipster('disable');
+        };
 
 
         var mainCtrl = {
             'start' : function(){
 
+                var $container = $('.permission-container');
+                var $form      = $('form', $container);
+                var $submiter  = $(':submit', $form);
+
                 _preventManagerRemoval();
+                _disableAccessOnGrant();
                 userSelect = $('#add-user').select2();
                 roleSelect = $('#add-role').select2();
 
@@ -154,14 +171,37 @@ define([
                     if ($(this).is(':checked') != []) {
                         var accessCheckbox = $(this).closest('tr').find('.privilege-WRITE').not(':checked')[0];
                         $(accessCheckbox).click();
-                    };
+                    }
                     _preventManagerRemoval();
+                    _disableAccessOnGrant();
                 }).on('click', '.delete_permission:not(.disabled)', function(event) {
                     event.preventDefault();
                     _deletePermission(this);
                 });
+                
+                $form.on('submit', function(e){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                });
+                $submiter.on('click', function(e){
+                    e.preventDefault();
 
+                    $submiter.addClass('disabled');
+
+                    $.post($form.attr('action'), $form.serialize())
+                        .done(function(res){
+                            if(res && res.success){
+                                feedback().success(__("Permissions saved"));
+                            } else {
+                                feedback().error(__("Something went wrong..."));
+                            }
+                        })
+                        .complete(function(){
+                            $submiter.removeClass('disabled');
+                        });
+                });
             }
-        }
+        };
+
         return mainCtrl;
     })

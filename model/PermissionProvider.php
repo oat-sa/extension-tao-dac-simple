@@ -47,6 +47,15 @@ class PermissionProvider
      * @see \oat\generis\model\data\PermissionInterface::getPermissions()
      */
     public function getPermissions(User $user, array $resourceIds) {
+
+        if (in_array(INSTANCE_ROLE_SYSADMIN, $user->getRoles())) {
+            $permissions = array();
+            foreach ($resourceIds as $id) {
+                $permissions[$id] = $this->getSupportedRights();
+            }
+            return $permissions;
+        }
+
         $dbAccess = new DataBaseAccess();
         $userIds = $user->getRoles();
         $userIds[] = $user->getIdentifier();
