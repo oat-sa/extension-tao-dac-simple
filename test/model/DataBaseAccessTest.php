@@ -14,11 +14,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * 
- * Copyright (c) 2008-2010 (original work) Deutsche Institut für Internationale Pädagogische Forschung (under the project TAO-TRANSFER);
- *               2009-2012 (update and modification) Public Research Centre Henri Tudor (under the project TAO-SUSTAIN & TAO-DEV);
+ * Copyright (c) 2014 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT); *
  * 
+ *  
  */
 
+namespace oat\taoDacSimple\test\model;
+
+use oat\taoDacSimple\model\DataBaseAccess;
 
 /**
  * Test database access
@@ -27,16 +30,16 @@
  * @package taodacSimple
  *
  */
-class DataBaseAccessTest extends PHPUnit_Framework_TestCase {
+class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
 
 
     /**
-     * @var \oat\taoDacSimple\model\DataBaseAccess
+     * @var DataBaseAccess
      */
     protected $instance;
 
     public function setUp() {
-        $this->instance = new \oat\taoDacSimple\model\DataBaseAccess();
+        $this->instance = new DataBaseAccess();
     }
 
     public function tearDown() {
@@ -56,15 +59,34 @@ class DataBaseAccessTest extends PHPUnit_Framework_TestCase {
             ->with(\PDO::FETCH_ASSOC)
             ->will($this->returnValue($resultFixture));
 
-        $persistenceMock = $this->getMockForAbstractClass('common_persistence_sql_pdo_mysql_Driver', [], 'common_persistence_Driver_Mock', false, false, true, ['query'], false);
-        $persistenceMock->expects($this->once())
+        
+        $driverMock =$this->getMockForAbstractClass('common_persistence_Driver', [], 'common_persistence_Driver_Mock', false, false, true, ['query'], false);
+
+        
+        $persistenceMock = $this->getMock(
+            'common_persistence_Persistence',
+            array('getDriver','query'),
+            array(array(),$driverMock),
+            '',
+            false,
+            true,
+            false
+        );
+        $persistenceMock
+            ->method('getDriver')
+            ->with(array(),$driverMock)
+            ->will($this->returnValue($driverMock));
+        
+        $persistenceMock
             ->method('query')
             ->with($queryFixture, $queryParams)
-            ->will($this->returnValue($statementMock));
-
+            ->will($this->returnValue($statementMock)); 
+        
         return $persistenceMock;
     }
 
+    
+    
     /**
      * @return array
      */
@@ -126,7 +148,7 @@ class DataBaseAccessTest extends PHPUnit_Framework_TestCase {
 
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
-        $query = "SELECT resource_id, privilege FROM " . \oat\taoDacSimple\model\DataBaseAccess::TABLE_PRIVILEGES_NAME
+        $query = "SELECT resource_id, privilege FROM " . DataBaseAccess::TABLE_PRIVILEGES_NAME
             . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
 

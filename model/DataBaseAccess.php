@@ -14,7 +14,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2009-2012 (original work) Public Research Centre Henri Tudor (under the project TAO-SUSTAIN & TAO-DEV);
+ * Copyright (c) 2014 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  *
  *
  */
@@ -45,11 +45,23 @@ class DataBaseAccess
 
     // --- OPERATIONS ---
 
+    
     public function __construct()
     {
-        $this->persistence = \common_persistence_Manager::getPersistence('default');
+        $this->setPersistence(\common_persistence_Manager::getPersistence('default'));
+        
     }
 
+
+    /**
+     *
+     * @author Lionel Lecaque, lionel@taotesting.com
+     * @param \common_persistence_Persistence $persistence
+     */
+    public function setPersistence(\common_persistence_Persistence $persistence){
+        $this->persistence = $persistence;
+    }
+    
     /**
      * We can know which users have a privilege on a resource
      * @param array $resourceIds
