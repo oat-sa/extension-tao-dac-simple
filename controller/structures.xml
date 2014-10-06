@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE structures SYSTEM "../doc/structures.dtd">
+<!DOCTYPE structures SYSTEM "../../tao/doc/structures.dtd">
 <structures>
-    <structure id="items" group="invisible">
+    <structure id="data-access-simple" name="Access Controls"  group="invisible" level="">
         <sections>
-            <section id="manage_items">
+            <section id="manage-acl" name="Manage Permissions" url="">
 				<actions>
-					<action name="Access control" url="/taoDacSimple/AdminAccessController/instancePermissions" group="tree" context="instance">
+					<action id="access-control-instance" name="Access control" url="/taoDacSimple/AdminAccessController/instancePermissions" group="tree" context="instance">
                         <icon id="icon-unlock" />
                     </action>
-					<action name="Access control" url="/taoDacSimple/AdminAccessController/classPermissions" group="tree" context="class">
+					<action id="access-control-class" name="Access control" url="/taoDacSimple/AdminAccessController/classPermissions" group="tree" context="class">
                         <icon id="icon-unlock" />
                     </action>
                 </actions>
