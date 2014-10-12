@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE structures SYSTEM "../../tao/doc/structures.dtd">
 <structures>
-    <structure id="data-access-simple" name="Access Controls"  group="invisible" level="">
+    <!-- add the permissions admin to the items section -->
+    <structure id="items" name="Items" group="invisible" level="">
         <sections>
-            <section id="manage-acl" name="Manage Permissions" url="">
+            <section id="manage_items" name="Manage Items" url="">
 				<actions>
 					<action id="access-control-instance" name="Access control" url="/taoDacSimple/AdminAccessController/instancePermissions" group="tree" context="instance">
                         <icon id="icon-unlock" />
