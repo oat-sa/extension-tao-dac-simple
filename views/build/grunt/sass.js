@@ -10,7 +10,7 @@ module.exports = function(grunt) {
     sass.taodacsimple.files[root + 'css/admin.css'] = root + 'scss/admin.scss';
 
     watch.taodacsimplesass = {
-        files : [root + 'views/scss/home.scss'],
+        files : [root + 'views/scss/**/*.scss'],
         tasks : ['sass:taodacsimple', 'notify:taodacsimplesass'],
         options : {
             debounceDelay : 1000
