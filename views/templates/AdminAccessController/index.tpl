@@ -1,5 +1,5 @@
 <?php use oat\tao\helpers\Template;?>
-<div class="permission-container">
+<div class="permission-container flex-container-full">
     <?php
         $userData = get_data('userData');
     ?>
