@@ -156,7 +156,6 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     public function savePermissions()
     {
-
         $users = $this->getRequest()->getParameter('users');
         $resourceIds = (array)$this->getRequest()->getParameter('resource_id');
         $recursive = ($this->getRequest()->getParameter('recursive') === "1");

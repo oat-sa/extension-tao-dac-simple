@@ -82,7 +82,7 @@ class PermissionProvider
      * @see \oat\generis\model\data\permission\PermissionInterface::getSupportedRights()
      */
     public function getSupportedRights() {
-        return array('GRANT', 'WRITE');
+        return array('GRANT', 'WRITE', 'READ');
     }
     
     
@@ -94,8 +94,9 @@ class PermissionProvider
      */
     public static function getRightLabels() {
         return array(
-        	'GRANT' => __('grant'),
-            'WRITE' => __('access')
+            'GRANT' => __('grant'),
+            'WRITE' => __('write'),
+            'READ' => __('read')
         );
     }
 }
