@@ -26,7 +26,10 @@ return array(
     'license' => 'GPL-2.0',
     'version' => '1.0',
 	'author' => 'Open Assessment Technologies SA',
-	'requires' => array('tao' => '>=2.6'),
+	'requires' => array(
+	   'tao' => '>=2.6',
+	   'taoItems' => '>=2.6'
+    ),
 	// for compatibility
 	'dependencies' => array('tao', 'taoItems'),
 	'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager',

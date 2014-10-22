@@ -2,7 +2,7 @@
 <!DOCTYPE structures SYSTEM "../../tao/doc/structures.dtd">
 <structures>
     <!-- add the permissions admin to the items section -->
-    <structure id="items" name="Items" group="invisible" level="">
+    <structure id="items" name="Items" level="0" group="main">
         <sections>
             <section id="manage_items" name="Manage Items" url="">
 				<actions>
