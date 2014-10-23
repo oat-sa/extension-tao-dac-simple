@@ -159,7 +159,8 @@ class AdminAccessController extends \tao_actions_CommonModule
 
         $users = $this->getRequest()->getParameter('users');
         $resourceIds = (array)$this->getRequest()->getParameter('resource_id');
-        
+        $recursive = ($this->getRequest()->getParameter('recursive') === "1");
+
         // cleanup uri param
         if ($this->hasRequestParameter('uri')) {
             $resourceId = $this->getRequest()->getParameter('uri');
@@ -186,22 +187,32 @@ class AdminAccessController extends \tao_actions_CommonModule
             ), 500);
         }
 
-        
-        foreach ($privileges as $userId => $privilegeIds) {
-            $permissions = $this->dataAccess->getDeltaPermissions($userId,$resourceId,$privilegeIds);
-            if(count($permissions['add']) > 0){
-                $this->dataAccess->addPermissions($userId, $resourceId, $permissions['add']);
-            }
-            if(count($permissions['remove'])){
-                $this->dataAccess->removePermissions($userId,$resourceId,$permissions['remove']);
+        //get resource
+        $clazz = new \core_kernel_classes_Class($resourceId);
+        $resources = array($clazz);
+        if($recursive){
+            $resources = array_merge($resources, $clazz->getSubClasses(true));
+            $resources = array_merge($resources, $clazz->getInstances(true));
+        }
+
+        foreach($resources as $resource){
+            foreach ($privileges as $userId => $privilegeIds) {
+                $permissions = $this->dataAccess->getDeltaPermissions($userId,$resource->getUri(),$privilegeIds);
+                if(count($permissions['add']) > 0){
+                    $this->dataAccess->addPermissions($userId, $resource->getUri(), $permissions['add']);
+                }
+                if(count($permissions['remove'])){
+                    $this->dataAccess->removePermissions($userId,$resource->getUri(),$permissions['remove']);
+                }
             }
         }
-        
+
         return $this->returnJson(array(
         	'success' => true
         ));
         
     }
+
 
     /**
      * Check if the array to save contains a user that has all privileges
