@@ -187,9 +187,14 @@ class AdminAccessController extends \tao_actions_CommonModule
         }
 
         
-        $this->dataAccess->removeAllPermissions(array($resourceId));
         foreach ($privileges as $userId => $privilegeIds) {
-            $this->dataAccess->addPermissions($userId, $resourceId, $privilegeIds);
+            $permissions = $this->dataAccess->getDeltaPermissions($userId,$resourceId,$privilegeIds);
+            if(count($permissions['add']) > 0){
+                $this->dataAccess->addPermissions($userId, $resourceId, $permissions['add']);
+            }
+            if(count($permissions['remove'])){
+                $this->dataAccess->removePermissions($userId,$resourceId,$permissions['remove']);
+            }
         }
         
         return $this->returnJson(array(

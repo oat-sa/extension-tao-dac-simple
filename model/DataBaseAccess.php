@@ -97,11 +97,11 @@ class DataBaseAccess
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
         $query = "SELECT resource_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
-        /** @var \PDOStatement $statement */
         $params = $resourceIds;
         foreach ($userIds as $userId) {
             $params[] = $userId;
         }
+        /** @var \PDOStatement $statement */
         $statement = $this->persistence->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -132,6 +132,23 @@ class DataBaseAccess
             );
         }
         return true;
+    }
+
+    /**
+     * get the delta between existing permissions and new permissions
+     *
+     * @access public
+     * @param  string $user
+     * @param  string $resourceId
+     * @param  array $rights the new permissions
+     * @return boolean
+     */
+    public function getDeltaPermissions($user, $resourceId, $rights)
+    {
+        $privileges = $this->getPermissions(array($user), array($resourceId));
+        $permissions['remove'] = (isset($privileges[$resourceId]))?array_diff($privileges[$resourceId],$rights):array();
+        $permissions['add'] = (isset($privileges[$resourceId]))?array_diff($rights,$privileges[$resourceId]):$rights;
+        return $permissions;
     }
 
     /**
