@@ -138,8 +138,6 @@ class DataBaseAccess
     public function getDeltaPermissions($resourceId, $rights)
     {
         $privileges = $this->getPermissions($resourceId);
-        $add = array();
-        $remove = array();
 
         foreach($rights as $userId => $privilegeIds){
             //if privileges are in request but not in db we add then
@@ -160,10 +158,8 @@ class DataBaseAccess
             $remove[$userId] = $privilegeIds;
         }
 
-        $permissions = array('remove' => $remove, 'add' => $add);
 
-
-        return $permissions;
+        return compact("remove", "add");
     }
 
     /**
