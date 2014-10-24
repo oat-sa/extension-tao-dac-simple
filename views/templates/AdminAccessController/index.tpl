@@ -51,17 +51,17 @@
                     <?php endforeach;?>
                 </select>
             </div>
-            <div class="col-2">
+            <div class="add">
                 <button class="btn-info small" id="add-user-btn" type="button"><?= __('Add user(s)')?></button>
             </div>
-            <div class="col-2">
+            <div class="col-3">
                 <select id="add-role" multiple style="width:100%">
                     <?php foreach ($roles as $roleId => $roleLabel):?>
                     <option value="<?=$roleId?>"><?=$roleLabel?></option>
                     <?php endforeach;?>
                 </select>
             </div>
-            <div class="col-2">
+            <div class="add">
                 <button class="btn-info small" id="add-role-btn" type="button"><?= __('Add role(s)')?></button>
             </div>
             <div class="col-3 txt-rgt">
