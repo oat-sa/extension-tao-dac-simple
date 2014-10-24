@@ -196,13 +196,17 @@ class AdminAccessController extends \tao_actions_CommonModule
         }
 
         foreach($resources as $resource){
-            foreach ($privileges as $userId => $privilegeIds) {
-                $permissions = $this->dataAccess->getDeltaPermissions($userId,$resource->getUri(),$privilegeIds);
-                if(count($permissions['add']) > 0){
-                    $this->dataAccess->addPermissions($userId, $resource->getUri(), $permissions['add']);
+            $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(),$privileges);
+            // add permissions
+            foreach ($permissions['add'] as $userId => $privilegeIds) {
+                if(count($privilegeIds) > 0){
+                    $this->dataAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
                 }
-                if(count($permissions['remove'])){
-                    $this->dataAccess->removePermissions($userId,$resource->getUri(),$permissions['remove']);
+            }
+            // remove permissions
+            foreach ($permissions['remove'] as $userId => $privilegeIds) {
+                if(count($privilegeIds) > 0){
+                    $this->dataAccess->removePermissions($userId,$resource->getUri(),$privilegeIds);
                 }
             }
         }
