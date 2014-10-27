@@ -50,7 +50,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 
     /**
      * A possible entry point to tao
-     * @requiresRight uri GRANT
+     * @requiresRight id GRANT
      */
     public function instancePermissions()
     {
@@ -59,7 +59,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 
     /**
      * A possible entry point to tao
-     * @requiresRight classUri GRANT
+     * @requiresRight id GRANT
      */
     public function classPermissions()
     {
@@ -71,14 +71,9 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     protected function adminPermissions()
     {
+        $resource = new \core_kernel_classes_Resource($this->getRequestParameter('id'));
         
-        $resourceUri = ($this->hasRequestParameter('uri') && strlen($this->getRequestParameter('uri')) > 0) 
-            ? \tao_helpers_Uri::decode($this->getRequestParameter('uri'))
-            : \tao_helpers_Uri::decode($this->getRequestParameter('classUri'));
-        
-        $resource = new \core_kernel_classes_Resource($resourceUri);
-        
-        $accessRights = AdminService::getUsersPermissions($resourceUri);
+        $accessRights = AdminService::getUsersPermissions($resource->getUri());
         $userList = $this->getUserList();
         $roleList = $this->getRoleList();
         
@@ -110,7 +105,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         $this->setData('userData', $userData);
         
         
-        $this->setData('uri', $resourceUri);
+        $this->setData('uri', $resource->getUri());
         $this->setData('label', $resource->getLabel());
         
         $this->setView('AdminAccessController/index.tpl');
