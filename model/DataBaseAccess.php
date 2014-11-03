@@ -81,29 +81,35 @@ class DataBaseAccess
     }
 
     /**
-     * Get the permissions for a list of resources
+     * Get the permissions for a list of resources and users
      *
      * @access public
-     * @param  string $resourceId
+     * @param array $userIds
+     * @param  array $resourceIds
      * @return array
      */
-    public function getPermissions($resourceId)
-    {
+    public function getPermissions($userIds, array $resourceIds){
         // get privileges for a user/roles and a resource
         $returnValue = array();
 
-        $query = "SELECT user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ?";
+        $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
+        $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
+        $query = "SELECT resource_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
+        $params = $resourceIds;
+        foreach ($userIds as $userId) {
+            $params[] = $userId;
+        }
         /** @var \PDOStatement $statement */
-        $statement = $this->persistence->query($query, array($resourceId));
+        $statement = $this->persistence->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
-        foreach ($results as $result) {
-            $returnValue[$result['user_id']][] = $result['privilege'];
-        }
+         foreach ($results as $result) {
+            $returnValue[$result['resource_id']][] = $result['privilege'];
+         }
 
-        return $returnValue;
-    }
+         return $returnValue;
+     }
 
     /**
      * add permissions of a user to a resource
@@ -127,6 +133,32 @@ class DataBaseAccess
         return true;
     }
 
+
+    /**
+     * Get the permissions for a list of resources
+     *
+     * @access public
+     * @param  string $resourceId
+     * @return array
+     */
+    public function getResourcePermissions($resourceId)
+    {
+        // get privileges for a user/roles and a resource
+        $returnValue = array();
+
+        $query = "SELECT user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ?";
+
+        /** @var \PDOStatement $statement */
+        $statement = $this->persistence->query($query, array($resourceId));
+        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($results as $result) {
+            $returnValue[$result['user_id']][] = $result['privilege'];
+        }
+
+        return $returnValue;
+    }
+
     /**
      * get the delta between existing permissions and new permissions
      *
@@ -137,7 +169,7 @@ class DataBaseAccess
      */
     public function getDeltaPermissions($resourceId, $rights)
     {
-        $privileges = $this->getPermissions($resourceId);
+        $privileges = $this->getResourcePermissions($resourceId);
 
         foreach($rights as $userId => $privilegeIds){
             //if privileges are in request but not in db we add then
