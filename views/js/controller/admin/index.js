@@ -125,12 +125,16 @@ define([
          */
         var _disableAccessOnGrant = function(){
             var $managersChecked = $('#permissions-table').find('.privilege-GRANT:checked'),
-                $cantAccess = $managersChecked.closest('tr').find('.privilege-WRITE'),
+                $cantWrite = $managersChecked.closest('tr').find('.privilege-WRITE'),
+                $cantRead = $managersChecked.closest('tr').find('.privilege-READ'),
                 $managers = $('#permissions-table').find('.privilege-GRANT').not(':checked'),
-                $canAccess = $managers.closest('tr').find('.privilege-WRITE');
+                $canWrite = $managers.closest('tr').find('.privilege-WRITE'),
+                $canRead = $managers.closest('tr').find('.privilege-READ');
 
-            $canAccess.removeClass('disabled').closest('label').tooltipster('disable');
-            $cantAccess.addClass('disabled').closest('label').tooltipster('disable');
+            $canWrite.removeClass('disabled').closest('label').tooltipster('disable');
+            $canRead.removeClass('disabled').closest('label').tooltipster('disable');
+            $cantWrite.addClass('disabled').closest('label').tooltipster('disable');
+            $cantRead.addClass('disabled').closest('label').tooltipster('disable');
         };
 
 
@@ -163,14 +167,16 @@ define([
                 });
 
                 /**
-                 * Ensure that if you give the manage (GRANT) permission, access (WRITE) persmission is given too
+                 * Ensure that if you give the manage (GRANT) permission, access (WRITE and READ) permissions are given too
                  * &
                  * Listen all clicks on delete buttons to call the _deletePersmission function
                  */
                 $('#permissions-table').on('click', '.privilege-GRANT:not(.disabled) ', function() {
                     if ($(this).is(':checked') != []) {
-                        var accessCheckbox = $(this).closest('tr').find('.privilege-WRITE').not(':checked')[0];
-                        $(accessCheckbox).click();
+                        var writeCheckbox = $(this).closest('tr').find('.privilege-WRITE').not(':checked')[0];
+                        var readCheckbox = $(this).closest('tr').find('.privilege-READ').not(':checked')[0];
+                        $(writeCheckbox).click();
+                        $(readCheckbox).click();
                     }
                     _preventManagerRemoval();
                     _disableAccessOnGrant();
