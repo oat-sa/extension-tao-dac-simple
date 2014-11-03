@@ -17,6 +17,12 @@
         </label>
     </td>
     <td>
+        <label class="tooltip">
+            <input type="checkbox" class="privilege-READ" name="users[{{user}}][READ]" value="1" checked>
+            <span class="icon-checkbox"></span>
+        </label>
+    </td>
+    <td>
         <button type="button" class="small delete_permission tooltip btn-link" data-acl-user="{{user}}" data-acl-type="{{type}}" data-acl-label="{{label}}" >
             <span class="icon-remove"></span>{{__ "Remove"}}
         </button>
