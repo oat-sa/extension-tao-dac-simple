@@ -39,9 +39,14 @@ class Updater extends \common_ext_ExtensionUpdater {
         
         $currentVersion = $initialVersion;
         
-        // add backoffice user rights to Tests
         if ($currentVersion == '1.0') {
             $impl = new PermissionProvider();
+            
+            // add read access to Items
+            $class = new \core_kernel_classes_Class(TAO_ITEM_CLASS);
+            AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, array('RIIGHT'));
+            
+            // add backoffice user rights to Tests
             $class = new \core_kernel_classes_Class(TAO_TEST_CLASS);
             AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
             $currentVersion = '1.0.1';
