@@ -23,6 +23,7 @@ namespace oat\taoDacSimple\model;
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\oatbox\user\User;
+use core_kernel_classes_Class;
 
 /**
  * Simple permissible Permission model
