@@ -44,7 +44,7 @@ class Updater extends \common_ext_ExtensionUpdater {
             
             // add read access to Items
             $class = new \core_kernel_classes_Class(TAO_ITEM_CLASS);
-            AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, array('RIIGHT'));
+            AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, array('READ'));
             
             // add backoffice user rights to Tests
             $class = new \core_kernel_classes_Class(TAO_TEST_CLASS);
