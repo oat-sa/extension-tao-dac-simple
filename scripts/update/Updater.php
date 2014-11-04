@@ -21,6 +21,9 @@
 
 namespace oat\taoDacSimple\scripts\update;
 
+use oat\taoDacSimple\model\PermissionProvider;
+use oat\taoDacSimple\model\AdminService;
+
 /**
  * 
  * @author Joel Bout <joel@taotesting.com>
@@ -36,10 +39,10 @@ class Updater extends \common_ext_ExtensionUpdater {
         
         $currentVersion = $initialVersion;
         
-        //if (version_compare($currentVersion, '1.0.1', '<')) {
+        // add backoffice user rights to Tests
         if ($currentVersion == '1.0') {
-            // add basic rights to Tests
-            $class = new core_kernel_classes_Class(TAO_TEST_CLASS);
+            $impl = new PermissionProvider();
+            $class = new \core_kernel_classes_Class(TAO_TEST_CLASS);
             AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
             $currentVersion = '1.0.1';
         }
