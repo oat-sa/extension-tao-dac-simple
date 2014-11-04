@@ -99,4 +99,11 @@ class PermissionProvider
             'READ' => __('read')
         );
     }
+    
+    public static function getSupportedRootClasses() {
+        return array(
+            new core_kernel_classes_Class(TAO_ITEM_CLASS),
+            new core_kernel_classes_Class(TAO_TEST_CLASS)
+        );
+    }
 }

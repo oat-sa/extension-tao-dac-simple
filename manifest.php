@@ -28,7 +28,8 @@ return array(
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'tao' => '>=2.6',
-	   'taoItems' => '>=2.6'
+	   'taoItems' => '>=2.6',
+       'taoTests' => '*'
     ),
 	// for compatibility
 	'dependencies' => array('tao', 'taoItems'),

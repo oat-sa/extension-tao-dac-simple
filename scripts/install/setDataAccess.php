@@ -44,5 +44,7 @@ foreach ($queries as $query){
 $impl = new PermissionProvider();
 PermissionManager::setPermissionModel($impl);
 
-$class = new core_kernel_classes_Class(TAO_ITEM_CLASS);
-AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
+$rights = $impl->getSupportedRights();
+foreach (PermissionProvider::getSupportedRootClasses() as $class) {
+    AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $rights);
+}
