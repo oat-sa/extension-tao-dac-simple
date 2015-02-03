@@ -12,7 +12,7 @@ module.exports = function(grunt) {
     /**
      * Remove bundled and bundling files
      */
-    clean.taodacsimplebundle = [out,  root + '/taoDacSimple/views/js/controllers.min.js'];
+    clean.taodacsimplebundle = [out];
     
     /**
      * Compile tao files into a bundle 
