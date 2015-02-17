@@ -24,6 +24,7 @@ use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\oatbox\user\User;
 use core_kernel_classes_Class;
+use oat\oatbox\Configurable;
 
 /**
  * Simple permissible Permission model
@@ -34,14 +35,9 @@ use core_kernel_classes_Class;
  * @access public
  * @author Joel Bout, <joel@taotesting.com>
  */
-class PermissionProvider
+class PermissionProvider extends Configurable
     implements PermissionInterface
 {
-    /**
-     * 
-     */
-    public function __construct() {
-    }
     
     /**
      * (non-PHPdoc)
