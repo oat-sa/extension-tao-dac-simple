@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: TAO v2.7\n"
-"PO-Revision-Date: 2014-10-14T10:43:30\n"
+"Project-Id-Version: TAO 3.0-RC04\n"
+"PO-Revision-Date: 2015-03-06T16:00:11\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: en-US\n"
@@ -12,9 +12,6 @@ msgstr ""
 "X-Poedit-Basepath: ../../\n"
 "X-Poedit-KeywordsList: __\n"
 "X-Poedit-SearchPath-0: .\n"
-
-msgid "access"
-msgstr ""
 
 msgid "Access control"
 msgstr ""
@@ -42,7 +39,17 @@ msgstr ""
 msgid "Manage Items"
 msgstr ""
 
+#, tao-public
+msgid "Manage tests"
+msgstr ""
+
 msgid "Permissions saved"
+msgstr ""
+
+msgid "read"
+msgstr ""
+
+msgid "Recursive"
 msgstr ""
 
 msgid "Remove"
@@ -54,7 +61,14 @@ msgstr ""
 msgid "Something went wrong..."
 msgstr ""
 
+#, tao-public
+msgid "Tests"
+msgstr ""
+
 msgid "Type"
+msgstr ""
+
+msgid "write"
 msgstr ""
 
 msgid "You must have one role or user that have the manage permission on this element."
