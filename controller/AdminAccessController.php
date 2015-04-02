@@ -106,7 +106,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         
         
         $this->setData('uri', $resource->getUri());
-        $this->setData('label', $resource->getLabel());
+        $this->setData('label', _dh($resource->getLabel()));
         
         $this->setView('AdminAccessController/index.tpl');
     }
@@ -122,7 +122,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         $userService = \tao_models_classes_UserService::singleton();
         $users = array();
         foreach ($userService->getAllUsers() as $user) {
-            $users[$user->getUri()] = $user->getLabel();
+            $users[$user->getUri()] = _dh($user->getLabel());
         }
         
         return $users;
@@ -139,7 +139,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         
         $roles = array();
         foreach ($roleService->getAllRoles() as $role) {
-            $roles[$role->getUri()] = $role->getLabel();
+            $roles[$role->getUri()] = _dh($role->getLabel());
         }
 
         return $roles;
