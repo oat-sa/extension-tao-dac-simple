@@ -53,14 +53,14 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
     public function getPersistenceMock($queryParams, $queryFixture, $resultFixture) {
 
 
-        $statementMock = $this->getMock('PDOStatementFake', ['fetchAll'],[],'', false, false, true, false);
+        $statementMock = $this->getMock('PDOStatementFake', array('fetchAll'),array(),'', false, false, true, false);
         $statementMock->expects($this->once())
             ->method('fetchAll')
             ->with(\PDO::FETCH_ASSOC)
             ->will($this->returnValue($resultFixture));
 
         
-        $driverMock =$this->getMockForAbstractClass('common_persistence_Driver', [], 'common_persistence_Driver_Mock', false, false, true, ['query'], false);
+        $driverMock =$this->getMockForAbstractClass('common_persistence_Driver', array(), 'common_persistence_Driver_Mock', false, false, true, array('query'), false);
 
         
         $persistenceMock = $this->getMock(
@@ -91,11 +91,11 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
      * @return array
      */
     public function resourceIdsProvider() {
-        return [
-            [[1]],
-            [[1, 2, 3, 4]],
-            [[1, 2]],
-        ];
+        return array(
+            array(array(1)),
+            array(array(1, 2, 3, 4)),
+            array(array(1, 2)),
+        );
     }
 
     /**
@@ -112,9 +112,9 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         $queryFixture = "SELECT resource_id, user_id, privilege FROM " . \oat\taoDacSimple\model\DataBaseAccess::TABLE_PRIVILEGES_NAME . "
         WHERE resource_id IN ($inQuery)";
 
-        $resultFixture = [
-            ['fixture']
-        ];
+        $resultFixture = array(
+            array('fixture')
+        );
 
         $persistenceMock = $this->getPersistenceMock($resourceIds, $queryFixture, $resultFixture);
 
@@ -128,10 +128,10 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
      * @return array
      */
     public function getPermissionProvider() {
-        return [
-            [[1,2,3], [1, 2, 3]],
-            [[1], [2]],
-        ];
+        return array(
+            array(array(1,2,3), array(1, 2, 3)),
+            array(array(1), array(2)),
+        );
     }
     /**
      * Get the permissions a user has on a list of ressources
@@ -152,18 +152,18 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
             . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
 
-        $fetchResultFixture = [
-            ['resource_id' => 1, 'privilege' => 'open'],
-            ['resource_id' => 2, 'privilege' => 'close'],
-            ['resource_id' => 3, 'privilege' => 'create'],
-            ['resource_id' => 3, 'privilege' => 'delete'],
-        ];
+        $fetchResultFixture = array(
+            array('resource_id' => 1, 'privilege' => 'open'),
+            array('resource_id' => 2, 'privilege' => 'close'),
+            array('resource_id' => 3, 'privilege' => 'create'),
+            array('resource_id' => 3, 'privilege' => 'delete'),
+        );
 
-        $resultFixture = [
-            1 =>  ['open'],
-            2 => ['close'],
-            3 => ['create', 'delete']
-        ];
+        $resultFixture = array(
+            1 =>  array('open'),
+            2 => array('close'),
+            3 => array('create', 'delete')
+        );
 
         $params = $resourceIds;
         foreach ($userIds as $userId) {
