@@ -98,9 +98,6 @@ class AdminAccessController extends \tao_actions_CommonModule
             }
         }
         
-        $this->setData('users', $userList);
-        $this->setData('roles', $roleList);
-        
         $this->setData('userPrivileges', $accessRights);
         $this->setData('userData', $userData);
         

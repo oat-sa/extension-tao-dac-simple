@@ -45,24 +45,16 @@
         </table>
         <div class="grid-row">
             <div class="col-3">
-                <select id="add-user" multiple style="width:100%">
-                    <?php foreach ($users as $userId => $username):?>
-                    <option value="<?=$userId?>"><?=$username?></option>
-                    <?php endforeach;?>
-                </select>
-            </div>
-            <div class="add">
-                <button class="btn-info small" id="add-user-btn" type="button"><?= __('Add user(s)')?></button>
+                <input type="text" id="add-user" style="width:100%" placeholder="<?= __('Add user(s)') ?>"
+                       data-url="<?= _url('search', 'Search', 'tao') ?>"
+                       data-ontology="http://www.tao.lu/Ontologies/TAO.rdf#User"
+                       data-params-root="params" />
             </div>
             <div class="col-3">
-                <select id="add-role" multiple style="width:100%">
-                    <?php foreach ($roles as $roleId => $roleLabel):?>
-                    <option value="<?=$roleId?>"><?=$roleLabel?></option>
-                    <?php endforeach;?>
-                </select>
-            </div>
-            <div class="add">
-                <button class="btn-info small" id="add-role-btn" type="button"><?= __('Add role(s)')?></button>
+                <input type="text" id="add-role" style="width:100%" placeholder="<?= __('Add role(s)') ?>"
+                       data-url="<?= _url('search', 'Search', 'tao') ?>"
+                       data-ontology="http://www.tao.lu/Ontologies/generis.rdf#UserRole"
+                       data-params-root="params" />
             </div>
             <div class="col-3 txt-rgt">
                 <label>
