@@ -28,6 +28,14 @@ define([
 ], function ($, _, __, lineTpl, helpers, feedback, autocomplete) {
     'use strict';
 
+    var errorMsgManagePermission = __('You must have one role or user that have the manage permission on this element.');
+
+    var tooltipConfigManagePermission = {
+        content : __(errorMsgManagePermission),
+        theme : 'tao-info-tooltip',
+        trigger: 'hover'
+    };
+
     /**
      * Checks the managers, we need at least one activated manager.
      * @returns {Boolean} Returns `true` if there is at least one manager in the list
@@ -41,6 +49,22 @@ define([
             checkOk = false;
         }
         return checkOk;
+    };
+
+    /**
+     * Avoids to remove all managers
+     */
+    var _preventManagerRemoval = function(){
+        var $container = $('.permission-container');
+        var $form = $('form', $container);
+        var $submitter = $(':submit', $form);
+
+        $submitter.tooltipster(tooltipConfigManagePermission);
+        if (!_checkManagers()) {
+            $submitter.addClass('disabled').tooltipster('enable');
+        } else {
+            $submitter.removeClass('disabled').tooltipster('disable');
+        }
     };
 
     /**
@@ -60,6 +84,8 @@ define([
 
         $cantWrite.addClass('disabled');
         $cantRead.addClass('disabled');
+
+        _preventManagerRemoval();
     };
 
     /**
@@ -77,6 +103,8 @@ define([
         if (!_.isEmpty(type) && !_.isEmpty(user) && !_.isEmpty(label)) {
             $this.closest('tr').remove();
         }
+
+        _preventManagerRemoval();
     };
 
     /**
@@ -146,7 +174,7 @@ define([
 
             var $container = $('.permission-container');
             var $form = $('form', $container);
-            var $submiter = $(':submit', $form);
+            var $submitter = $(':submit', $form);
 
             _disableAccessOnGrant();
 
@@ -183,15 +211,19 @@ define([
                 e.preventDefault();
                 e.stopImmediatePropagation();
             });
-            $submiter.on('click', function (e) {
+            $submitter.on('click', function (e) {
                 e.preventDefault();
 
+                if ($submitter.hasClass('disabled')) {
+                    return;
+                }
+
                 if (!_checkManagers()) {
-                    feedback().error(__('You must have one role or user that have the manage permission on this element.'));
+                    feedback().error(errorMsgManagePermission);
                    return;
                 }
 
-                $submiter.addClass('disabled');
+                $submitter.addClass('disabled');
 
                 $.post($form.attr('action'), $form.serialize())
                     .done(function (res) {
@@ -202,7 +234,7 @@ define([
                         }
                     })
                     .complete(function () {
-                        $submiter.removeClass('disabled');
+                        $submitter.removeClass('disabled');
                     });
             });
         }

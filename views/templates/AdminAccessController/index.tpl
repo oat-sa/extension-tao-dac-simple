@@ -35,8 +35,8 @@
                         </td>
                     <?php endforeach;?>
                     <td>
-                        <button type="button" class="small delete_permission tooltip btn-link" data-acl-user="<?= $userUri?>" data-acl-type="<?= $userData[$userUri]['isRole'] ? 'role' : 'user'?>" data-acl-label="<?= $userData[$userUri]['label']?>" >
-                            <span class="icon-remove"></span><?= __('Remove')?>
+                        <button type="button" class="small delete_permission tooltip btn-info" data-acl-user="<?= $userUri?>" data-acl-type="<?= $userData[$userUri]['isRole'] ? 'role' : 'user'?>" data-acl-label="<?= $userData[$userUri]['label']?>" >
+                            <span class="icon-bin"></span><?= __('Remove')?>
                         </button>
                     </td>
                 </tr>
@@ -53,7 +53,7 @@
             <div class="col-3">
                 <input type="text" id="add-role" style="width:100%" placeholder="<?= __('Add role(s)') ?>"
                        data-url="<?= _url('search', 'Search', 'tao') ?>"
-                       data-ontology="http://www.tao.lu/Ontologies/generis.rdf#UserRole"
+                       data-ontology="http://www.tao.lu/Ontologies/generis.rdf#ClassRole"
                        data-params-root="params" />
             </div>
             <div class="col-3 txt-rgt">
