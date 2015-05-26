@@ -86,6 +86,22 @@ define([
         $cantRead.addClass('disabled');
 
         _preventManagerRemoval();
+        _disableAccessOnWrite();
+    };
+
+    /**
+     * Allow to enable / disable the access checkbox based on the state of the write privilege
+     */
+    var _disableAccessOnWrite = function () {
+        var $writersChecked = $('#permissions-table').find('.privilege-WRITE:checked').closest('tr'),
+            $cantChangeRead = $writersChecked.find('.privilege-READ'),
+
+            $writers = $('#permissions-table').find('.privilege-WRITE').not(':checked').closest('tr'),
+            $canChangeRead = $writers.find('.privilege-READ');
+
+        $canChangeRead.removeClass('disabled');
+
+        $cantChangeRead.addClass('disabled').attr('checked', true);
     };
 
     /**
@@ -202,6 +218,8 @@ define([
                     $readCheckbox.click();
                 }
                 _disableAccessOnGrant();
+            }).on('click', '.privilege-WRITE:not(.disabled) ', function () {
+                _disableAccessOnWrite();
             }).on('click', '.delete_permission:not(.disabled)', function (event) {
                 event.preventDefault();
                 _deletePermission(this);
