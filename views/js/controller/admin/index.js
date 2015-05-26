@@ -161,6 +161,7 @@ define([
                 user: id,
                 label: label
             }));
+            _disableAccessOnGrant();
         }
     };
 
