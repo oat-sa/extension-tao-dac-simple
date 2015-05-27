@@ -282,11 +282,13 @@ define([
 
             // install autocomplete for user add
             _searchFactory('#add-user', function (event, value, label) {
+                $('#add-user').focus();
                 _addPermission('#permissions-table-users', 'user', value, label);
             });
 
             // install autocomplete for role add
             _searchFactory('#add-role', function (event, value, label) {
+                $('#add-role').focus();
                 _addPermission('#permissions-table-roles', 'role', value, label);
             });
 
