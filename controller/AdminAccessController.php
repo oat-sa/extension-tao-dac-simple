@@ -79,28 +79,26 @@ class AdminAccessController extends \tao_actions_CommonModule
         
         $this->setData('privileges', PermissionProvider::getRightLabels());
         
-        $userData = array();
-        foreach (array_keys($accessRights) as $uri) {
+        $users = array();
+        $roles = array();
+        foreach ($accessRights as $uri => $privileges) {
             if (isset($userList[$uri])) {
-                $userData[$uri] = array(
+                $users[$uri] = array(
                     'label' => $userList[$uri],
-                    'isRole' => false
+                    'privileges' => $privileges,
                 );
-                unset($userList[$uri]);
             } elseif (isset($roleList[$uri])) {
-                $userData[$uri] = array(
+                $roles[$uri] = array(
                     'label' => $roleList[$uri],
-                    'isRole' => true
+                    'privileges' => $privileges,
                 );
-                unset($roleList[$uri]);
             } else {
                 \common_Logger::d('unknown user '.$uri);
             }
         }
         
-        $this->setData('userPrivileges', $accessRights);
-        $this->setData('userData', $userData);
-        
+        $this->setData('users', $users);
+        $this->setData('roles', $roles);
         
         $this->setData('uri', $resource->getUri());
         $this->setData('label', _dh($resource->getLabel()));

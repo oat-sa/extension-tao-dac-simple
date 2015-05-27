@@ -28,8 +28,22 @@ define([
 ], function ($, _, __, lineTpl, helpers, feedback, autocomplete) {
     'use strict';
 
+    /**
+     * The amount of displayed lines that fires the tabs mode
+     * @type {Number}
+     */
+    var linesThreshold = 10;
+
+    /**
+     * The warning message shown when all managers have been removed
+     * @type {String}
+     */
     var errorMsgManagePermission = __('You must have one role or user that have the manage permission on this element.');
 
+    /**
+     * Config object needed by the tooltip used to display warning if all managers have been removed
+     * @type {Object}
+     */
     var tooltipConfigManagePermission = {
         content : __(errorMsgManagePermission),
         theme : 'tao-info-tooltip',
@@ -38,11 +52,12 @@ define([
 
     /**
      * Checks the managers, we need at least one activated manager.
+     * @param {jQuery|Element|String} container
      * @returns {Boolean} Returns `true` if there is at least one manager in the list
      * @private
      */
-    var _checkManagers = function () {
-        var $managers = $('#permissions-table').find('.privilege-GRANT:checked');
+    var _checkManagers = function (container) {
+        var $managers = $(container).find('.privilege-GRANT:checked');
         var checkOk = true;
 
         if (!$managers.length) {
@@ -53,15 +68,17 @@ define([
 
     /**
      * Avoids to remove all managers
+     * @param {jQuery|Element|String} container
+     * @private
      */
-    var _preventManagerRemoval = function(){
-        var $container = $('.permission-container');
-        var $form = $('form', $container);
+    var _preventManagerRemoval = function(container){
+        var $form = $(container).closest('form');
         var $submitter = $(':submit', $form);
 
         $submitter.tooltipster(tooltipConfigManagePermission);
-        if (!_checkManagers()) {
+        if (!_checkManagers($form)) {
             $submitter.addClass('disabled').tooltipster('enable');
+            feedback().info(errorMsgManagePermission);
         } else {
             $submitter.removeClass('disabled').tooltipster('disable');
         }
@@ -69,35 +86,43 @@ define([
 
     /**
      * Allow to enable / disable the access checkbox based on the state of the grant privilege
+     * @param {jQuery|Element|String} container
+     * @private
      */
-    var _disableAccessOnGrant = function () {
-        var $managersChecked = $('#permissions-table').find('.privilege-GRANT:checked').closest('tr'),
-            $cantWrite = $managersChecked.find('.privilege-WRITE'),
-            $cantRead = $managersChecked.find('.privilege-READ'),
+    var _disableAccessOnGrant = function (container) {
+        var $container = $(container);
 
-            $managers = $('#permissions-table').find('.privilege-GRANT').not(':checked').closest('tr'),
-            $canWrite = $managers.find('.privilege-WRITE'),
-            $canRead = $managers.find('.privilege-READ');
+        var $managersChecked = $container.find('.privilege-GRANT:checked').closest('tr');
+        var $cantChangeWrite = $managersChecked.find('.privilege-WRITE');
+        var $cantChangeRead = $managersChecked.find('.privilege-READ');
 
-        $canWrite.removeClass('disabled');
-        $canRead.removeClass('disabled');
+        var $managers = $container.find('.privilege-GRANT').not(':checked').closest('tr');
+        var $canChangeWrite = $managers.find('.privilege-WRITE');
+        var $canChangeRead = $managers.find('.privilege-READ');
 
-        $cantWrite.addClass('disabled');
-        $cantRead.addClass('disabled');
+        $canChangeWrite.removeClass('disabled');
+        $canChangeRead.removeClass('disabled');
 
-        _preventManagerRemoval();
-        _disableAccessOnWrite();
+        $cantChangeWrite.addClass('disabled').attr('checked', true);
+        $cantChangeRead.addClass('disabled').attr('checked', true);
+
+        _preventManagerRemoval($container);
+        _disableAccessOnWrite($container);
     };
 
     /**
      * Allow to enable / disable the access checkbox based on the state of the write privilege
+     * @param {jQuery|Element|String} container
+     * @private
      */
-    var _disableAccessOnWrite = function () {
-        var $writersChecked = $('#permissions-table').find('.privilege-WRITE:checked').closest('tr'),
-            $cantChangeRead = $writersChecked.find('.privilege-READ'),
+    var _disableAccessOnWrite = function (container) {
+        var $container = $(container);
 
-            $writers = $('#permissions-table').find('.privilege-WRITE').not(':checked').closest('tr'),
-            $canChangeRead = $writers.find('.privilege-READ');
+        var $writersChecked = $container.find('.privilege-WRITE:checked').closest('tr');
+        var $cantChangeRead = $writersChecked.find('.privilege-READ');
+
+        var $writers = $container.find('.privilege-WRITE').not(':checked').closest('tr');
+        var $canChangeRead = $writers.find('.privilege-READ');
 
         $canChangeRead.removeClass('disabled');
 
@@ -107,33 +132,36 @@ define([
     /**
      * Delete a permission row for a user/role
      * @param  {DOM Element} element DOM element that triggered the function
+     * @private
      */
     var _deletePermission = function (element) {
         // 1. Get the user / role
-        var $this = $(element),
-            type = $this.data('acl-type'),
-            user = $this.data('acl-user'),
-            label = $this.data('acl-label');
+        var $this = $(element);
+        var $container = $this.closest('table');
+        var type = $this.data('acl-type');
+        var user = $this.data('acl-user');
+        var label = $this.data('acl-label');
 
         // 2. Remove it from the list
         if (!_.isEmpty(type) && !_.isEmpty(user) && !_.isEmpty(label)) {
             $this.closest('tr').remove();
         }
 
-        _preventManagerRemoval();
+        _preventManagerRemoval($container);
+        _manageTabsDisplay();
     };
 
     /**
      * Checks if a permission has already been added to the list.
      * Highlight the list if the permission is already in the list.
+     * @param {jQuery|Element|String} container
      * @param {String} type role/user regarding what it will be added.
      * @param {String} id The identifier of the resource.
      * @returns {boolean} Returns true if the permission is already in the list
      * @private
      */
-    var _checkPermission = function (type, id) {
-        var $table = $('#permissions-table'),
-            $btn = $table.find('button[data-acl-user="' + id + '"]'),
+    var _checkPermission = function (container, type, id) {
+        var $btn = $(container).find('button[data-acl-user="' + id + '"]'),
             $line = $btn.closest('tr');
 
         if ($line.length) {
@@ -146,22 +174,78 @@ define([
 
     /**
      * Add a new lines into the permissions table regarding what is selected into the add-* select
+     * @param {jQuery|Element|String} container
      * @param {String} type role/user regarding what it will be added.
      * @param {String} id The identifier of the resource.
      * @param {String} label The label of the resource.
+     * @private
      */
-    var _addPermission = function (type, id, label) {
-        var $table = $('#permissions-table'),
-            $body = $table.find('tbody').first();
+    var _addPermission = function (container, type, id, label) {
+        var $container = $(container),
+            $body = $container.find('tbody').first();
 
         // only add the permission if it's not already present in the list
-        if (!_checkPermission(type, id)) {
+        if (!_checkPermission($container, type, id)) {
             $body.append(lineTpl({
                 type: type,
                 user: id,
                 label: label
             }));
-            _disableAccessOnGrant();
+            _disableAccessOnGrant($container);
+            _manageTabsDisplay();
+        }
+    };
+
+    /**
+     * Ensures that if you give the manage (GRANT) permission, access (WRITE and READ) permissions are given too
+     * Listens all clicks on delete buttons to call the _deletePermission function
+     * @param {jQuery|Element|String} container The container on which apply the listeners
+     * @private
+     */
+    var _installListeners = function(container) {
+        var $container = $(container);
+        $container.on('click', '.privilege-GRANT:not(.disabled) ', function () {
+            _disableAccessOnGrant($container);
+        }).on('click', '.privilege-WRITE:not(.disabled) ', function () {
+            _disableAccessOnWrite($container);
+        }).on('click', '.delete_permission:not(.disabled)', function (event) {
+            event.preventDefault();
+            _deletePermission(this);
+        });
+    };
+
+    /**
+     * Manages the display of tabs.
+     * If the total amount of lines per tables is too big, display the tabs. Otherwise, hide them.
+     * @private
+     */
+    var _manageTabsDisplay = function() {
+        var $tabs = $('.permission-tabs');
+        var needsTabs = $tabs.find('.privilege-GRANT').length > linesThreshold;
+        var $focused, index;
+
+        if (needsTabs) {
+            $tabs.find('ul').show();
+            if (!$tabs.hasClass('ui-tabs')) {
+                // get the current focused panel
+                $focused = $tabs.find(':focus').closest('.permission-tabs-panel');
+                index = Math.max(0, $focused.index() - 1);
+
+                // install the tabs, but keep the current panel focused
+                $tabs.tabs({
+                    // use two options to be compatible with both older and current version of jQueryUI
+                    selected: index,
+                    active: index
+                });
+            }
+            $('.msg-edit-area label span').hide();
+        } else {
+            if ($tabs.hasClass('ui-tabs')) {
+                $tabs.find('.ui-tabs-hide').removeClass('ui-tabs-hide');
+                $tabs.tabs('destroy');
+            }
+            $tabs.find('ul').hide();
+            $('.msg-edit-area label span').show();
         }
     };
 
@@ -171,7 +255,7 @@ define([
      * @param {Object} options A list of options to set
      * @returns {Autocompleter} Returns the instance of the autocompleter component
      */
-    var searchFactory = function (element, options) {
+    var _searchFactory = function (element, options) {
         if (_.isFunction(options)) {
             options = {
                 onSelectItem: options
@@ -193,38 +277,24 @@ define([
             var $form = $('form', $container);
             var $submitter = $(':submit', $form);
 
-            _disableAccessOnGrant();
+            _disableAccessOnGrant('#permissions-table-users');
+            _disableAccessOnGrant('#permissions-table-roles');
 
             // install autocomplete for user add
-            searchFactory('#add-user', function (event, value, label) {
-                _addPermission('user', value, label);
+            _searchFactory('#add-user', function (event, value, label) {
+                _addPermission('#permissions-table-users', 'user', value, label);
             });
 
             // install autocomplete for role add
-            searchFactory('#add-role', function (event, value, label) {
-                _addPermission('role', value, label);
+            _searchFactory('#add-role', function (event, value, label) {
+                _addPermission('#permissions-table-roles', 'role', value, label);
             });
 
-            /**
-             * Ensure that if you give the manage (GRANT) permission, access (WRITE and READ) permissions are given too
-             * &
-             * Listen all clicks on delete buttons to call the _deletePersmission function
-             */
-            $('#permissions-table').on('click', '.privilege-GRANT:not(.disabled) ', function () {
-                if ($(this).is(':checked') != []) {
-                    var $tr = $(this).closest('tr');
-                    var $writeCheckbox = $tr.find('.privilege-WRITE').not(':checked').first();
-                    var $readCheckbox = $tr.find('.privilege-READ').not(':checked').first();
-                    $writeCheckbox.click();
-                    $readCheckbox.click();
-                }
-                _disableAccessOnGrant();
-            }).on('click', '.privilege-WRITE:not(.disabled) ', function () {
-                _disableAccessOnWrite();
-            }).on('click', '.delete_permission:not(.disabled)', function (event) {
-                event.preventDefault();
-                _deletePermission(this);
-            });
+            // ensure that if you give the manage (GRANT) permission, access (WRITE and READ) permissions are given too
+            _installListeners('#permissions-table-users');
+            _installListeners('#permissions-table-roles');
+
+            _manageTabsDisplay();
 
             $form.on('submit', function (e) {
                 e.preventDefault();
@@ -237,7 +307,7 @@ define([
                     return;
                 }
 
-                if (!_checkManagers()) {
+                if (!_checkManagers('form')) {
                     feedback().error(errorMsgManagePermission);
                    return;
                 }
