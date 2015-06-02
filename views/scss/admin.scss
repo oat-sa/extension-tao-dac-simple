@@ -8,13 +8,12 @@
     }
 
     .msg-edit-area {
-        border: 1px $uiGeneralContentBorder solid;
         background: $canvas;
         padding: 20px 20px 10px 20px;
-        @include simple-border();
+        @include simple-border($uiGeneralContentBorder);
 
         .icon-add {
-            font-size: 2rem !important;
+            @include font-size(20, true);
             vertical-align: middle;
         }
     }
