@@ -99,6 +99,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         
         $this->setData('users', $users);
         $this->setData('roles', $roles);
+        $this->setData('isClass', $resource->isClass());
         
         $this->setData('uri', $resource->getUri());
         $this->setData('label', _dh($resource->getLabel()));

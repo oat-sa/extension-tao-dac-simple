@@ -128,11 +128,13 @@
         </div>
         <div class="grid-row">
             <div class="col-12 txt-rgt">
+                <?php if (get_data('isClass')): ?>
                 <label>
                     <?=__('Recursive') ?>
                     <input type="checkbox" name="recursive" value="1">
                     <span class="icon-checkbox"></span>
                 </label>
+                <?php endif; ?>
                 <button type="submit" class="btn-info small"><span class="icon-save"></span> <?= __('Save') ?></button>
             </div>
         </div>
