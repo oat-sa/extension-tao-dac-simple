@@ -74,26 +74,23 @@ class AdminAccessController extends \tao_actions_CommonModule
         $resource = new \core_kernel_classes_Resource($this->getRequestParameter('id'));
         
         $accessRights = AdminService::getUsersPermissions($resource->getUri());
-        $userList = $this->getUserList();
-        $roleList = $this->getRoleList();
         
         $this->setData('privileges', PermissionProvider::getRightLabels());
         
         $users = array();
         $roles = array();
         foreach ($accessRights as $uri => $privileges) {
-            if (isset($userList[$uri])) {
-                $users[$uri] = array(
-                    'label' => $userList[$uri],
-                    'privileges' => $privileges,
-                );
-            } elseif (isset($roleList[$uri])) {
+            $identity = new \core_kernel_classes_Resource($uri);
+            if ($identity->isInstanceOf(\tao_models_classes_RoleService::singleton()->getRoleClass())) {
                 $roles[$uri] = array(
-                    'label' => $roleList[$uri],
+                    'label' => $identity->getLabel(),
                     'privileges' => $privileges,
                 );
             } else {
-                \common_Logger::d('unknown user '.$uri);
+                $users[$uri] = array(
+                    'label' => $identity->getLabel(),
+                    'privileges' => $privileges,
+                );
             }
         }
         
@@ -105,40 +102,6 @@ class AdminAccessController extends \tao_actions_CommonModule
         $this->setData('label', _dh($resource->getLabel()));
         
         $this->setView('AdminAccessController/index.tpl');
-    }
-
-
-    /**
-     * get the list of users
-     * @param array $resourceIds
-     * @return array key => value with key = user Uri and value = user Label
-     */
-    protected function getUserList()
-    {
-        $userService = \tao_models_classes_UserService::singleton();
-        $users = array();
-        foreach ($userService->getAllUsers() as $user) {
-            $users[$user->getUri()] = _dh($user->getLabel());
-        }
-        
-        return $users;
-    }
-
-    /**
-     * get the list of roles
-     * @param array $resourceIds
-     * @return array key => value with key = user Uri and value = user Label
-     */
-    protected function getRoleList()
-    {
-        $roleService = \tao_models_classes_RoleService::singleton();
-        
-        $roles = array();
-        foreach ($roleService->getAllRoles() as $role) {
-            $roles[$role->getUri()] = _dh($role->getLabel());
-        }
-
-        return $roles;
     }
 
     /**
