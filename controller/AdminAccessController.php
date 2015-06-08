@@ -74,75 +74,34 @@ class AdminAccessController extends \tao_actions_CommonModule
         $resource = new \core_kernel_classes_Resource($this->getRequestParameter('id'));
         
         $accessRights = AdminService::getUsersPermissions($resource->getUri());
-        $userList = $this->getUserList();
-        $roleList = $this->getRoleList();
         
         $this->setData('privileges', PermissionProvider::getRightLabels());
         
-        $userData = array();
-        foreach (array_keys($accessRights) as $uri) {
-            if (isset($userList[$uri])) {
-                $userData[$uri] = array(
-                    'label' => $userList[$uri],
-                    'isRole' => false
+        $users = array();
+        $roles = array();
+        foreach ($accessRights as $uri => $privileges) {
+            $identity = new \core_kernel_classes_Resource($uri);
+            if ($identity->isInstanceOf(\tao_models_classes_RoleService::singleton()->getRoleClass())) {
+                $roles[$uri] = array(
+                    'label' => $identity->getLabel(),
+                    'privileges' => $privileges,
                 );
-                unset($userList[$uri]);
-            } elseif (isset($roleList[$uri])) {
-                $userData[$uri] = array(
-                    'label' => $roleList[$uri],
-                    'isRole' => true
-                );
-                unset($roleList[$uri]);
             } else {
-                \common_Logger::d('unknown user '.$uri);
+                $users[$uri] = array(
+                    'label' => $identity->getLabel(),
+                    'privileges' => $privileges,
+                );
             }
         }
         
-        $this->setData('users', $userList);
-        $this->setData('roles', $roleList);
-        
-        $this->setData('userPrivileges', $accessRights);
-        $this->setData('userData', $userData);
-        
+        $this->setData('users', $users);
+        $this->setData('roles', $roles);
+        $this->setData('isClass', $resource->isClass());
         
         $this->setData('uri', $resource->getUri());
         $this->setData('label', _dh($resource->getLabel()));
         
         $this->setView('AdminAccessController/index.tpl');
-    }
-
-
-    /**
-     * get the list of users
-     * @param array $resourceIds
-     * @return array key => value with key = user Uri and value = user Label
-     */
-    protected function getUserList()
-    {
-        $userService = \tao_models_classes_UserService::singleton();
-        $users = array();
-        foreach ($userService->getAllUsers() as $user) {
-            $users[$user->getUri()] = _dh($user->getLabel());
-        }
-        
-        return $users;
-    }
-
-    /**
-     * get the list of roles
-     * @param array $resourceIds
-     * @return array key => value with key = user Uri and value = user Label
-     */
-    protected function getRoleList()
-    {
-        $roleService = \tao_models_classes_RoleService::singleton();
-        
-        $roles = array();
-        foreach ($roleService->getAllRoles() as $role) {
-            $roles[$role->getUri()] = _dh($role->getLabel());
-        }
-
-        return $roles;
     }
 
     /**

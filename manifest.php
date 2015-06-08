@@ -36,6 +36,8 @@ return array(
 	'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager',
     'acl' => array(
         array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager', array('ext'=>'taoDacSimple')),
+        array('grant', 'http://www.tao.lu/Ontologies/TAOItem.rdf#ItemsManagerRole', array('controller' => 'oat\taoDacSimple\controller\AdminAccessController')),
+        array('grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', array('controller' => 'oat\taoDacSimple\controller\AdminAccessController'))
     ),
     'install' => array(
         'php' => array(
