@@ -46,7 +46,7 @@ define([
      */
     var tooltipConfigManagePermission = {
         content : __(errorMsgManagePermission),
-        theme : 'tao-info-tooltip',
+        theme : 'tao-warning-tooltip',
         trigger: 'hover'
     };
 
@@ -78,7 +78,7 @@ define([
         $submitter.tooltipster(tooltipConfigManagePermission);
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled').tooltipster('enable');
-            feedback().info(errorMsgManagePermission);
+            feedback().warning(errorMsgManagePermission);
         } else {
             $submitter.removeClass('disabled').tooltipster('disable');
         }
