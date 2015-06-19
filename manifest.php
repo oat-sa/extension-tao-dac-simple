@@ -24,7 +24,7 @@ return array(
 	'label' => 'extension-tao-dac-simple',
 	'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '1.0.1',
+    'version' => '1.0.2',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'tao' => '>=2.7.0',
@@ -36,6 +36,8 @@ return array(
 	'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager',
     'acl' => array(
         array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager', array('ext'=>'taoDacSimple')),
+        array('grant', 'http://www.tao.lu/Ontologies/TAOItem.rdf#ItemsManagerRole', array('controller' => 'oat\taoDacSimple\controller\AdminAccessController')),
+        array('grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', array('controller' => 'oat\taoDacSimple\controller\AdminAccessController'))
     ),
     'install' => array(
         'php' => array(
