@@ -24,7 +24,7 @@ return array(
 	'label' => 'extension-tao-dac-simple',
 	'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '1.0.2',
+    'version' => '1.1',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'taoBackOffice' => '>=0.9'
@@ -49,11 +49,6 @@ return array(
         )
     ),
     'update' => 'oat\\taoDacSimple\\scripts\\update\\Updater',
-    'autoload' => array (
-        'psr-4' => array(
-            'oat\\taoDacSimple\\' => dirname(__FILE__).DIRECTORY_SEPARATOR
-        )
-    ),
     'routes' => array(
         '/taoDacSimple' => 'oat\\taoDacSimple\\controller'
     ),
