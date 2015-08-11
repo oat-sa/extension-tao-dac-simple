@@ -25,15 +25,9 @@ use oat\tao\model\menu\Action;
 $taoClass = new core_kernel_classes_Class(TAO_OBJECT_CLASS);
 
 $classAdminXml = simplexml_load_string(
-'<action id="access-control-class" name="Access control" url="/taoDacSimple/AdminAccessController/classPermissions" group="tree" context="class">
+'<action id="access-control-admin" name="Access control" url="/taoDacSimple/AdminAccessController/adminPermissions" group="tree" context="resource">
     <icon id="icon-unlock" />
 </action>');
 $classAdmin = Action::fromSimpleXMLElement($classAdminXml);
 ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
 
-$instanceAdminXml = simplexml_load_string(
-'<action id="access-control-instance" name="Access control" url="/taoDacSimple/AdminAccessController/instancePermissions" group="tree" context="instance">
-    <icon id="icon-unlock" />
-</action>');
-$instanceAdmin = Action::fromSimpleXMLElement($instanceAdminXml);
-ClassActionRegistry::getRegistry()->registerAction($taoClass, $instanceAdmin);
