@@ -90,6 +90,7 @@ class AdminAccessController extends \tao_actions_CommonModule
     /**
      * add privileges for a group of users on resources. It works for add or modify privileges
      * @return bool
+     * @requiresRight resource_id GRANT
      */
     public function savePermissions()
     {
