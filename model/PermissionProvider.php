@@ -99,8 +99,9 @@ class PermissionProvider extends Configurable
     
     public static function getSupportedRootClasses() {
         return array(
-            new core_kernel_classes_Class(TAO_ITEM_CLASS),
-            new core_kernel_classes_Class(TAO_TEST_CLASS)
+            new core_kernel_classes_Class(TAO_OBJECT_CLASS),
+            new core_kernel_classes_Class(CLASS_GENERIS_USER),
+            new core_kernel_classes_Class(CLASS_ROLE)
         );
     }
 }

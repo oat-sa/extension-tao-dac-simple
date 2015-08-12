@@ -22,6 +22,7 @@
 namespace oat\taoDacSimple\model;
 
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\tao\model\menu\Action;
 
 /**
  * Service to administer the privileges
@@ -91,5 +92,14 @@ class AdminService
         foreach ($class->getSubClasses(false) as $subclass) {
             self::addPermissionToClass($subclass, $userUri, $rights);
         }
+    }
+    
+    public static function getAdminAction() {
+        $classAdminXml = simplexml_load_string(
+            '<action id="access-control-admin" name="Access control" url="/taoDacSimple/AdminAccessController/adminPermissions" group="tree" context="resource">'
+            .'<icon id="icon-unlock" />'
+            .'</action>'
+        );
+        return Action::fromSimpleXMLElement($classAdminXml);
     }
 }
