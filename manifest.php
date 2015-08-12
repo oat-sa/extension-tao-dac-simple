@@ -24,12 +24,10 @@ return array(
 	'label' => 'extension-tao-dac-simple',
 	'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '1.0.2',
+    'version' => '1.1',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
-	   'tao' => '>=2.7.0',
-	   'taoItems' => '>=2.6',
-       'taoTests' => '*'
+	   'taoBackOffice' => '>=0.9'
     ),
 	// for compatibility
 	'dependencies' => array('tao', 'taoItems'),
@@ -42,6 +40,7 @@ return array(
     'install' => array(
         'php' => array(
             dirname(__FILE__).'/scripts/install/setDataAccess.php',
+            dirname(__FILE__).'/scripts/install/registerAdmin.php'
         )
     ),
     'uninstall' => array(
@@ -50,11 +49,6 @@ return array(
         )
     ),
     'update' => 'oat\\taoDacSimple\\scripts\\update\\Updater',
-    'autoload' => array (
-        'psr-4' => array(
-            'oat\\taoDacSimple\\' => dirname(__FILE__).DIRECTORY_SEPARATOR
-        )
-    ),
     'routes' => array(
         '/taoDacSimple' => 'oat\\taoDacSimple\\controller'
     ),
@@ -67,8 +61,5 @@ return array(
 
         #BASE WWW the web resources path
         'BASE_WWW' => ROOT_URL.'taoDacSimple/views/'
-	),
-    'extra' => array(
-        'structures' => dirname(__FILE__).DIRECTORY_SEPARATOR.'controller'.DIRECTORY_SEPARATOR.'structures.xml',
-    )
+	)
 );

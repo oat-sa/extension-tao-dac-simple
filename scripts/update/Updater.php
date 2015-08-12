@@ -54,7 +54,12 @@ class Updater extends \common_ext_ExtensionUpdater {
         if ($currentVersion == '1.0.1') {
             $currentVersion = '1.0.2';
         }
-
+        if ($currentVersion == '1.0.2') {
+            $postInstall = $this->extension->getDir().'scripts'.DIRECTORY_SEPARATOR.'install'.DIRECTORY_SEPARATOR.'registerAdmin.php';
+            require_once $postInstall;
+            $currentVersion = '1.1';
+        }
+        
         return $currentVersion;
     }
 }

@@ -1,3 +1,4 @@
+<?php
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,19 +14,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2013 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  *
  *
  */
 
-define(function(){
-    'user strict';
-    return {
-        'AdminAccessController' : {
-            'css': 'admin', 
-            'actions' : {
-                'adminPermissions' : 'controller/admin/index'
-            }
-        }
-    };
-});
+use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
+use oat\tao\model\menu\Action;
+
+$taoClass = new core_kernel_classes_Class(TAO_OBJECT_CLASS);
+
+$classAdminXml = simplexml_load_string(
+'<action id="access-control-admin" name="Access control" url="/taoDacSimple/AdminAccessController/adminPermissions" group="tree" context="resource">
+    <icon id="icon-unlock" />
+</action>');
+$classAdmin = Action::fromSimpleXMLElement($classAdminXml);
+ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
+
