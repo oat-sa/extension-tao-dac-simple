@@ -20,14 +20,11 @@
  */
 
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
-use oat\tao\model\menu\Action;
+use oat\taoDacSimple\model\PermissionProvider;
+use oat\taoDacSimple\model\action\AdminAction;
 
-$taoClass = new core_kernel_classes_Class(TAO_OBJECT_CLASS);
+$classAdmin = new AdminAction();
 
-$classAdminXml = simplexml_load_string(
-'<action id="access-control-admin" name="Access control" url="/taoDacSimple/AdminAccessController/adminPermissions" group="tree" context="resource">
-    <icon id="icon-unlock" />
-</action>');
-$classAdmin = Action::fromSimpleXMLElement($classAdminXml);
-ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
-
+foreach (PermissionProvider::getSupportedRootClasses() as $class) {
+    ClassActionRegistry::getRegistry()->registerAction($class, $classAdmin);
+}

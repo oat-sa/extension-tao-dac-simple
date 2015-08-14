@@ -22,6 +22,7 @@
 namespace oat\taoDacSimple\model;
 
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\tao\model\menu\Action;
 
 /**
  * Service to administer the privileges

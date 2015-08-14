@@ -23,6 +23,9 @@ namespace oat\taoDacSimple\scripts\update;
 
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
+use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
+use oat\generis\model\data\permission\PermissionManager;
+use oat\taoDacSimple\model\action\AdminAction;
 
 /**
  * 
@@ -55,9 +58,37 @@ class Updater extends \common_ext_ExtensionUpdater {
             $currentVersion = '1.0.2';
         }
         if ($currentVersion == '1.0.2') {
-            $postInstall = $this->extension->getDir().'scripts'.DIRECTORY_SEPARATOR.'install'.DIRECTORY_SEPARATOR.'registerAdmin.php';
-            require_once $postInstall;
+            $taoClass = new core_kernel_classes_Class(TAO_OBJECT_CLASS);
+            $classAdmin = new AdminAction();
+            ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
+            
             $currentVersion = '1.1';
+        }
+        if ($currentVersion == '1.1') {
+            $classesToAdd = array(
+                new \core_kernel_classes_Class(CLASS_GENERIS_USER),
+                new \core_kernel_classes_Class(CLASS_ROLE)
+            );
+            
+            // add admin to new instances
+            $classAdmin = new AdminAction();
+            foreach ($classesToAdd as $class) {
+                ClassActionRegistry::getRegistry()->registerAction($class, $classAdmin);
+            }
+            
+            // add base permissions to new classes
+            $taoClass = new \core_kernel_classes_Class(TAO_OBJECT_CLASS);
+            foreach ($taoClass->getSubClasses(false) as $class) {
+                if (!in_array($class->getUri(), array(TAO_ITEM_CLASS,TAO_TEST_CLASS))) {
+                    $classesToAdd[] = $class;
+                }
+            }
+            $rights = PermissionManager::getPermissionModel()->getSupportedRights();
+            foreach ($classesToAdd as $class) {
+                AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $rights);
+            }
+            
+            $currentVersion = '1.2.0';
         }
         
         return $currentVersion;
