@@ -26,7 +26,7 @@ use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
 use oat\generis\model\data\permission\PermissionManager;
 use oat\taoDacSimple\model\action\AdminAction;
-
+use \core_kernel_classes_Class;
 /**
  * 
  * @author Joel Bout <joel@taotesting.com>
@@ -58,7 +58,7 @@ class Updater extends \common_ext_ExtensionUpdater {
             $currentVersion = '1.0.2';
         }
         if ($currentVersion == '1.0.2') {
-            $taoClass = new core_kernel_classes_Class(TAO_OBJECT_CLASS);
+            $taoClass = new \core_kernel_classes_Class(TAO_OBJECT_CLASS);
             $classAdmin = new AdminAction();
             ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
             
