@@ -20,10 +20,10 @@
  */
 
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
-use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
+use oat\taoDacSimple\model\action\AdminAction;
 
-$classAdmin = AdminService::getAdminAction();
+$classAdmin = new AdminAction();
 
 foreach (PermissionProvider::getSupportedRootClasses() as $class) {
     ClassActionRegistry::getRegistry()->registerAction($class, $classAdmin);

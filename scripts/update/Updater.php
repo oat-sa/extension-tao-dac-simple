@@ -25,6 +25,7 @@ use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
 use oat\generis\model\data\permission\PermissionManager;
+use oat\taoDacSimple\model\action\AdminAction;
 
 /**
  * 
@@ -58,7 +59,7 @@ class Updater extends \common_ext_ExtensionUpdater {
         }
         if ($currentVersion == '1.0.2') {
             $taoClass = new core_kernel_classes_Class(TAO_OBJECT_CLASS);
-            $classAdmin = AdminService::getAdminAction();
+            $classAdmin = new AdminAction();
             ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
             
             $currentVersion = '1.1';
@@ -70,7 +71,7 @@ class Updater extends \common_ext_ExtensionUpdater {
             );
             
             // add admin to new instances
-            $classAdmin = AdminService::getAdminAction();
+            $classAdmin = new AdminAction();
             foreach ($classesToAdd as $class) {
                 ClassActionRegistry::getRegistry()->registerAction($class, $classAdmin);
             }
