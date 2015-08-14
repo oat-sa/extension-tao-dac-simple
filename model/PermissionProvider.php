@@ -65,11 +65,15 @@ class PermissionProvider extends Configurable
      */
     public function onResourceCreated(\core_kernel_classes_Resource $resource) {
         $dbAccess = new DataBaseAccess();
-        // test if class
-        $class = new \core_kernel_classes_Class($resource);
-        foreach (array_merge($resource->getTypes(), $class->getParentClasses()) as $parent) {
-            foreach (AdminService::getUsersPermissions($parent->getUri()) as $userUri => $rights) {
-                $dbAccess->addPermissions($userUri, $resource->getUri(), $rights);
+        // verify resource is created
+        $permissions = $dbAccess->getResourcePermissions($resource->getUri());
+        if (empty($permissions)) {
+            // treat resources as classes without parent classes
+            $class = new \core_kernel_classes_Class($resource);
+            foreach (array_merge($resource->getTypes(), $class->getParentClasses()) as $parent) {
+                foreach (AdminService::getUsersPermissions($parent->getUri()) as $userUri => $rights) {
+                    $dbAccess->addPermissions($userUri, $resource->getUri(), $rights);
+                }
             }
         }
     }
