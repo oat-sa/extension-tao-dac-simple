@@ -49,27 +49,10 @@ class AdminAccessController extends \tao_actions_CommonModule
     }
 
     /**
-     * A possible entry point to tao
-     * @requiresRight id GRANT
-     */
-    public function instancePermissions()
-    {
-        return $this->adminPermissions();
-    }
-
-    /**
-     * A possible entry point to tao
-     * @requiresRight id GRANT
-     */
-    public function classPermissions()
-    {
-        return $this->adminPermissions();
-    }
-
-    /**
      * Manage permissions
+     * @requiresRight id GRANT
      */
-    protected function adminPermissions()
+    public function adminPermissions()
     {
         $resource = new \core_kernel_classes_Resource($this->getRequestParameter('id'));
         
@@ -107,6 +90,7 @@ class AdminAccessController extends \tao_actions_CommonModule
     /**
      * add privileges for a group of users on resources. It works for add or modify privileges
      * @return bool
+     * @requiresRight resource_id GRANT
      */
     public function savePermissions()
     {

@@ -65,11 +65,15 @@ class PermissionProvider extends Configurable
      */
     public function onResourceCreated(\core_kernel_classes_Resource $resource) {
         $dbAccess = new DataBaseAccess();
-        // test if class
-        $class = new \core_kernel_classes_Class($resource);
-        foreach (array_merge($resource->getTypes(), $class->getParentClasses()) as $parent) {
-            foreach (AdminService::getUsersPermissions($parent->getUri()) as $userUri => $rights) {
-                $dbAccess->addPermissions($userUri, $resource->getUri(), $rights);
+        // verify resource is created
+        $permissions = $dbAccess->getResourcePermissions($resource->getUri());
+        if (empty($permissions)) {
+            // treat resources as classes without parent classes
+            $class = new \core_kernel_classes_Class($resource);
+            foreach (array_merge($resource->getTypes(), $class->getParentClasses()) as $parent) {
+                foreach (AdminService::getUsersPermissions($parent->getUri()) as $userUri => $rights) {
+                    $dbAccess->addPermissions($userUri, $resource->getUri(), $rights);
+                }
             }
         }
     }
@@ -99,8 +103,9 @@ class PermissionProvider extends Configurable
     
     public static function getSupportedRootClasses() {
         return array(
-            new core_kernel_classes_Class(TAO_ITEM_CLASS),
-            new core_kernel_classes_Class(TAO_TEST_CLASS)
+            new core_kernel_classes_Class(TAO_OBJECT_CLASS),
+            new core_kernel_classes_Class(CLASS_GENERIS_USER),
+            new core_kernel_classes_Class(CLASS_ROLE)
         );
     }
 }
