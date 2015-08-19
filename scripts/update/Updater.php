@@ -85,7 +85,11 @@ class Updater extends \common_ext_ExtensionUpdater {
             }
             $rights = PermissionManager::getPermissionModel()->getSupportedRights();
             foreach ($classesToAdd as $class) {
-                AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $rights);
+                if (count(AdminService::getUsersPermissions($class->getUri())) == 0) {
+                    AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $rights);
+                } else {
+                    \common_Logger::w('Unexpected rights present for '.$class->getUri());
+                }
             }
             
             $currentVersion = '1.2.0';
