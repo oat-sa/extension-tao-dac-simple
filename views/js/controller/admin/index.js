@@ -23,7 +23,7 @@ define([
     'helpers',
     'ui/feedback',
     'ui/autocomplete',
-    'tooltipster',
+    'qtip',
     'jqueryui'
 ], function ($, _, __, lineTpl, helpers, feedback, autocomplete) {
     'use strict';
@@ -45,9 +45,17 @@ define([
      * @type {Object}
      */
     var tooltipConfigManagePermission = {
-        content : __(errorMsgManagePermission),
-        theme : 'tao-warning-tooltip',
-        trigger: 'hover'
+        style : {
+            classes : 'qtip-rounded qtip-orange'
+        },
+        position: {
+            my : 'bottom center',
+            at : 'top center',
+            viewport: $(window),
+        },
+        content: {
+            text: __(errorMsgManagePermission)
+        }
     };
 
     /**
@@ -75,12 +83,14 @@ define([
         var $form = $(container).closest('form');
         var $submitter = $(':submit', $form);
 
-        $submitter.tooltipster(tooltipConfigManagePermission);
+        $submitter.qtip(tooltipConfigManagePermission);
         if (!_checkManagers($form)) {
-            $submitter.addClass('disabled').tooltipster('enable');
+            $submitter.addClass('disabled')
+            $submitter.qtip('enable');
             feedback().warning(errorMsgManagePermission);
         } else {
-            $submitter.removeClass('disabled').tooltipster('disable');
+            $submitter.removeClass('disabled');
+            $submitter.qtip('disable');
         }
     };
 
