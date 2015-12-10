@@ -23,7 +23,7 @@ define([
     'helpers',
     'ui/feedback',
     'ui/autocomplete',
-    'qtip',
+    'ui/tooltip',
     'jqueryui'
 ], function ($, _, __, lineTpl, helpers, feedback, autocomplete) {
     'use strict';
@@ -45,14 +45,7 @@ define([
      * @type {Object}
      */
     var tooltipConfigManagePermission = {
-        style : {
-            classes : 'qtip-rounded qtip-orange'
-        },
-        position: {
-            my : 'bottom center',
-            at : 'top center',
-            viewport: $(window),
-        },
+        theme : 'warning',
         content: {
             text: __(errorMsgManagePermission)
         }
