@@ -40,9 +40,8 @@ class Updater extends \common_ext_ExtensionUpdater {
      */
     public function update($initialVersion) {
         
-        $currentVersion = $initialVersion;
         
-        if ($currentVersion == '1.0') {
+        if ($this->isVersion('1.0')) {
             $impl = new PermissionProvider();
             
             // add read access to Items
@@ -52,19 +51,20 @@ class Updater extends \common_ext_ExtensionUpdater {
             // add backoffice user rights to Tests
             $class = new \core_kernel_classes_Class(TAO_TEST_CLASS);
             AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
-            $currentVersion = '1.0.1';
+
+            $this->setVersion('1.0.1');
         }
-        if ($currentVersion == '1.0.1') {
-            $currentVersion = '1.0.2';
+        if ($this->isVersion('1.0.1')) {
+            $this->setVersion('1.0.2');
         }
-        if ($currentVersion == '1.0.2') {
+        if ($this->isVersion( '1.0.2')) {
             $taoClass = new \core_kernel_classes_Class(TAO_OBJECT_CLASS);
             $classAdmin = new AdminAction();
             ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
             
-            $currentVersion = '1.1';
+            $this->setVersion('1.1');
         }
-        if ($currentVersion == '1.1') {
+        if ($this->isVersion('1.1')) {
             $classesToAdd = array(
                 new \core_kernel_classes_Class(CLASS_GENERIS_USER),
                 new \core_kernel_classes_Class(CLASS_ROLE)
@@ -91,10 +91,13 @@ class Updater extends \common_ext_ExtensionUpdater {
                     \common_Logger::w('Unexpected rights present for '.$class->getUri());
                 }
             }
-            
-            $currentVersion = '1.2.0';
+            $this->setVersion('1.2.0');
         }
+
+        if ($this->isVersion('1.2.0')) {
+            $this->setVersion('1.2.1');
+         }
         
-        return $currentVersion;
+        return null;
     }
 }
