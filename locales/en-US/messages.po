@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: TAO v3.1-dev\n"
-"PO-Revision-Date: 2015-06-18T15:07:02\n"
+"Project-Id-Version: TAO 3.1.0-sprint15\n"
+"PO-Revision-Date: 2015-12-23T13:08:40\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: en-US\n"
@@ -13,7 +13,6 @@ msgstr ""
 "X-Poedit-KeywordsList: __\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#, tao-public
 msgid "Access control"
 msgstr ""
 
@@ -30,18 +29,6 @@ msgid "Add user(s)"
 msgstr ""
 
 msgid "grant"
-msgstr ""
-
-#, tao-public
-msgid "Items"
-msgstr ""
-
-#, tao-public
-msgid "Manage Items"
-msgstr ""
-
-#, tao-public
-msgid "Manage tests"
 msgstr ""
 
 msgid "Name"
@@ -69,10 +56,6 @@ msgid "Save"
 msgstr ""
 
 msgid "Something went wrong..."
-msgstr ""
-
-#, tao-public
-msgid "Tests"
 msgstr ""
 
 msgid "Type"
