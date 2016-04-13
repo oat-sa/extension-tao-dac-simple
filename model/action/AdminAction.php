@@ -21,7 +21,10 @@
 namespace oat\taoDacSimple\model\action;
 
 use oat\tao\model\menu\Icon;
-use oat\taoBackOffice\model\menuStructure\Action;
+use oat\taoBackOffice\model\menuStructure\Action as MenuAction;
+use oat\oatbox\PhpSerializeStateless;
+use oat\oatbox\PhpSerializable;
+
 /**
  * Admin Action, based on xml:
  * 
@@ -29,7 +32,9 @@ use oat\taoBackOffice\model\menuStructure\Action;
  *     <icon id="icon-unlock" />
  * </action>
  */
-class AdminAction implements Action {
+class AdminAction implements MenuAction, PhpSerializable {
+    
+    use PhpSerializeStateless;
     
     /**
      * @return string Identifier of action
@@ -90,5 +95,5 @@ class AdminAction implements Action {
             'src' => null
         ));
     }
-
+    
 }
