@@ -26,7 +26,7 @@ module.exports = function(grunt) {
             modules : [{
                 name: 'taoDacSimple/controller/routes',
                 include : ext.getExtensionsControllers(['taoDacSimple']),
-                exclude : ['mathJax', 'mediaElement'].concat(libs)
+                exclude : ['mathJax'].concat(libs)
             }]
         }
     };
