@@ -78,7 +78,7 @@ define([
 
         $submitter.qtip(tooltipConfigManagePermission);
         if (!_checkManagers($form)) {
-            $submitter.addClass('disabled')
+            $submitter.addClass('disabled');
             $submitter.qtip('enable');
             feedback().warning(errorMsgManagePermission);
         } else {
