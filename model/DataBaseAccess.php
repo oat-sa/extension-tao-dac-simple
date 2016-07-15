@@ -21,9 +21,9 @@
 
 namespace oat\taoDacSimple\model;
 
-use common_session_SessionManager;
-use common_Logger;
-use tao_models_classes_UserService;
+use oat\oatbox\event\EventManagerAwareTrait;
+use oat\taoDacSimple\model\event\DacAddedEvent;
+use oat\taoDacSimple\model\event\DacRemovedEvent;
 
 /**
  * Class to handle the storage and retrieval of permissions
@@ -33,6 +33,8 @@ use tao_models_classes_UserService;
  */
 class DataBaseAccess
 {
+
+    use EventManagerAwareTrait;
     // --- ASSOCIATIONS ---
 
 
@@ -130,6 +132,9 @@ class DataBaseAccess
                 array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege)
             );
         }
+
+        $this->getEventManager()->trigger(new DacAddedEvent($user, $resourceId, $privilege));
+
         return true;
     }
 
@@ -215,6 +220,7 @@ class DataBaseAccess
         $params[] = $user;
         
         $this->persistence->exec($query, $params);
+        $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
 
         return true;
     }
@@ -232,6 +238,8 @@ class DataBaseAccess
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
         $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
         $this->persistence->exec($query, $resourceIds);
+
+        $this->getEventManager()->trigger(new DacRemovedEvent('-', $resourceIds, '-'));
 
         return true;
     }
