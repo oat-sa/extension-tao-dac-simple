@@ -24,7 +24,7 @@ return array(
 	'label' => 'extension-tao-dac-simple',
 	'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '1.5.0',
+    'version' => '2.0.0',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'taoBackOffice' => '>=0.9'
@@ -58,8 +58,5 @@ return array(
 
 		#BASE URL (usually the domain root)
 		'BASE_URL' => ROOT_URL.'taoDacSimple/',
-
-        #BASE WWW the web resources path
-        'BASE_WWW' => ROOT_URL.'taoDacSimple/views/'
 	)
 );
