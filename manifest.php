@@ -18,13 +18,17 @@
  *
  *
  */
+use oat\taoDacSimple\scripts\install\SetupDataAccess;
+use oat\taoDacSimple\scripts\install\RegisterAction;
+use oat\taoDacSimple\controller\AdminAccessController;
+use oat\taoDacSimple\scripts\uninstall\RemoveDataAccess;
 
 return array(
     'name' => 'taoDacSimple',
 	'label' => 'extension-tao-dac-simple',
 	'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '2.0.0',
+    'version' => '2.0.1',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'taoBackOffice' => '>=0.9'
@@ -34,18 +38,18 @@ return array(
 	'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager',
     'acl' => array(
         array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager', array('ext'=>'taoDacSimple')),
-        array('grant', 'http://www.tao.lu/Ontologies/TAOItem.rdf#ItemsManagerRole', array('controller' => 'oat\taoDacSimple\controller\AdminAccessController')),
-        array('grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', array('controller' => 'oat\taoDacSimple\controller\AdminAccessController'))
+        array('grant', 'http://www.tao.lu/Ontologies/TAOItem.rdf#ItemsManagerRole', AdminAccessController::class),
+        array('grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', AdminAccessController::class)
     ),
     'install' => array(
         'php' => array(
-            dirname(__FILE__).'/scripts/install/setDataAccess.php',
-            dirname(__FILE__).'/scripts/install/registerAdmin.php'
+            SetupDataAccess::class,
+            RegisterAction::class
         )
     ),
     'uninstall' => array(
         'php' => array(
-            dirname(__FILE__).'/scripts/uninstall/unsetDataAccess.php',
+            RemoveDataAccess::class
         )
     ),
     'update' => 'oat\\taoDacSimple\\scripts\\update\\Updater',

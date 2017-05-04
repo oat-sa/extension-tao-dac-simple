@@ -24,7 +24,7 @@ namespace oat\taoDacSimple\scripts\update;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
-use oat\generis\model\data\permission\PermissionManager;
+use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\action\AdminAction;
 use \core_kernel_classes_Class;
 /**
@@ -83,7 +83,7 @@ class Updater extends \common_ext_ExtensionUpdater {
                     $classesToAdd[] = $class;
                 }
             }
-            $rights = PermissionManager::getPermissionModel()->getSupportedRights();
+            $rights = $this->getServiceManager()->get(PermissionInterface::SERVICE_ID)->getSupportedRights();
             foreach ($classesToAdd as $class) {
                 if (count(AdminService::getUsersPermissions($class->getUri())) == 0) {
                     AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $rights);
@@ -94,6 +94,6 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('1.2.0');
         }
 
-        $this->skip('1.2.0', '2.0.0');
+        $this->skip('1.2.0', '2.0.1');
     }
 }

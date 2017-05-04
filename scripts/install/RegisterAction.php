@@ -18,20 +18,20 @@
  *
  *
  */
+namespace oat\taoDacSimple\scripts\install;
 
-use oat\taoDacSimple\model\DataBaseAccess;
-use oat\generis\model\data\permission\PermissionManager;
-use oat\taoDacSimple\model\AdminService;
-use oat\generis\model\data\permission\implementation\FreeAccess;
+use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
+use oat\taoDacSimple\model\PermissionProvider;
+use oat\taoDacSimple\model\action\AdminAction;
+use oat\oatbox\extension\InstallAction;
 
-$persistence = common_persistence_Manager::getPersistence('default');
-$schema = $persistence->getDriver()->getSchemaManager()->createSchema();
-$fromSchema = clone $schema;
-$table = $schema->dropTable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
-$queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
-foreach ($queries as $query){
-    $persistence->exec($query);
+class RegisterAction extends InstallAction
+{
+    public function __invoke($params)
+    {
+        $classAdmin = new AdminAction();
+        foreach (PermissionProvider::getSupportedRootClasses() as $class) {
+            ClassActionRegistry::getRegistry()->registerAction($class, $classAdmin);
+        }
+    }
 }
-
-$impl = new FreeAccess();
-PermissionManager::setPermissionModel($impl);
