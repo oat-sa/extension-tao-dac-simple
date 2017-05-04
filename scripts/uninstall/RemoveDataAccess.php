@@ -27,13 +27,15 @@ use oat\generis\model\data\permission\implementation\FreeAccess;
 use oat\oatbox\extension\UninstallAction;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
 use oat\taoDacSimple\model\PermissionProvider;
+use oat\taoDacSimple\model\action\AdminAction;
 
 class RemoveDataAccess extends UninstallAction
 {
     public function __invoke($params)
     {
+        $classAdmin = new AdminAction();
         foreach (PermissionProvider::getSupportedRootClasses() as $class) {
-            ClassActionRegistry::getRegistry()->registerAction($class, $classAdmin);
+            ClassActionRegistry::getRegistry()->unregisterAction($class, $classAdmin);
         }
         
         $persistence = $this->getServiceLocator()->get(\common_persistence_Manager::SERVICE_ID)->getPersistenceById('default');

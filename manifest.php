@@ -31,7 +31,7 @@ return array(
     'version' => '2.0.1',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
-	   'taoBackOffice' => '>=0.9'
+	   'taoBackOffice' => '>=1.1.0'
     ),
 	// for compatibility
 	'dependencies' => array('tao', 'taoItems'),
