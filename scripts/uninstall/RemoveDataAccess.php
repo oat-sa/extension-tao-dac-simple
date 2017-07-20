@@ -48,6 +48,6 @@ class RemoveDataAccess extends UninstallAction
             $persistence->exec($query);
         }
         
-        $this->registerService(PermissionInterface::SERVICE_ID, new FreeAccess());
+        $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, new FreeAccess());
     }
 }
