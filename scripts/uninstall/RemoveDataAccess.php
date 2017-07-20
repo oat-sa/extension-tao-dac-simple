@@ -37,17 +37,24 @@ class RemoveDataAccess extends UninstallAction
         foreach (PermissionProvider::getSupportedRootClasses() as $class) {
             ClassActionRegistry::getRegistry()->unregisterAction($class, $classAdmin);
         }
-        
-        $persistence = $this->getServiceLocator()->get(\common_persistence_Manager::SERVICE_ID)->getPersistenceById('default');
-        
-        $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
-        $fromSchema = clone $schema;
-        $table = $schema->dropTable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
-        $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
-        foreach ($queries as $query){
-            $persistence->exec($query);
+
+        try {
+            $persistence = $this->getServiceLocator()->get(\common_persistence_Manager::SERVICE_ID)->getPersistenceById('default');
+
+            $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
+            $fromSchema = clone $schema;
+            $table = $schema->dropTable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
+            $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
+            foreach ($queries as $query) {
+                $persistence->exec($query);
+            }
+
+            $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, new FreeAccess());
+
+        } catch (\Exception $e) {
+            return \common_report_Report::createFailure(__("something went wrong during taoDacSimple uninstallation\n".$e->getMessage()));
         }
-        
-        $this->registerService(PermissionInterface::SERVICE_ID, new FreeAccess());
+
+        return \common_report_Report::createSuccess(__('taoDacSimple extension correctly uninstalled'));
     }
 }
