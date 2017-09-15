@@ -21,6 +21,7 @@
 
 namespace oat\taoDacSimple\scripts\update;
 
+use oat\tao\model\TaoOntology;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
@@ -45,12 +46,12 @@ class Updater extends \common_ext_ExtensionUpdater {
             $impl = new PermissionProvider();
             
             // add read access to Items
-            $class = new \core_kernel_classes_Class(TAO_ITEM_CLASS);
-            AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, array('READ'));
+            $class = new \core_kernel_classes_Class(TaoOntology::ITEM_CLASS);
+            AdminService::addPermissionToClass($class, TaoOntology::INSTANCE_ROLE_BACKOFFICE, array('READ'));
             
             // add backoffice user rights to Tests
-            $class = new \core_kernel_classes_Class(TAO_TEST_CLASS);
-            AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
+            $class = new \core_kernel_classes_Class(TaoOntology::TEST_CLASS);
+            AdminService::addPermissionToClass($class, TaoOntology::INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
 
             $this->setVersion('1.0.1');
         }
@@ -58,7 +59,7 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('1.0.2');
         }
         if ($this->isVersion( '1.0.2')) {
-            $taoClass = new \core_kernel_classes_Class(TAO_OBJECT_CLASS);
+            $taoClass = new \core_kernel_classes_Class(TaoOntology::OBJECT_CLASS);
             $classAdmin = new AdminAction();
             ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
             
@@ -77,16 +78,16 @@ class Updater extends \common_ext_ExtensionUpdater {
             }
             
             // add base permissions to new classes
-            $taoClass = new \core_kernel_classes_Class(TAO_OBJECT_CLASS);
+            $taoClass = new \core_kernel_classes_Class(TaoOntology::OBJECT_CLASS);
             foreach ($taoClass->getSubClasses(false) as $class) {
-                if (!in_array($class->getUri(), array(TAO_ITEM_CLASS,TAO_TEST_CLASS))) {
+                if (!in_array($class->getUri(), array(TaoOntology::ITEM_CLASS,TaoOntology::TEST_CLASS))) {
                     $classesToAdd[] = $class;
                 }
             }
             $rights = $this->getServiceManager()->get(PermissionInterface::SERVICE_ID)->getSupportedRights();
             foreach ($classesToAdd as $class) {
                 if (count(AdminService::getUsersPermissions($class->getUri())) == 0) {
-                    AdminService::addPermissionToClass($class, INSTANCE_ROLE_BACKOFFICE, $rights);
+                    AdminService::addPermissionToClass($class, TaoOntology::INSTANCE_ROLE_BACKOFFICE, $rights);
                 } else {
                     \common_Logger::w('Unexpected rights present for '.$class->getUri());
                 }
@@ -94,6 +95,6 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('1.2.0');
         }
 
-        $this->skip('1.2.0', '2.0.3');
+        $this->skip('1.2.0', '2.0.4');
     }
 }
