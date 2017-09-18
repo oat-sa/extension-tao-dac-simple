@@ -46,7 +46,7 @@ class PermissionProvider extends ConfigurableService
      */
     public function getPermissions(User $user, array $resourceIds) {
 
-        if (in_array(TaoOntology::INSTANCE_ROLE_SYSADMIN, $user->getRoles())) {
+        if (in_array(TaoOntology::PROPERTY_INSTANCE_ROLE_SYSADMIN, $user->getRoles())) {
             $permissions = array();
             foreach ($resourceIds as $id) {
                 $permissions[$id] = $this->getSupportedRights();
@@ -105,7 +105,7 @@ class PermissionProvider extends ConfigurableService
     
     public static function getSupportedRootClasses() {
         return array(
-            new core_kernel_classes_Class(TaoOntology::OBJECT_CLASS),
+            new core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI),
             new core_kernel_classes_Class(CLASS_GENERIS_USER),
             new core_kernel_classes_Class(CLASS_ROLE)
         );
