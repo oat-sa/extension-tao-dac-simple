@@ -32,21 +32,10 @@ class SetupDataAccess extends InstallAction
 {
     public function __invoke($params)
     {
-        $persistence = $this->getServiceLocator()->get(\common_persistence_Manager::SERVICE_ID)->getPersistenceById('default');
+        /** @var DataBaseAccess $databaseAccess */
+        $databaseAccess = $this->getServiceLocator()->get(DataBaseAccess::SERVICE_ID);
         
-        $schemaManager = $persistence->getDriver()->getSchemaManager();
-        $schema = $schemaManager->createSchema();
-        $fromSchema = clone $schema;
-        $table = $schema->createtable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
-        $table->addColumn('user_id',"string",array("notnull" => null,"length" => 255));
-        $table->addColumn('resource_id',"string",array("notnull" => null,"length" => 255));
-        $table->addColumn('privilege',"string",array("notnull" => null,"length" => 255));
-        $table->setPrimaryKey(array("user_id","resource_id","privilege"));
-        
-        $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
-        foreach ($queries as $query){
-            $persistence->exec($query);
-        }
+        $databaseAccess->createTables();
         
         $impl = new PermissionProvider();
         $this->registerService(PermissionInterface::SERVICE_ID, $impl);

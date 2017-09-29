@@ -22,6 +22,7 @@
 namespace oat\taoDacSimple\model;
 
 use oat\oatbox\event\EventManagerAwareTrait;
+use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 
@@ -31,39 +32,19 @@ use oat\taoDacSimple\model\event\DacRemovedEvent;
  * @author Antoine Robin <antoine.robin@vesperiagroup.com>
  * @author Joel Bout <joel@taotesting.com>
  */
-class DataBaseAccess
+class DataBaseAccess extends ConfigurableService
 {
 
     use EventManagerAwareTrait;
-    // --- ASSOCIATIONS ---
 
+    const SERVICE_ID = 'taoDacSimple/DataBaseAccess';
 
-    // --- ATTRIBUTES ---
+    const OPTION_PERSISTENCE = 'persistence';
 
-
-    private $persistence = null;
+    private $persistence;
 
     const TABLE_PRIVILEGES_NAME = 'data_privileges';
 
-    // --- OPERATIONS ---
-
-    
-    public function __construct()
-    {
-        $this->setPersistence(\common_persistence_Manager::getPersistence('default'));
-        
-    }
-
-
-    /**
-     *
-     * @author Lionel Lecaque, lionel@taotesting.com
-     * @param \common_persistence_Persistence $persistence
-     */
-    public function setPersistence(\common_persistence_Persistence $persistence){
-        $this->persistence = $persistence;
-    }
-    
     /**
      * We can know which users have a privilege on a resource
      * @param array $resourceIds
@@ -76,7 +57,7 @@ class DataBaseAccess
         $query = "SELECT resource_id, user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . "
         WHERE resource_id IN ($inQuery)";
         /** @var \PDOStatement $statement */
-        $statement = $this->persistence->query($query, $resourceIds);
+        $statement = $this->getPersistence()->query($query, $resourceIds);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
         return $results;
@@ -103,7 +84,7 @@ class DataBaseAccess
             $params[] = $userId;
         }
         /** @var \PDOStatement $statement */
-        $statement = $this->persistence->query($query, $params);
+        $statement = $this->getPersistence()->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
          foreach ($results as $result) {
@@ -127,7 +108,7 @@ class DataBaseAccess
 
         foreach ($rights as $privilege) {
             // add a line with user URI, resource Id and privilege
-            $this->persistence->insert(
+            $this->getPersistence()->insert(
                 self::TABLE_PRIVILEGES_NAME,
                 array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege)
             );
@@ -154,7 +135,7 @@ class DataBaseAccess
         $query = "SELECT user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ?";
 
         /** @var \PDOStatement $statement */
-        $statement = $this->persistence->query($query, array($resourceId));
+        $statement = $this->getPersistence()->query($query, array($resourceId));
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($results as $result) {
@@ -219,7 +200,7 @@ class DataBaseAccess
         }
         $params[] = $user;
         
-        $this->persistence->exec($query, $params);
+        $this->getPersistence()->exec($query, $params);
         $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
 
         return true;
@@ -237,11 +218,53 @@ class DataBaseAccess
         //get all entries that match (resourceId) and remove them
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
         $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
-        $this->persistence->exec($query, $resourceIds);
+        $this->getPersistence()->exec($query, $resourceIds);
 
         $this->getEventManager()->trigger(new DacRemovedEvent('-', $resourceIds, '-'));
 
         return true;
+    }
+
+    /**
+     * @return \common_persistence_SqlPersistence
+     */
+    private function getPersistence()
+    {
+        if (!$this->persistence){
+            $this->persistence = \common_persistence_Manager::getPersistence($this->getOption(self::OPTION_PERSISTENCE));
+        }
+        return $this->persistence;
+    }
+
+
+    public function createTables(){
+
+        $schemaManager = $this->getPersistence()->getDriver()->getSchemaManager();
+        $schema = $schemaManager->createSchema();
+        $fromSchema = clone $schema;
+        $table = $schema->createtable(self::TABLE_PRIVILEGES_NAME);
+        $table->addColumn('user_id',"string", ["notnull" => null,"length" => 255]);
+        $table->addColumn('resource_id',"string", ["notnull" => null,"length" => 255]);
+        $table->addColumn('privilege',"string", ["notnull" => null,"length" => 255]);
+        $table->setPrimaryKey(["user_id","resource_id","privilege"]);
+
+        $queries = $this->getPersistence()->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
+        foreach ($queries as $query){
+            $this->getPersistence()->exec($query);
+        }
+    }
+
+
+    public function removeTables()
+    {
+        $persistence = $this->getPersistence();
+        $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
+        $fromSchema = clone $schema;
+        $table = $schema->dropTable(self::TABLE_PRIVILEGES_NAME);
+        $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
+        foreach ($queries as $query) {
+            $persistence->exec($query);
+        }
     }
 
 }
