@@ -21,6 +21,7 @@
 
 namespace oat\taoDacSimple\scripts\update;
 
+use oat\generis\model\GenerisRdf;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
@@ -66,8 +67,8 @@ class Updater extends \common_ext_ExtensionUpdater {
         }
         if ($this->isVersion('1.1')) {
             $classesToAdd = array(
-                new \core_kernel_classes_Class(CLASS_GENERIS_USER),
-                new \core_kernel_classes_Class(CLASS_ROLE)
+                new \core_kernel_classes_Class(GenerisRdf::CLASS_GENERIS_USER),
+                new \core_kernel_classes_Class(GenerisRdf::CLASS_ROLE)
             );
             
             // add admin to new instances
