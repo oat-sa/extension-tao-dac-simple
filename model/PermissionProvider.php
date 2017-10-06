@@ -22,6 +22,7 @@ namespace oat\taoDacSimple\model;
 
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\generis\model\GenerisRdf;
+use oat\tao\model\TaoOntology;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\oatbox\user\User;
 use core_kernel_classes_Class;
@@ -46,7 +47,7 @@ class PermissionProvider extends ConfigurableService
      */
     public function getPermissions(User $user, array $resourceIds) {
 
-        if (in_array(INSTANCE_ROLE_SYSADMIN, $user->getRoles())) {
+        if (in_array(TaoOntology::PROPERTY_INSTANCE_ROLE_SYSADMIN, $user->getRoles())) {
             $permissions = array();
             foreach ($resourceIds as $id) {
                 $permissions[$id] = $this->getSupportedRights();
@@ -105,7 +106,7 @@ class PermissionProvider extends ConfigurableService
     
     public static function getSupportedRootClasses() {
         return array(
-            new core_kernel_classes_Class(TAO_OBJECT_CLASS),
+            new core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI),
             new core_kernel_classes_Class(GenerisRdf::CLASS_GENERIS_USER),
             new core_kernel_classes_Class(GenerisRdf::CLASS_ROLE)
         );
