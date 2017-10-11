@@ -39,15 +39,9 @@ class RemoveDataAccess extends UninstallAction
         }
 
         try {
-            $persistence = $this->getServiceLocator()->get(\common_persistence_Manager::SERVICE_ID)->getPersistenceById('default');
-
-            $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
-            $fromSchema = clone $schema;
-            $table = $schema->dropTable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
-            $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
-            foreach ($queries as $query) {
-                $persistence->exec($query);
-            }
+            /** @var DataBaseAccess $databaseAccess */
+            $databaseAccess = $this->getServiceManager()->get(DataBaseAccess::SERVICE_ID);
+            $databaseAccess->removeTables();
 
             $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, new FreeAccess());
 
