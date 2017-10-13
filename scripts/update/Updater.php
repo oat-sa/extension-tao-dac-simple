@@ -21,6 +21,7 @@
 
 namespace oat\taoDacSimple\scripts\update;
 
+use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
@@ -95,5 +96,17 @@ class Updater extends \common_ext_ExtensionUpdater {
         }
 
         $this->skip('1.2.0', '2.0.3');
+
+
+        if ($this->isVersion( '2.0.3')) {
+
+            $dataAccess = new DataBaseAccess([
+                DataBaseAccess::OPTION_PERSISTENCE =>'default'
+            ]);
+
+            $this->getServiceManager()->register(DataBaseAccess::SERVICE_ID, $dataAccess);
+
+            $this->setVersion('2.1.0');
+        }
     }
 }

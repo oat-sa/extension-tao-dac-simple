@@ -21,8 +21,7 @@
 
 namespace oat\taoDacSimple\model;
 
-use oat\taoDacSimple\model\DataBaseAccess;
-use oat\tao\model\menu\Action;
+use oat\oatbox\service\ServiceManager;
 
 /**
  * Service to administer the privileges
@@ -36,12 +35,11 @@ class AdminService
      * 
      * @param string $resourceUri
      * @param string $userUri
-     * @param string $userType
      * @return boolean
      */
     public static function setOwner($resourceUri, $userUri) {
-        
-        $db = new DataBaseAccess();
+        /** @var DataBaseAccess $db */
+        $db = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
         
         // Needs better abstraction
         $dbRow = $db->getUsersWithPermissions(array($resourceUri));
@@ -53,18 +51,19 @@ class AdminService
         
         return $db->addPermissions($userUri, $resourceUri, array('OWNER'));
     }
-    
+
     /**
      * Get a list of users with permissions for a given resource
-     * 
-     * Returns an associativ array  with userid as key and an array of rights as value
-     * 
-     * @param string $resourceIds
+     *
+     * Returns an associative array  with userid as key and an array of rights as value
+     *
+     * @param $resourceUri
      * @return array
      */
     public static function getUsersPermissions($resourceUri)
     {
-        $db = new DataBaseAccess();
+        /** @var DataBaseAccess $db */
+        $db = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
         $results = $db->getUsersWithPermissions(array($resourceUri));
     
         $permissions = array();
@@ -79,12 +78,17 @@ class AdminService
         
         return $permissions;
     }
-    
+
     /**
      * recursivly add permissions to a class and all instances
+     * @param \core_kernel_classes_Class $class
+     * @param $userUri
+     * @param $rights
      */
     public static function addPermissionToClass(\core_kernel_classes_Class $class, $userUri, $rights) {
-        $dbAccess = new DataBaseAccess();
+
+        /** @var DataBaseAccess $dbAccess */
+        $dbAccess = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
         $dbAccess->addPermissions($userUri, $class->getUri(), $rights);
         foreach ($class->getInstances(false) as $instance) {
             $dbAccess->addPermissions($userUri, $instance->getUri(), $rights);
@@ -93,4 +97,9 @@ class AdminService
             self::addPermissionToClass($subclass, $userUri, $rights);
         }
     }
+
+    public static function getServiceManager(){
+        return ServiceManager::getServiceManager();
+    }
+
 }
