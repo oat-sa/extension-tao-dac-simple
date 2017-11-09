@@ -47,7 +47,7 @@ class SetupDataAccess extends InstallAction
         }
 
         $currentService = $this->getServiceManager()->has(PermissionProvider::SERVICE_ID);
-        if($currentService instanceof FreeAccess || $currentService instanceof NoAccess){
+        if(!$currentService instanceof FreeAccess || !$currentService instanceof NoAccess){
             $impl = new IntersectionUnionSupported([$currentService, $impl]);
         }
 
