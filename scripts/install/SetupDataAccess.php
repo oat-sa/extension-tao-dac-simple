@@ -46,9 +46,9 @@ class SetupDataAccess extends InstallAction
             AdminService::addPermissionToClass($class, TaoRoles::BACK_OFFICE, $rights);
         }
 
-        $currentService = $this->getServiceManager()->has(PermissionProvider::SERVICE_ID);
-        if(!$currentService instanceof FreeAccess || !$currentService instanceof NoAccess){
-            $impl = new IntersectionUnionSupported([$currentService, $impl]);
+        $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
+        if(!$currentService instanceof FreeAccess && !$currentService instanceof NoAccess){
+            $impl = new IntersectionUnionSupported(['inner' => [$currentService, $impl]]);
         }
 
         $this->registerService(PermissionInterface::SERVICE_ID, $impl);
