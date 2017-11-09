@@ -20,10 +20,12 @@
  */
 namespace oat\taoDacSimple\scripts\install;
 
+use oat\generis\model\data\permission\implementation\FreeAccess;
+use oat\generis\model\data\permission\implementation\IntersectionUnionSupported;
+use oat\generis\model\data\permission\implementation\NoAccess;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
-use oat\oatbox\service\ServiceManager;
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\oatbox\extension\InstallAction;
 use oat\tao\model\user\TaoRoles;
@@ -38,12 +40,20 @@ class SetupDataAccess extends InstallAction
         $databaseAccess->createTables();
         
         $impl = new PermissionProvider();
-        $this->registerService(PermissionInterface::SERVICE_ID, $impl);
-        
+
         $rights = $impl->getSupportedRights();
         foreach (PermissionProvider::getSupportedRootClasses() as $class) {
             AdminService::addPermissionToClass($class, TaoRoles::BACK_OFFICE, $rights);
         }
+
+        $currentService = $this->getServiceManager()->has(PermissionProvider::SERVICE_ID);
+        if($currentService instanceof FreeAccess || $currentService instanceof NoAccess){
+            $impl = new IntersectionUnionSupported([$currentService, $impl]);
+        }
+
+        $this->registerService(PermissionInterface::SERVICE_ID, $impl);
+        
+
         return new \common_report_Report(\common_report_Report::TYPE_SUCCESS, 'Setup SimpleDac');
     }
 }
