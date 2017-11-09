@@ -21,13 +21,15 @@
 
 namespace oat\taoDacSimple\scripts\update;
 
+use oat\generis\model\data\permission\implementation\FreeAccess;
+use oat\generis\model\data\permission\implementation\IntersectionUnionSupported;
+use oat\generis\model\data\permission\implementation\NoAccess;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\action\AdminAction;
-use \core_kernel_classes_Class;
 /**
  * 
  * @author Joel Bout <joel@taotesting.com>
@@ -109,7 +111,17 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('2.1.0');
         }
 
-        $this->skip('2.1.0', '2.2.0');
+        if ($this->isVersion( '2.1.0')) {
+
+            $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
+            if(!$currentService instanceof PermissionProvider && !$currentService instanceof FreeAccess && !$currentService instanceof NoAccess){
+                $impl = new IntersectionUnionSupported(['inner' => [$currentService, new PermissionProvider()]]);
+                $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, $impl);
+            }
+
+            $this->setVersion('2.2.0');
+        }
+
 
     }
 }
