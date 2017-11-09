@@ -40,7 +40,7 @@ class SetupDataAccess extends InstallAction
         $databaseAccess->createTables();
         
         $impl = new PermissionProvider();
-
+        $toRegister = $impl;
         $rights = $impl->getSupportedRights();
         foreach (PermissionProvider::getSupportedRootClasses() as $class) {
             AdminService::addPermissionToClass($class, TaoRoles::BACK_OFFICE, $rights);
@@ -48,10 +48,14 @@ class SetupDataAccess extends InstallAction
 
         $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
         if(!$currentService instanceof FreeAccess && !$currentService instanceof NoAccess){
-            $impl = new IntersectionUnionSupported(['inner' => [$currentService, $impl]]);
+            if($currentService instanceof IntersectionUnionSupported){
+                $toRegister = $currentService->add($impl);
+            } else {
+                $toRegister = new IntersectionUnionSupported(['inner' => [$currentService, $impl]]);
+            }
         }
 
-        $this->registerService(PermissionInterface::SERVICE_ID, $impl);
+        $this->registerService(PermissionInterface::SERVICE_ID, $toRegister);
         
 
         return new \common_report_Report(\common_report_Report::TYPE_SUCCESS, 'Setup SimpleDac');

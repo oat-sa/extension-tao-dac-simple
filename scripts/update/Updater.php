@@ -115,8 +115,12 @@ class Updater extends \common_ext_ExtensionUpdater {
 
             $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
             if(!$currentService instanceof PermissionProvider && !$currentService instanceof FreeAccess && !$currentService instanceof NoAccess){
-                $impl = new IntersectionUnionSupported(['inner' => [$currentService, new PermissionProvider()]]);
-                $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, $impl);
+                if($currentService instanceof IntersectionUnionSupported){
+                    $toRegister = $currentService->add(new PermissionProvider());
+                } else {
+                    $toRegister = new IntersectionUnionSupported(['inner' => [$currentService, new PermissionProvider()]]);
+                }
+                $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, $toRegister);
             }
 
             $this->setVersion('2.2.0');
