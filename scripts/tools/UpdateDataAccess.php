@@ -62,15 +62,17 @@ class UpdateDataAccess extends AbstractAction
 
         if(empty($databaseAccess->getResourcePermissions($class->getUri()))){
             $databaseAccess->addPermissions(TaoRoles::BACK_OFFICE, $class->getUri(), $rights);
+            $updated++;
         }
         foreach ($class->getInstances(false) as $instance) {
             if(empty($databaseAccess->getResourcePermissions($instance->getUri()))){
                 $databaseAccess->addPermissions(TaoRoles::BACK_OFFICE, $instance->getUri(), $rights);
+                $updated++;
             }
         }
 
         foreach ($class->getSubClasses(false) as $subclass) {
-            $updated += $this->addPermissionsToClass($subclass, TaoRoles::BACK_OFFICE, $rights);
+            $updated += $this->addPermissionsToClass($subclass, $rights);
         }
 
         return $updated;
