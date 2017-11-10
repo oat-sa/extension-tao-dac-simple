@@ -83,6 +83,12 @@ class DataBaseAccess extends ConfigurableService
         foreach ($userIds as $userId) {
             $params[] = $userId;
         }
+
+        //If resource doesn't have permission don't return null
+        foreach($resourceIds as $resourceId){
+            $returnValue[$resourceId] = [];
+        }
+
         /** @var \PDOStatement $statement */
         $statement = $this->getPersistence()->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
