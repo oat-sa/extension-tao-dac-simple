@@ -28,6 +28,11 @@ use oat\tao\model\user\TaoRoles;
 
 /**
  * Class UpdateDataAccess
+ * usage
+ * ```
+ * sudo -u www-data php index.php 'oat\taoDacSimple\scripts\tools\UpdateDataAccess'
+ * ```
+ *
  * @package oat\taoDacSimple\scripts\tools
  */
 class UpdateDataAccess extends AbstractAction
