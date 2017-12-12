@@ -14,7 +14,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014 (original work) Open Assessment Technologies SA;
+ * Copyright (c) 2014-2017 (original work) Open Assessment Technologies SA;
  *
  *
  */
@@ -36,8 +36,8 @@ use oat\taoDacSimple\model\PermissionProvider;
  */
 class AdminAccessController extends \tao_actions_CommonModule
 {
-
-    private $dataAccess = null;
+    /** @var DataBaseAccess  */
+    private $dataAccess;
 
     /**
      * initialize the services
@@ -45,7 +45,7 @@ class AdminAccessController extends \tao_actions_CommonModule
     public function __construct()
     {
         parent::__construct();
-        $this->dataAccess = new DataBaseAccess();
+        $this->dataAccess = $this->getServiceManager()->get(DataBaseAccess::SERVICE_ID);
     }
 
     /**

@@ -21,6 +21,10 @@
 
 namespace oat\taoDacSimple\scripts\update;
 
+use oat\generis\model\data\permission\implementation\FreeAccess;
+use oat\generis\model\data\permission\implementation\IntersectionUnionSupported;
+use oat\generis\model\data\permission\implementation\NoAccess;
+use oat\taoDacSimple\model\DataBaseAccess;
 use oat\generis\model\GenerisRdf;
 use oat\tao\model\TaoOntology;
 use oat\taoDacSimple\model\PermissionProvider;
@@ -28,7 +32,6 @@ use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\action\AdminAction;
-use \core_kernel_classes_Class;
 /**
  * 
  * @author Joel Bout <joel@taotesting.com>
@@ -96,6 +99,35 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('1.2.0');
         }
 
-        $this->skip('1.2.0', '2.0.4');
+        $this->skip('1.2.0', '2.0.3');
+
+
+        if ($this->isVersion( '2.0.3')) {
+
+            $dataAccess = new DataBaseAccess([
+                DataBaseAccess::OPTION_PERSISTENCE =>'default'
+            ]);
+
+            $this->getServiceManager()->register(DataBaseAccess::SERVICE_ID, $dataAccess);
+
+            $this->setVersion('2.1.0');
+        }
+
+        if ($this->isVersion( '2.1.0')) {
+
+            $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
+            if(!$currentService instanceof PermissionProvider && !$currentService instanceof FreeAccess && !$currentService instanceof NoAccess){
+                if($currentService instanceof IntersectionUnionSupported){
+                    $toRegister = $currentService->add(new PermissionProvider());
+                } else {
+                    $toRegister = new IntersectionUnionSupported(['inner' => [$currentService, new PermissionProvider()]]);
+                }
+                $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, $toRegister);
+            }
+
+            $this->setVersion('2.2.0');
+        }
+
+        $this->skip('2.2.0', '2.3.0');
     }
 }

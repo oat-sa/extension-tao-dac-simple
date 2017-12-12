@@ -37,8 +37,7 @@ use oat\oatbox\service\ConfigurableService;
  * @access public
  * @author Joel Bout, <joel@taotesting.com>
  */
-class PermissionProvider extends ConfigurableService
-    implements PermissionInterface
+class PermissionProvider extends ConfigurableService implements PermissionInterface
 {
     
     /**
@@ -55,7 +54,7 @@ class PermissionProvider extends ConfigurableService
             return $permissions;
         }
 
-        $dbAccess = new DataBaseAccess();
+        $dbAccess = $this->getServiceManager()->get(DataBaseAccess::SERVICE_ID);
         $userIds = $user->getRoles();
         $userIds[] = $user->getIdentifier();
         return $dbAccess->getPermissions($userIds, $resourceIds);
@@ -67,7 +66,7 @@ class PermissionProvider extends ConfigurableService
      */
     public function onResourceCreated(\core_kernel_classes_Resource $resource)
     {
-        $dbAccess = new DataBaseAccess();
+        $dbAccess = $this->getServiceManager()->get(DataBaseAccess::SERVICE_ID);
         // verify resource is created
         $permissions = $dbAccess->getResourcePermissions($resource->getUri());
         if (empty($permissions)) {

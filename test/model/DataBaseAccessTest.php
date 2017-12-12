@@ -14,7 +14,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * 
- * Copyright (c) 2014 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT); *
+ * Copyright (c) 2014-2017 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT); *
  * 
  *  
  */
@@ -118,7 +118,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
 
         $persistenceMock = $this->getPersistenceMock($resourceIds, $queryFixture, $resultFixture);
 
-        $this->instance->setPersistence($persistenceMock);
+        $this->setPersistence($this->instance, $persistenceMock);
 
         $this->assertSame($resultFixture, $this->instance->getUsersWithPermissions($resourceIds));
     }
@@ -171,7 +171,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         }
         $persistenceMock = $this->getPersistenceMock($params, $query, $fetchResultFixture);
 
-        $this->instance->setPersistence($persistenceMock);
+        $this->setPersistence($this->instance, $persistenceMock);
 
         $this->assertSame($resultFixture, $this->instance->getPermissions($userIds, $resourceIds));
     }
@@ -238,6 +238,15 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         $this->persistence->exec($query, $resourceIds);
 
         return true;
+    }
+
+
+    private function setPersistence($instance, $persistenceMock)
+    {
+        $reflectionClass = new \ReflectionClass(get_class($instance));
+        $persistence = $reflectionClass->getProperty('persistence');
+        $persistence->setAccessible(true);
+        $persistence->setValue($instance, $persistenceMock);
     }
 
 
