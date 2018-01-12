@@ -27,15 +27,15 @@ use oat\oatbox\PhpSerializable;
 
 /**
  * Admin Action, based on xml:
- * 
+ *
  * <action id="access-control-admin" name="Access control" url="/taoDacSimple/AdminAccessController/adminPermissions" group="tree" context="resource">
  *     <icon id="icon-unlock" />
  * </action>
  */
 class AdminAction implements MenuAction, PhpSerializable {
-    
+
     use PhpSerializeStateless;
-    
+
     /**
      * @return string Identifier of action
      */
@@ -43,7 +43,7 @@ class AdminAction implements MenuAction, PhpSerializable {
     {
         return 'access-control-admin';
     }
-    
+
     /**
      * @return string Label of the action
      */
@@ -59,7 +59,7 @@ class AdminAction implements MenuAction, PhpSerializable {
     {
         return _url('adminPermissions', 'AdminAccessController', 'taoDacSimple');
     }
-    
+
     /**
      * @return string Java script bindings of action
      */
@@ -67,7 +67,7 @@ class AdminAction implements MenuAction, PhpSerializable {
     {
         return self::BINDING_DEFAULT;
     }
-    
+
     /**
      * @return string Context of the action
      */
@@ -83,7 +83,7 @@ class AdminAction implements MenuAction, PhpSerializable {
     {
         return self::GROUP_DEFAULT;
     }
-    
+
     /**
      * @return Icon Icon to be used with action
      */
@@ -95,5 +95,14 @@ class AdminAction implements MenuAction, PhpSerializable {
             'src' => null
         ));
     }
-    
+
+    /**
+     * The action applies on a single resource
+     * @return boolean
+     */
+    public function isMultiple()
+    {
+        return false;
+    }
+
 }
