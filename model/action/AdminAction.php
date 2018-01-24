@@ -105,4 +105,13 @@ class AdminAction implements MenuAction, PhpSerializable {
         return false;
     }
 
+    /**
+     * @return array this action requires GRANT permissions
+     */
+    public function getRequiredRights()
+    {
+        return [
+            'id' => 'GRANT'
+        ];
+    }
 }
