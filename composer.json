@@ -14,7 +14,7 @@
     ],
     "homepage" : "http://www.taotesting.com",
     "license" : [
-        "GPL-2.0"
+        "GPL-2.0-ONLY"
     ],
     "extra" : {
         "tao-extension-name" : "taoDacSimple"
@@ -27,5 +27,5 @@
         "psr-4" : {
             "oat\\taoDacSimple\\" : ""
         }
-    } 
+    }
 }
