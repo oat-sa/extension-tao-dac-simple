@@ -24,6 +24,7 @@ namespace oat\taoDacSimple\controller;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
+use oat\oatbox\log\LoggerAwareTrait;
 
 /**
  * This controller is used to manage permission administration
@@ -36,6 +37,8 @@ use oat\taoDacSimple\model\PermissionProvider;
  */
 class AdminAccessController extends \tao_actions_CommonModule
 {
+    use LoggerAwareTrait;
+
     /** @var DataBaseAccess  */
     private $dataAccess;
 
@@ -91,31 +94,15 @@ class AdminAccessController extends \tao_actions_CommonModule
      * add privileges for a group of users on resources. It works for add or modify privileges
      * @return bool
      * @requiresRight resource_id GRANT
+     * @throws
      */
     public function savePermissions()
     {
-        $users = $this->getRequest()->getParameter('users');
-        $resourceIds = (array)$this->getRequest()->getParameter('resource_id');
         $recursive = ($this->getRequest()->getParameter('recursive') === "1");
 
-        // cleanup uri param
-        if ($this->hasRequestParameter('uri')) {
-            $resourceId = $this->getRequest()->getParameter('uri');
-        } else {
-            $resourceId = (string)$this->getRequest()->getParameter('resource_id');
-        }
+        $clazz = $this->getResource();
+        $privileges = $this->getPrivileges();
 
-        // cleanup privilege param
-        if ($this->hasRequestParameter('privileges')) {
-            $privileges = $this->getRequestParameter('privileges');
-        } else {
-            $privileges = array();
-            foreach ($this->getRequest()->getParameter('users') as $userId => $data) {
-                unset($data['type']);
-                $privileges[$userId] = array_keys($data);
-            }
-        }
-        
         // Check if there is still a owner on this resource
         if (!$this->validatePermissions($privileges)) {
             \common_Logger::e('Cannot save a list without a fully privileged user');
@@ -124,36 +111,96 @@ class AdminAccessController extends \tao_actions_CommonModule
             ), 500);
         }
 
-        //get resource
-        $clazz = new \core_kernel_classes_Class($resourceId);
         $resources = array($clazz);
         if($recursive){
             $resources = array_merge($resources, $clazz->getSubClasses(true));
             $resources = array_merge($resources, $clazz->getInstances(true));
         }
 
-        foreach($resources as $resource){
-            $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(),$privileges);
-            // add permissions
-            foreach ($permissions['add'] as $userId => $privilegeIds) {
-                if(count($privilegeIds) > 0){
-                    $this->dataAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
-                }
+        $success = true;
+        $code = 200;
+        $message = __('Permissions saved');
+        $processedResources = [];
+        foreach ($resources as $resource) {
+            $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
+            try {
+                $this->removePermissions($permissions['remove'], $resource);
+            } catch (\common_exception_InconsistentData $e) {
+                $success = false;
+                $message = $e->getMessage();
+                break;
             }
-            // remove permissions
-            foreach ($permissions['remove'] as $userId => $privilegeIds) {
-                if(count($privilegeIds) > 0){
-                    $this->dataAccess->removePermissions($userId,$resource->getUri(),$privilegeIds);
+            $this->addPermissions($permissions['add'], $resource);
+            $processedResources[] = $resource;
+        }
+
+        if (!$success) {
+            $this->rollback($processedResources, $privileges);
+            $code = 500;
+        }
+
+        return $this->returnJson([
+            'success' => $success,
+            'message' => $message
+        ], $code);
+    }
+
+    /**
+     * @param array $permissions
+     * @param \core_kernel_classes_Resource $resource
+     * @throws \common_exception_Error
+     * @throws \common_exception_InconsistentData
+     */
+    private function removePermissions(array $permissions, \core_kernel_classes_Resource $resource)
+    {
+        $pp = $this->getPermissionProvider();
+        $supportedRights = $pp->getSupportedRights();
+        sort($supportedRights);
+        $currentUser = \common_session_SessionManager::getSession()->getUser();
+        foreach ($permissions as $userId => $privilegeIds) {
+            if (count($privilegeIds) > 0) {
+                $this->dataAccess->removePermissions($userId, $resource->getUri(), $privilegeIds);
+                $currentUserPermissions = current($pp->getPermissions(
+                    $currentUser,
+                    [$this->getRequest()->getParameter('resource_id')]
+                ));
+                sort($currentUserPermissions);
+                if ($currentUserPermissions !== $supportedRights) {
+                    $this->dataAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
+                    $this->logWarning('Attempt to revoke access to resource ' . $resource->getUri()
+                        . ' for current user: ' . $currentUser->getIdentifier());
+                    throw new \common_exception_InconsistentData(__('Access can not be revoked for the current user.'));
                 }
             }
         }
-
-        return $this->returnJson(array(
-        	'success' => true
-        ));
-        
     }
 
+    /**
+     * @param $permissions
+     * @param $resource
+     */
+    private function addPermissions($permissions, $resource)
+    {
+        foreach ($permissions as $userId => $privilegeIds) {
+            if (count($privilegeIds) > 0) {
+                $this->dataAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
+            }
+        }
+    }
+
+    /**
+     * @param $resources
+     * @param $privileges
+     * @throws
+     */
+    private function rollback($resources, $privileges)
+    {
+        foreach ($resources as $resource) {
+            $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
+            $this->removePermissions($permissions['add'], $resource);
+            $this->addPermissions($permissions['remove'], $resource);
+        }
+    }
 
     /**
      * Check if the array to save contains a user that has all privileges
@@ -163,13 +210,53 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     protected function validatePermissions($usersPrivileges)
     {
-        $pp = new PermissionProvider();
+        $pp = $this->getPermissionProvider();
         foreach ($usersPrivileges as $user => $options) {
             if (array_diff($options, $pp->getSupportedRights()) === array_diff($pp->getSupportedRights(), $options)) {
                 return true;
             }
         }
+
         return false;
     }
 
+    /**
+     * @return PermissionProvider
+     */
+    private function getPermissionProvider()
+    {
+        return $this->getServiceLocator()->get(PermissionProvider::SERVICE_ID);
+    }
+
+    /**
+     * Get privileges from request
+     * @return array
+     */
+    private function getPrivileges()
+    {
+        if ($this->hasRequestParameter('privileges')) {
+            $privileges = $this->getRequestParameter('privileges');
+        } else {
+            $privileges = [];
+            foreach ($this->getRequest()->getParameter('users') as $userId => $data) {
+                unset($data['type']);
+                $privileges[$userId] = array_keys($data);
+            }
+        }
+        return $privileges;
+    }
+
+    /**
+     * Get resource fro request
+     * @return \core_kernel_classes_Class
+     */
+    private function getResource()
+    {
+        if ($this->hasRequestParameter('uri')) {
+            $resourceId = $this->getRequest()->getParameter('uri');
+        } else {
+            $resourceId = (string)$this->getRequest()->getParameter('resource_id');
+        }
+        return new \core_kernel_classes_Class($resourceId);
+    }
 }
