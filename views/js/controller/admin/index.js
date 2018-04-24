@@ -23,9 +23,10 @@ define([
     'helpers',
     'ui/feedback',
     'ui/autocomplete',
+    'util/httpErrorParser',
     'ui/tooltip',
     'jqueryui'
-], function ($, _, __, lineTpl, helpers, feedback, autocomplete) {
+], function ($, _, __, lineTpl, helpers, feedback, autocomplete, httpErrorParser) {
     'use strict';
 
     /**
@@ -319,17 +320,20 @@ define([
 
                 $submitter.addClass('disabled');
 
-                $.post($form.attr('action'), $form.serialize())
-                    .done(function (res) {
-                        if (res && res.success) {
-                            feedback().success(__("Permissions saved"));
-                        } else {
-                            feedback().error(__("Something went wrong..."));
-                        }
-                    })
-                    .complete(function () {
-                        $submitter.removeClass('disabled');
-                    });
+                $.ajax({
+                    url : $form.attr('action'),
+                    type : 'POST',
+                    data : $form.serialize(),
+                    global : false
+                }).done(function () {
+                    feedback().success(__('Permissions saved'));
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    var error = httpErrorParser.parse(jqXHR, textStatus, errorThrown);
+                    feedback().error(error.message);
+                })
+                .complete(function () {
+                    $submitter.removeClass('disabled');
+                });
             });
         }
     };
