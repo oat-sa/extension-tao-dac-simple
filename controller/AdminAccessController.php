@@ -100,8 +100,8 @@ class AdminAccessController extends \tao_actions_CommonModule
     {
         $recursive = ($this->getRequest()->getParameter('recursive') === "1");
 
-        $clazz = $this->getResource();
-        $privileges = $this->getPrivileges();
+        $clazz = $this->getResourceFromRequest();
+        $privileges = $this->getPrivilegesFromRequest();
 
         // Check if there is still a owner on this resource
         if (!$this->validatePermissions($privileges)) {
@@ -121,20 +121,16 @@ class AdminAccessController extends \tao_actions_CommonModule
         $code = 200;
         $message = __('Permissions saved');
         $processedResources = [];
-        foreach ($resources as $resource) {
-            $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
-            try {
+        try {
+            foreach ($resources as $resource) {
+                $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
                 $this->removePermissions($permissions['remove'], $resource);
-            } catch (\common_exception_InconsistentData $e) {
-                $success = false;
-                $message = $e->getMessage();
-                break;
+                $this->addPermissions($permissions['add'], $resource);
+                $processedResources[] = $resource;
             }
-            $this->addPermissions($permissions['add'], $resource);
-            $processedResources[] = $resource;
-        }
-
-        if (!$success) {
+        } catch (\common_exception_InconsistentData $e) {
+            $success = false;
+            $message = $e->getMessage();
             $this->rollback($processedResources, $privileges);
             $code = 500;
         }
@@ -153,14 +149,14 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     private function removePermissions(array $permissions, \core_kernel_classes_Resource $resource)
     {
-        $pp = $this->getPermissionProvider();
-        $supportedRights = $pp->getSupportedRights();
+        $permissionProvider = $this->getPermissionProvider();
+        $supportedRights = $permissionProvider->getSupportedRights();
         sort($supportedRights);
         $currentUser = \common_session_SessionManager::getSession()->getUser();
         foreach ($permissions as $userId => $privilegeIds) {
             if (count($privilegeIds) > 0) {
                 $this->dataAccess->removePermissions($userId, $resource->getUri(), $privilegeIds);
-                $currentUserPermissions = current($pp->getPermissions(
+                $currentUserPermissions = current($permissionProvider->getPermissions(
                     $currentUser,
                     [$this->getRequest()->getParameter('resource_id')]
                 ));
@@ -210,9 +206,9 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     protected function validatePermissions($usersPrivileges)
     {
-        $pp = $this->getPermissionProvider();
+        $permissionProvider = $this->getPermissionProvider();
         foreach ($usersPrivileges as $user => $options) {
-            if (array_diff($options, $pp->getSupportedRights()) === array_diff($pp->getSupportedRights(), $options)) {
+            if (array_diff($options, $permissionProvider->getSupportedRights()) === array_diff($permissionProvider->getSupportedRights(), $options)) {
                 return true;
             }
         }
@@ -232,7 +228,7 @@ class AdminAccessController extends \tao_actions_CommonModule
      * Get privileges from request
      * @return array
      */
-    private function getPrivileges()
+    private function getPrivilegesFromRequest()
     {
         if ($this->hasRequestParameter('privileges')) {
             $privileges = $this->getRequestParameter('privileges');
@@ -250,7 +246,7 @@ class AdminAccessController extends \tao_actions_CommonModule
      * Get resource fro request
      * @return \core_kernel_classes_Class
      */
-    private function getResource()
+    private function getResourceFromRequest()
     {
         if ($this->hasRequestParameter('uri')) {
             $resourceId = $this->getRequest()->getParameter('uri');

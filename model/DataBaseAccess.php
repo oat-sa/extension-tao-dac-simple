@@ -238,7 +238,7 @@ class DataBaseAccess extends ConfigurableService
     {
         if (!$this->persistence){
 
-            $this->persistence = $this->getServiceManager()->get(\common_persistence_Manager::class)->getPersistence($this->getOption(self::OPTION_PERSISTENCE));
+            $this->persistence = $this->getServiceManager()->get(\common_persistence_Manager::SERVICE_ID)->getPersistence($this->getOption(self::OPTION_PERSISTENCE));
         }
         return $this->persistence;
     }
