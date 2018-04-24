@@ -191,10 +191,14 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     private function rollback($resources, $privileges)
     {
-        foreach ($resources as $resource) {
-            $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
-            $this->removePermissions($permissions['add'], $resource);
-            $this->addPermissions($permissions['remove'], $resource);
+        try {
+            foreach ($resources as $resource) {
+                $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
+                $this->removePermissions($permissions['add'], $resource);
+                $this->addPermissions($permissions['remove'], $resource);
+            }
+        } catch (\Exception $e) {
+            $this->logWarning('Error occurred during rollback at ' . self::class . ': ' . $e->getMessage());
         }
     }
 
