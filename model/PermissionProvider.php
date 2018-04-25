@@ -23,7 +23,6 @@ namespace oat\taoDacSimple\model;
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\generis\model\GenerisRdf;
 use oat\tao\model\TaoOntology;
-use oat\taoDacSimple\model\DataBaseAccess;
 use oat\oatbox\user\User;
 use core_kernel_classes_Class;
 use oat\oatbox\service\ConfigurableService;
@@ -46,7 +45,7 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
      */
     public function getPermissions(User $user, array $resourceIds) {
 
-        if (in_array(TaoOntology::PROPERTY_INSTANCE_ROLE_SYSADMIN, $user->getRoles())) {
+        if (in_array(DacRoles::DAC_ADMINISTRATOR, $user->getRoles())) {
             $permissions = array();
             foreach ($resourceIds as $id) {
                 $permissions[$id] = $this->getSupportedRights();
