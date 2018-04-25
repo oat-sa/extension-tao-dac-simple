@@ -48,7 +48,7 @@ return array(
             RegisterAction::class
         ),
         'rdf' => array(
-            dirname(__FILE__). '/model/ontology/dac.rdf',
+            __DIR__ . '/model/ontology/dac.rdf',
         ),
     ),
     'uninstall' => array(

@@ -9,8 +9,8 @@
 >
   <rdf:Description rdf:about="http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator">
     <rdf:type rdf:resource="http://www.tao.lu/Ontologies/generis.rdf#UserRole"/>
-    <rdfs:label xml:lang="en-US"><![CDATA[DAC Administrator]]></rdfs:label>
-    <rdfs:comment xml:lang="en-US"><![CDATA[Data Access Control Administrator role]]></rdfs:comment>
+    <rdfs:label xml:lang="en-US"><![CDATA[Data Access Administrator]]></rdfs:label>
+    <rdfs:comment xml:lang="en-US"><![CDATA[Data Access Administrator role]]></rdfs:comment>
     <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole"/>
   </rdf:Description>
 
