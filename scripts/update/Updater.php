@@ -32,6 +32,8 @@ use oat\taoDacSimple\model\AdminService;
 use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\action\AdminAction;
+use oat\tao\scripts\update\OntologyUpdater;
+
 /**
  * 
  * @author Joel Bout <joel@taotesting.com>
@@ -129,5 +131,10 @@ class Updater extends \common_ext_ExtensionUpdater {
         }
 
         $this->skip('2.2.0', '2.6.0');
+
+        if ($this->isVersion('2.6.0')) {
+            OntologyUpdater::syncModels();
+            $this->setVersion('2.7.0');
+        }
     }
 }
