@@ -28,7 +28,7 @@ return array(
 	'label' => 'extension-tao-dac-simple',
 	'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '2.5.1',
+    'version' => '2.7.0',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'taoBackOffice' => '>=1.4.0',
@@ -46,7 +46,10 @@ return array(
         'php' => array(
             SetupDataAccess::class,
             RegisterAction::class
-        )
+        ),
+        'rdf' => array(
+            __DIR__ . '/model/ontology/dac.rdf',
+        ),
     ),
     'uninstall' => array(
         'php' => array(
