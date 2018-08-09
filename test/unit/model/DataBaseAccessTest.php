@@ -19,7 +19,7 @@
  *  
  */
 
-namespace oat\taoDacSimple\test\model;
+namespace oat\taoDacSimple\test\unit\model;
 
 use oat\taoDacSimple\model\DataBaseAccess;
 
@@ -173,6 +173,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
 
         $this->setPersistence($this->instance, $persistenceMock);
 
+        // @todo fix key order (2, 1, 3)
         $this->assertSame($resultFixture, $this->instance->getPermissions($userIds, $resourceIds));
     }
 
