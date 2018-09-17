@@ -27,7 +27,6 @@ use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\oatbox\log\LoggerAwareTrait;
 
-\console::setMode('file', __DIR__ . '/cl.log');
 
 /**
  * This controller is used to manage permission administration
