@@ -91,11 +91,8 @@ class AdminAccessController extends \tao_actions_CommonModule
 
         // Add csrf token
         $tokenService = $this->getServiceLocator()->get(TokenService::SERVICE_ID);
-        $tokenName    = $tokenService->getTokenName();
-        $token        = $tokenService->createToken();
-        $this->setCookie($tokenName, $token, null, '/');
-        $this->setData('xsrf-token-name', $tokenName);
-        $this->setData('xsrf-token-value', $token);
+        $this->setData('xsrf-token-name',  $tokenService->getTokenName());
+        $this->setData('xsrf-token-value', $tokenService->createToken());
 
         $this->setView('AdminAccessController/index.tpl');
     }
@@ -114,7 +111,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         $privileges = $this->getPrivilegesFromRequest();
 
         // Csrf token validation
-        $this->validateCsrfToken();
+        $token = $this->validateCsrfToken();
 
         // Check if there is still a owner on this resource
         if (!$this->validatePermissions($privileges)) {
@@ -150,7 +147,8 @@ class AdminAccessController extends \tao_actions_CommonModule
 
         return $this->returnJson([
             'success' => $success,
-            'message' => $message
+            'message' => $message,
+            'token'   => $token
         ], $code);
     }
 
@@ -247,9 +245,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 
         if($tokenService->checkToken($token)) {
             $tokenService->revokeToken($token);
-            $newToken = $tokenService->createToken();
-            $this->setCookie($tokenName, $newToken, null, '/');
-            return true;
+            return $tokenService->createToken();
         }
 
         \common_Logger::e('CSRF token validation failed');

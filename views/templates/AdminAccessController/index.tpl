@@ -4,7 +4,7 @@
 
     <form action="<?= _url('savePermissions') ?>" method="POST" class="list-container">
         <input type="hidden" name="resource_id" id="resource_id" value="<?= get_data('uri') ?>">
-        <input type="hidden" name="<?= get_data('xsrf-token-name') ?>" id="token" value="<?= get_data('xsrf-token-value') ?>">
+        <input type="hidden" name="<?= get_data('xsrf-token-name') ?>" id="xsrfToken" value="<?= get_data('xsrf-token-value') ?>">
 
         <div class="permission-tabs">
             <ul>

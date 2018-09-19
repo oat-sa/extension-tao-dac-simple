@@ -327,6 +327,7 @@ define([
                     global : false
                 }).done(function () {
                     feedback().success(__('Permissions saved'));
+                    $('#xsrfToken').val(data.token);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     var error = httpErrorParser.parse(jqXHR, textStatus, errorThrown);
                     feedback().error(error.message);
