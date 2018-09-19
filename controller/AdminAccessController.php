@@ -145,10 +145,13 @@ class AdminAccessController extends \tao_actions_CommonModule
             $code = 500;
         }
 
+        $tokenService = $this->getServiceLocator()->get(TokenService::SERVICE_ID);
+
         return $this->returnJson([
-            'success' => $success,
-            'message' => $message,
-            'token'   => $token
+            'success'   => $success,
+            'message'   => $message,
+            'token'     => $token,
+            'tokenName' => $tokenService->getTokenName()
         ], $code);
     }
 

@@ -325,9 +325,9 @@ define([
                     type : 'POST',
                     data : $form.serialize(),
                     global : false
-                }).done(function () {
+                }).done(function (data) {
                     feedback().success(__('Permissions saved'));
-                    $('#xsrfToken').val(data.token);
+                    $('[name="' + data.tokenName + '"', $form).val(data.token);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     var error = httpErrorParser.parse(jqXHR, textStatus, errorThrown);
                     feedback().error(error.message);
