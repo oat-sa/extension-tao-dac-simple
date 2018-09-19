@@ -327,7 +327,7 @@ define([
                     global : false
                 }).done(function (data) {
                     feedback().success(__('Permissions saved'));
-                    $('[name="' + data.tokenName + '"', $form).val(data.token);
+                    $('[name="' + data.tokenName + '"]', $form).val(data.token);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     var error = httpErrorParser.parse(jqXHR, textStatus, errorThrown);
                     feedback().error(error.message);
