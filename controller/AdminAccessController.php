@@ -235,9 +235,9 @@ class AdminAccessController extends \tao_actions_CommonModule
     }
 
     /**
-     * Validates CSRF token and revokes token on success
+     * Validates CSRF token and returns a fresh token on success
      *
-     * @return bool
+     * @return string
      * @throws \common_exception_Unauthorized
      */
     protected function validateCsrfToken()
