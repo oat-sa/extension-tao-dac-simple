@@ -35,26 +35,26 @@ use oat\taoDacSimple\model\action\AdminAction;
 use oat\tao\scripts\update\OntologyUpdater;
 
 /**
- * 
+ *
  * @author Joel Bout <joel@taotesting.com>
  */
 class Updater extends \common_ext_ExtensionUpdater {
-    
+
     /**
-     * 
+     *
      * @param string $currentVersion
      * @return string $versionUpdatedTo
      */
     public function update($initialVersion) {
-        
-        
+
+
         if ($this->isVersion('1.0')) {
             $impl = new PermissionProvider();
-            
+
             // add read access to Items
             $class = new \core_kernel_classes_Class(TaoOntology::ITEM_CLASS_URI);
             AdminService::addPermissionToClass($class, TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE, array('READ'));
-            
+
             // add backoffice user rights to Tests
             $class = new \core_kernel_classes_Class(TaoOntology::TEST_CLASS_URI);
             AdminService::addPermissionToClass($class, TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
@@ -68,7 +68,7 @@ class Updater extends \common_ext_ExtensionUpdater {
             $taoClass = new \core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI);
             $classAdmin = new AdminAction();
             ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
-            
+
             $this->setVersion('1.1');
         }
         if ($this->isVersion('1.1')) {
@@ -76,13 +76,13 @@ class Updater extends \common_ext_ExtensionUpdater {
                 new \core_kernel_classes_Class(GenerisRdf::CLASS_GENERIS_USER),
                 new \core_kernel_classes_Class(GenerisRdf::CLASS_ROLE)
             );
-            
+
             // add admin to new instances
             $classAdmin = new AdminAction();
             foreach ($classesToAdd as $class) {
                 ClassActionRegistry::getRegistry()->registerAction($class, $classAdmin);
             }
-            
+
             // add base permissions to new classes
             $taoClass = new \core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI);
             foreach ($taoClass->getSubClasses(false) as $class) {
@@ -137,6 +137,6 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('2.7.0');
         }
 
-        $this->skip('2.7.0', '2.7.2');
+        $this->skip('2.7.0', '2.7.3');
     }
 }
