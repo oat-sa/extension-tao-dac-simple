@@ -256,26 +256,22 @@ define([
     /**
      * Installs a search purpose autocompleter onto an element.
      * @param {jQuery|Element|String} element The element on which install the autocompleter
-     * @param {Object} options A list of options to set
+     * @param {Function} onSelectItem - The selection callback
      * @returns {Autocompleter} Returns the instance of the autocompleter component
      */
-    var _searchFactory = function (element, options) {
-        if (_.isFunction(options)) {
-            options = {
-                onSelectItem: options
-            };
-        }
-
-        options = _.assign({
+    var _searchFactory = function (element, onSelectItem) {
+        var autocompleteOptions = {
             isProvider: true,
             preventSubmit: true
-        }, options || {});
-
-        return autocomplete(element, options);
+        };
+        if (_.isFunction(onSelectItem)) {
+            autocompleteOptions.onSelectItem = onSelectItem;
+        }
+        return autocomplete(element, autocompleteOptions);
     };
 
     var mainCtrl = {
-        'start': function () {
+        start: function start () {
 
             var $container = $('.permission-container');
             var $form = $('form', $container);
@@ -315,7 +311,7 @@ define([
 
                 if (!_checkManagers('form')) {
                     feedback().error(errorMsgManagePermission);
-                   return;
+                    return;
                 }
 
                 $submitter.addClass('disabled');
@@ -333,8 +329,7 @@ define([
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     var error = httpErrorParser.parse(jqXHR, textStatus, errorThrown);
                     feedback().error(error.message);
-                })
-                .complete(function () {
+                }).complete(function () {
                     $submitter.removeClass('disabled');
                 });
             });
