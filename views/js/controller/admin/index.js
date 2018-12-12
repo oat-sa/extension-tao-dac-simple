@@ -26,7 +26,7 @@ define([
     'util/httpErrorParser',
     'ui/tooltip',
     'jqueryui'
-], function ($, _, __, lineTpl, helpers, feedback, autocomplete, httpErrorParser) {
+], function ($, _, __, lineTpl, helpers, feedback, autocomplete, httpErrorParser, tooltip) {
     'use strict';
 
     /**
@@ -46,10 +46,8 @@ define([
      * @type {Object}
      */
     var tooltipConfigManagePermission = {
-        theme : 'warning',
-        content: {
-            text: __(errorMsgManagePermission)
-        }
+        theme: 'warning',
+        title: __(errorMsgManagePermission)
     };
 
     /**
@@ -77,14 +75,14 @@ define([
         var $form = $(container).closest('form');
         var $submitter = $(':submit', $form);
 
-        $submitter.qtip(tooltipConfigManagePermission);
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled');
-            $submitter.qtip('enable');
+            tooltip($submitter, tooltipConfigManagePermission);
             feedback().warning(errorMsgManagePermission);
         } else {
             $submitter.removeClass('disabled');
-            $submitter.qtip('disable');
+            $submitter.data('$tooltip').dispose();
+            $submitter.removeAttr('$tooltip');
         }
     };
 
