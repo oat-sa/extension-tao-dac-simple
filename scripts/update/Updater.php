@@ -138,6 +138,6 @@ class Updater extends \common_ext_ExtensionUpdater {
         }
 
         $this->skip('2.7.0', '3.0.0');
-        $this->skip('2.7.0', '3.0.1');
+        $this->skip('2.7.0', '3.1.0');
     }
 }
