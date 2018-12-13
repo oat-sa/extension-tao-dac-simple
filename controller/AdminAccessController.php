@@ -21,6 +21,7 @@
 
 namespace oat\taoDacSimple\controller;
 
+use oat\generis\model\OntologyAwareTrait;
 use oat\tao\model\security\xsrf\TokenService;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\AdminService;
@@ -40,17 +41,14 @@ use oat\oatbox\log\LoggerAwareTrait;
 class AdminAccessController extends \tao_actions_CommonModule
 {
     use LoggerAwareTrait;
-
-    /** @var DataBaseAccess  */
-    private $dataAccess;
+    use OntologyAwareTrait;
 
     /**
-     * initialize the services
+     * @return DataBaseAccess
      */
-    public function __construct()
+    protected function getDataBaseAccessService()
     {
-        parent::__construct();
-        $this->dataAccess = $this->getServiceManager()->get(DataBaseAccess::SERVICE_ID);
+        return $this->getServiceLocator()->get(DataBaseAccess::SERVICE_ID);
     }
 
     /**
@@ -59,7 +57,7 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     public function adminPermissions()
     {
-        $resource = new \core_kernel_classes_Resource($this->getRequestParameter('id'));
+        $resource = $this->getResource($this->getRequestParameter('id'));
 
         $accessRights = AdminService::getUsersPermissions($resource->getUri());
 
@@ -68,7 +66,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         $users = array();
         $roles = array();
         foreach ($accessRights as $uri => $privileges) {
-            $identity = new \core_kernel_classes_Resource($uri);
+            $identity = $this->getResource($uri);
             if ($identity->isInstanceOf(\tao_models_classes_RoleService::singleton()->getRoleClass())) {
                 $roles[$uri] = array(
                     'label' => $identity->getLabel(),
@@ -115,7 +113,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 
         // Check if there is still a owner on this resource
         if (!$this->validatePermissions($privileges)) {
-            \common_Logger::e('Cannot save a list without a fully privileged user');
+            $this->logError('Cannot save a list without a fully privileged user');
             return $this->returnJson(array(
             	'success' => false
             ), 500);
@@ -133,7 +131,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         $processedResources = [];
         try {
             foreach ($resources as $resource) {
-                $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
+                $permissions = $this->getDataBaseAccessService()->getDeltaPermissions($resource->getUri(), $privileges);
                 $this->removePermissions($permissions['remove'], $resource);
                 $this->addPermissions($permissions['add'], $resource);
                 $processedResources[] = $resource;
@@ -166,17 +164,17 @@ class AdminAccessController extends \tao_actions_CommonModule
         $permissionProvider = $this->getPermissionProvider();
         $supportedRights = $permissionProvider->getSupportedRights();
         sort($supportedRights);
-        $currentUser = \common_session_SessionManager::getSession()->getUser();
+        $currentUser = $this->getSession()->getUser();
         foreach ($permissions as $userId => $privilegeIds) {
             if (count($privilegeIds) > 0) {
-                $this->dataAccess->removePermissions($userId, $resource->getUri(), $privilegeIds);
+                $this->getDataBaseAccessService()->removePermissions($userId, $resource->getUri(), $privilegeIds);
                 $currentUserPermissions = current($permissionProvider->getPermissions(
                     $currentUser,
                     [$this->getRequest()->getParameter('resource_id')]
                 ));
                 sort($currentUserPermissions);
                 if ($currentUserPermissions !== $supportedRights) {
-                    $this->dataAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
+                    $this->getDataBaseAccessService()->addPermissions($userId, $resource->getUri(), $privilegeIds);
                     $this->logWarning('Attempt to revoke access to resource ' . $resource->getUri()
                         . ' for current user: ' . $currentUser->getIdentifier());
                     throw new \common_exception_InconsistentData(__('Access can not be revoked for the current user.'));
@@ -193,7 +191,7 @@ class AdminAccessController extends \tao_actions_CommonModule
     {
         foreach ($permissions as $userId => $privilegeIds) {
             if (count($privilegeIds) > 0) {
-                $this->dataAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
+                $this->getDataBaseAccessService()->addPermissions($userId, $resource->getUri(), $privilegeIds);
             }
         }
     }
@@ -207,7 +205,7 @@ class AdminAccessController extends \tao_actions_CommonModule
     {
         try {
             foreach ($resources as $resource) {
-                $permissions = $this->dataAccess->getDeltaPermissions($resource->getUri(), $privileges);
+                $permissions = $this->getDataBaseAccessService()->getDeltaPermissions($resource->getUri(), $privileges);
                 $this->removePermissions($permissions['add'], $resource);
                 $this->addPermissions($permissions['remove'], $resource);
             }
@@ -251,7 +249,7 @@ class AdminAccessController extends \tao_actions_CommonModule
             return $tokenService->createToken();
         }
 
-        \common_Logger::e('CSRF token validation failed');
+        $this->logError('CSRF token validation failed');
         throw new \common_exception_Unauthorized();
     }
 
@@ -292,6 +290,6 @@ class AdminAccessController extends \tao_actions_CommonModule
         } else {
             $resourceId = (string)$this->getRequest()->getParameter('resource_id');
         }
-        return new \core_kernel_classes_Class($resourceId);
+        return $this->getClass($resourceId);
     }
 }
