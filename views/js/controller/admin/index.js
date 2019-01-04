@@ -42,14 +42,6 @@ define([
     var errorMsgManagePermission = __('You must have one role or user that have the manage permission on this element.');
 
     /**
-     * Config object needed by the tooltip used to display warning if all managers have been removed
-     * @type {Object}
-     */
-    var tooltipConfigManagePermission = {
-        theme: 'warning',
-    };
-
-    /**
      * Checks the managers, we need at least one activated manager.
      * @param {jQuery|Element|String} container
      * @returns {Boolean} Returns `true` if there is at least one manager in the list
@@ -77,7 +69,7 @@ define([
 
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled');
-            instance = tooltip.create($submitter, errorMsgManagePermission, tooltipConfigManagePermission);
+            instance = tooltip.warning($submitter, errorMsgManagePermission);
             $submitter.data('$tooltip', instance);
             feedback().warning(errorMsgManagePermission);
         } else {
