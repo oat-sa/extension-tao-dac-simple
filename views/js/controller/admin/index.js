@@ -47,7 +47,6 @@ define([
      */
     var tooltipConfigManagePermission = {
         theme: 'warning',
-        title: __(errorMsgManagePermission)
     };
 
     /**
@@ -78,7 +77,7 @@ define([
 
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled');
-            instance = tooltip.create($submitter, tooltipConfigManagePermission);
+            instance = tooltip.create($submitter, errorMsgManagePermission, tooltipConfigManagePermission);
             $submitter.data('$tooltip', instance);
             feedback().warning(errorMsgManagePermission);
         } else {
