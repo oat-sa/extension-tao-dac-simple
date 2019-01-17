@@ -42,6 +42,11 @@ define([
     var errorMsgManagePermission = __('You must have one role or user that have the manage permission on this element.');
 
     /**
+     * tooltip instance that serves all methods with same tooltip data and its state
+     * @type {Tooltip}
+     */
+    var errorTooltip;
+    /**
      * Checks the managers, we need at least one activated manager.
      * @param {jQuery|Element|String} container
      * @returns {Boolean} Returns `true` if there is at least one manager in the list
@@ -65,17 +70,14 @@ define([
     var _preventManagerRemoval = function(container){
         var $form = $(container).closest('form');
         var $submitter = $(':submit', $form);
-        var instance;
 
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled');
-            instance = tooltip.warning($submitter, errorMsgManagePermission);
-            $submitter.data('$tooltip', instance);
+            errorTooltip = tooltip.warning($submitter, errorMsgManagePermission);
             feedback().warning(errorMsgManagePermission);
         } else {
             $submitter.removeClass('disabled');
-            $submitter.data('$tooltip').dispose();
-            $submitter.removeAttr('$tooltip');
+            errorTooltip.dispose();
         }
     };
 
