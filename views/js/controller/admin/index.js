@@ -105,8 +105,8 @@ define([
         $canChangeWrite.removeClass('disabled');
         $canChangeRead.removeClass('disabled');
 
-        $cantChangeWrite.addClass('disabled').attr('checked', true);
-        $cantChangeRead.addClass('disabled').attr('checked', true);
+        $cantChangeWrite.addClass('disabled').prop('checked', true);
+        $cantChangeRead.addClass('disabled').prop('checked', true);
 
         _preventManagerRemoval($container);
         _disableAccessOnWrite($container);
@@ -128,7 +128,7 @@ define([
 
         $canChangeRead.removeClass('disabled');
 
-        $cantChangeRead.addClass('disabled').attr('checked', true);
+        $cantChangeRead.addClass('disabled').prop('checked', true);
     };
 
     /**
