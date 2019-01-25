@@ -33,7 +33,7 @@ return array(
 	'requires' => array(
 	   'taoBackOffice' => '>=3.0.0',
        'generis' => '>=5.9.0',
-       'tao' => '>=23.0.0'
+       'tao' => '>=24.0.0'
     ),
 	// for compatibility
 	'dependencies' => array('tao', 'taoItems'),
