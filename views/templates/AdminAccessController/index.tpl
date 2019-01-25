@@ -52,14 +52,14 @@
                             </td>
                             <?php foreach (get_data('privileges') as $privilege => $privilegeLabel):?>
                             <td>
-                                <label class="tooltip">
+                                <label>
                                     <input type="checkbox" class="privilege-<?= $privilege ?>" name="users[<?= $uri ?>][<?= $privilege ?>]" value="1" <?= (in_array($privilege, $user['privileges'])) ? 'checked' : '' ?>>
                                     <span class="icon-checkbox"></span>
                                 </label>
                             </td>
                             <?php endforeach;?>
                             <td>
-                                <button type="button" class="small delete_permission tooltip btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $user['label'] ?>" >
+                                <button type="button" class="small delete_permission btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $user['label'] ?>" >
                                     <span class="icon-bin"></span><?= __('Remove') ?>
                                 </button>
                             </td>
@@ -110,14 +110,14 @@
                             </td>
                             <?php foreach (get_data('privileges') as $privilege => $privilegeLabel):?>
                             <td>
-                                <label class="tooltip">
+                                <label>
                                     <input type="checkbox" class="privilege-<?= $privilege ?>" name="users[<?= $uri ?>][<?= $privilege ?>]" value="1" <?= (in_array($privilege, $role['privileges'])) ? 'checked' : '' ?>>
                                     <span class="icon-checkbox"></span>
                                 </label>
                             </td>
                             <?php endforeach;?>
                             <td>
-                                <button type="button" class="small delete_permission tooltip btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $role['label'] ?>" >
+                                <button type="button" class="small delete_permission btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $role['label'] ?>" >
                                     <span class="icon-bin"></span><?= __('Remove') ?>
                                 </button>
                             </td>
