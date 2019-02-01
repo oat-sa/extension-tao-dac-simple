@@ -13,7 +13,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2015 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2015-2019 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
 define([
     'jquery',
@@ -26,7 +26,7 @@ define([
     'util/httpErrorParser',
     'ui/tooltip',
     'jqueryui'
-], function ($, _, __, lineTpl, helpers, feedback, autocomplete, httpErrorParser) {
+], function ($, _, __, lineTpl, helpers, feedback, autocomplete, httpErrorParser, tooltip) {
     'use strict';
 
     /**
@@ -42,16 +42,10 @@ define([
     var errorMsgManagePermission = __('You must have one role or user that have the manage permission on this element.');
 
     /**
-     * Config object needed by the tooltip used to display warning if all managers have been removed
-     * @type {Object}
+     * tooltip instance that serves all methods with same tooltip data and its state
+     * @type {Tooltip}
      */
-    var tooltipConfigManagePermission = {
-        theme : 'warning',
-        content: {
-            text: __(errorMsgManagePermission)
-        }
-    };
-
+    var errorTooltip;
     /**
      * Checks the managers, we need at least one activated manager.
      * @param {jQuery|Element|String} container
@@ -77,14 +71,18 @@ define([
         var $form = $(container).closest('form');
         var $submitter = $(':submit', $form);
 
-        $submitter.qtip(tooltipConfigManagePermission);
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled');
-            $submitter.qtip('enable');
+            errorTooltip = tooltip.warning($submitter, errorMsgManagePermission, {
+                placement : 'bottom',
+                trigger: "hover",
+            });
             feedback().warning(errorMsgManagePermission);
         } else {
             $submitter.removeClass('disabled');
-            $submitter.qtip('disable');
+            if(errorTooltip){
+                errorTooltip.dispose();
+            }
         }
     };
 
@@ -107,8 +105,8 @@ define([
         $canChangeWrite.removeClass('disabled');
         $canChangeRead.removeClass('disabled');
 
-        $cantChangeWrite.addClass('disabled').attr('checked', true);
-        $cantChangeRead.addClass('disabled').attr('checked', true);
+        $cantChangeWrite.addClass('disabled').prop('checked', true);
+        $cantChangeRead.addClass('disabled').prop('checked', true);
 
         _preventManagerRemoval($container);
         _disableAccessOnWrite($container);
@@ -130,7 +128,7 @@ define([
 
         $canChangeRead.removeClass('disabled');
 
-        $cantChangeRead.addClass('disabled').attr('checked', true);
+        $cantChangeRead.addClass('disabled').prop('checked', true);
     };
 
     /**
