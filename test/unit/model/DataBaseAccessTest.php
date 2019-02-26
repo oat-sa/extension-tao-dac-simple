@@ -53,7 +53,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
     public function getPersistenceMock($queryParams, $queryFixture, $resultFixture) {
 
 
-        $statementMock = $this->getMock('PDOStatementFake', array('fetchAll'),array(),'', false, false, true, false);
+        $statementMock = $this->createMock('PDOStatementFake', array('fetchAll'),array(),'', false, false, true, false);
         $statementMock->expects($this->once())
             ->method('fetchAll')
             ->with(\PDO::FETCH_ASSOC)
@@ -63,7 +63,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         $driverMock =$this->getMockForAbstractClass('common_persistence_Driver', array(), 'common_persistence_Driver_Mock', false, false, true, array('query'), false);
 
         
-        $persistenceMock = $this->getMock(
+        $persistenceMock = $this->createMock(
             'common_persistence_Persistence',
             array('getDriver','query'),
             array(array(),$driverMock),
