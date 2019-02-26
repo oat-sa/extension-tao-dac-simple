@@ -21,6 +21,7 @@
 
 namespace oat\taoDacSimple\test\unit\model;
 
+use oat\generis\test\TestCase;
 use oat\taoDacSimple\model\DataBaseAccess;
 
 /**
@@ -30,9 +31,7 @@ use oat\taoDacSimple\model\DataBaseAccess;
  * @package taodacSimple
  *
  */
-class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
-
-
+class DataBaseAccessTest extends TestCase {
     /**
      * @var DataBaseAccess
      */
@@ -48,12 +47,12 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * Return a persistence Mock object
-     * @return PHPUnit_Framework_MockObject_MockObject
+     * @return \PHPUnit_Framework_MockObject_MockObject
      */
     public function getPersistenceMock($queryParams, $queryFixture, $resultFixture) {
 
 
-        $statementMock = $this->getMock('PDOStatementFake', array('fetchAll'),array(),'', false, false, true, false);
+        $statementMock = $this->createMock(\PDOStatement::class);
         $statementMock->expects($this->once())
             ->method('fetchAll')
             ->with(\PDO::FETCH_ASSOC)
@@ -63,15 +62,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         $driverMock =$this->getMockForAbstractClass('common_persistence_Driver', array(), 'common_persistence_Driver_Mock', false, false, true, array('query'), false);
 
         
-        $persistenceMock = $this->getMock(
-            'common_persistence_Persistence',
-            array('getDriver','query'),
-            array(array(),$driverMock),
-            '',
-            false,
-            true,
-            false
-        );
+        $persistenceMock = $this->createMock(\common_persistence_SqlPersistence::class);
         $persistenceMock
             ->method('getDriver')
             ->with(array(),$driverMock)
@@ -85,8 +76,6 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         return $persistenceMock;
     }
 
-    
-    
     /**
      * @return array
      */
@@ -105,9 +94,6 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
      */
     public function testGetUsersWithPermissions($resourceIds)
     {
-
-
-
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
         $queryFixture = "SELECT resource_id, user_id, privilege FROM " . \oat\taoDacSimple\model\DataBaseAccess::TABLE_PRIVILEGES_NAME . "
         WHERE resource_id IN ($inQuery)";
@@ -133,6 +119,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
             array(array(1), array(2)),
         );
     }
+
     /**
      * Get the permissions a user has on a list of ressources
      * @dataProvider getPermissionProvider
@@ -160,7 +147,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         );
 
         $resultFixture = array(
-            1 =>  array('open'),
+            1 => array('open'),
             2 => array('close'),
             3 => array('create', 'delete')
         );
@@ -173,8 +160,7 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
 
         $this->setPersistence($this->instance, $persistenceMock);
 
-        // @todo fix key order (2, 1, 3)
-        $this->assertSame($resultFixture, $this->instance->getPermissions($userIds, $resourceIds));
+        $this->assertEquals($resultFixture, $this->instance->getPermissions($userIds, $resourceIds));
     }
 
     /**
@@ -188,7 +174,6 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
      */
     public function addPermissions($user, $resourceId, $rights)
     {
-
         foreach ($rights as $privilege) {
             // add a line with user URI, resource Id and privilege
             $this->persistence->insert(
@@ -241,7 +226,6 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         return true;
     }
 
-
     private function setPersistence($instance, $persistenceMock)
     {
         $reflectionClass = new \ReflectionClass(get_class($instance));
@@ -249,6 +233,4 @@ class DataBaseAccessTest extends \PHPUnit_Framework_TestCase {
         $persistence->setAccessible(true);
         $persistence->setValue($instance, $persistenceMock);
     }
-
-
 }
