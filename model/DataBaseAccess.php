@@ -43,6 +43,9 @@ class DataBaseAccess extends ConfigurableService
 
     const TABLE_PRIVILEGES_NAME = 'data_privileges';
 
+    /**
+     * @return EventManager
+     */
     protected function getEventManager()
     {
         return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
