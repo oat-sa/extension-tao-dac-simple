@@ -21,7 +21,7 @@
 
 namespace oat\taoDacSimple\model;
 
-use oat\oatbox\event\EventManagerAwareTrait;
+use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
@@ -35,8 +35,6 @@ use oat\taoDacSimple\model\event\DacRemovedEvent;
 class DataBaseAccess extends ConfigurableService
 {
 
-    use EventManagerAwareTrait;
-
     const SERVICE_ID = 'taoDacSimple/DataBaseAccess';
 
     const OPTION_PERSISTENCE = 'persistence';
@@ -44,6 +42,14 @@ class DataBaseAccess extends ConfigurableService
     private $persistence;
 
     const TABLE_PRIVILEGES_NAME = 'data_privileges';
+
+    /**
+     * @return EventManager
+     */
+    protected function getEventManager()
+    {
+        return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
+    }
 
     /**
      * We can know which users have a privilege on a resource

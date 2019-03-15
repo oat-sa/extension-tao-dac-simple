@@ -21,6 +21,7 @@
 
 namespace oat\taoDacSimple\controller;
 
+use oat\tao\model\routing\AnnotationReader\security;
 use oat\tao\model\security\xsrf\TokenService;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\AdminService;
@@ -46,6 +47,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 
     /**
      * initialize the services
+     * @security("hide")
      */
     public function __construct()
     {
