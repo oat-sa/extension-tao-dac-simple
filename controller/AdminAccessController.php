@@ -21,8 +21,6 @@
 
 namespace oat\taoDacSimple\controller;
 
-use oat\tao\model\routing\AnnotationReader\security;
-use oat\tao\model\security\xsrf\TokenService;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
@@ -91,11 +89,6 @@ class AdminAccessController extends \tao_actions_CommonModule
         $this->setData('uri', $resource->getUri());
         $this->setData('label', _dh($resource->getLabel()));
 
-        // Add csrf token
-        $tokenService = $this->getServiceLocator()->get(TokenService::SERVICE_ID);
-        $this->setData('xsrf-token-name',  $tokenService->getTokenName());
-        $this->setData('xsrf-token-value', $tokenService->createToken());
-
         $this->setView('AdminAccessController/index.tpl');
     }
 
@@ -107,26 +100,32 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     public function savePermissions()
     {
-        $recursive = ($this->getRequest()->getParameter('recursive') === "1");
+        $recursive = ($this->getRequest()->getParameter('recursive') === '1');
 
-        $clazz = $this->getResourceFromRequest();
+        $class = $this->getResourceFromRequest();
         $privileges = $this->getPrivilegesFromRequest();
 
-        // Csrf token validation
-        $token = $this->validateCsrfToken();
+        try {
+            $token = $this->validateCsrf();
+        } catch (\common_exception_Unauthorized $e) {
+            return $this->returnJson([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 403);
+        }
 
         // Check if there is still a owner on this resource
         if (!$this->validatePermissions($privileges)) {
             \common_Logger::e('Cannot save a list without a fully privileged user');
-            return $this->returnJson(array(
-            	'success' => false
-            ), 500);
+            return $this->returnJson([
+                'success' => false
+            ], 500);
         }
 
-        $resources = array($clazz);
+        $resources = [$class];
         if($recursive){
-            $resources = array_merge($resources, $clazz->getSubClasses(true));
-            $resources = array_merge($resources, $clazz->getInstances(true));
+            $resources = array_merge($resources, $class->getSubClasses(true));
+            $resources = array_merge($resources, $class->getInstances(true));
         }
 
         $success = true;
@@ -147,13 +146,10 @@ class AdminAccessController extends \tao_actions_CommonModule
             $code = 500;
         }
 
-        $tokenService = $this->getServiceLocator()->get(TokenService::SERVICE_ID);
-
         return $this->returnJson([
             'success'   => $success,
             'message'   => $message,
-            'token'     => $token,
-            'tokenName' => $tokenService->getTokenName()
+            'token'     => $token
         ], $code);
     }
 
@@ -234,27 +230,6 @@ class AdminAccessController extends \tao_actions_CommonModule
         }
 
         return false;
-    }
-
-    /**
-     * Validates CSRF token and returns a fresh token on success
-     *
-     * @return string
-     * @throws \common_exception_Unauthorized
-     */
-    protected function validateCsrfToken()
-    {
-        $tokenService = $this->getServiceLocator()->get(TokenService::SERVICE_ID);
-        $tokenName    = $tokenService->getTokenName();
-        $token        = $this->getRequestParameter($tokenName);
-
-        if($tokenService->checkToken($token)) {
-            $tokenService->revokeToken($token);
-            return $tokenService->createToken();
-        }
-
-        \common_Logger::e('CSRF token validation failed');
-        throw new \common_exception_Unauthorized();
     }
 
     /**
