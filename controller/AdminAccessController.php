@@ -106,7 +106,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         $privileges = $this->getPrivilegesFromRequest();
 
         try {
-            $token = $this->validateCsrf();
+            $this->validateCsrf();
         } catch (\common_exception_Unauthorized $e) {
             return $this->returnJson([
                 'success' => false,
@@ -148,8 +148,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 
         return $this->returnJson([
             'success'   => $success,
-            'message'   => $message,
-            'token'     => $token
+            'message'   => $message
         ], $code);
     }
 
