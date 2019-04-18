@@ -108,10 +108,8 @@ class AdminAccessController extends \tao_actions_CommonModule
         try {
             $this->validateCsrf();
         } catch (\common_exception_Unauthorized $e) {
-            return $this->returnJson([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 403);
+            $this->response = $this->getPsrResponse()->withStatus('412', _('CSRF validation failed'));
+            return;
         }
 
         // Check if there is still a owner on this resource
