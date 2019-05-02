@@ -280,6 +280,9 @@ define([
                         feedback().success(__('Permissions saved'));
                     }
                     $submitter.removeClass('disabled');
+                })
+                .catch(function(error) {
+                    feedback().error(error.message);
                 });
             });
         }
