@@ -283,6 +283,7 @@ define([
                 })
                 .catch(function(error) {
                     feedback().error(error.message);
+                    $submitter.removeClass('disabled');
                 });
             });
         }
