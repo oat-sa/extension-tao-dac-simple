@@ -46,4 +46,9 @@
             margin-top: 20px;
         }
     }
+
+    .permission-table-container {
+        overflow-y: auto;
+        max-height: 250px;
+    }
 }

@@ -1,15 +1,11 @@
 <?php use oat\tao\helpers\Template;?>
 <div class="permission-container flex-container-full">
-    <h1><?= __('Access Permissions for') ?> <em><?= get_data('label') ?></em></h1>
+    <h2><?= __('Access Permissions for') ?> <em><?= get_data('label') ?></em></h2>
 
     <form action="<?= _url('savePermissions') ?>" method="POST" class="list-container" data-use-csrf-token="true">
         <input type="hidden" name="resource_id" id="resource_id" value="<?= get_data('uri') ?>">
 
         <div class="permission-tabs">
-            <ul>
-                <li><a href="#tab-users"><?= __('Users') ?></a></li>
-                <li><a href="#tab-roles"><?= __('Roles') ?></a></li>
-            </ul>
             <div id="tab-users" class="permission-tabs-panel">
                 <div class="grid-container msg-edit-area">
                     <div class="grid-row commit">
@@ -23,49 +19,50 @@
                         </div>
                     </div>
                 </div>
-
-                <table class="matrix" id="permissions-table-users">
-                    <colgroup>
-                        <col class="cell-name">
-                        <col class="cell-type">
-                        <col class="cell-privilege" span="<?= count(get_data('privileges')) ?>">
-                        <col class="cell-actions">
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th><?= __('Name') ?></th>
-                            <th><?= __('Type') ?></th>
-                            <?php foreach (get_data('privileges') as $privilegeLabel):?>
-                            <th><?= ucfirst($privilegeLabel) ?></th>
+                <div class="permission-table-container">
+                    <table class="matrix" id="permissions-table-users">
+                        <colgroup>
+                            <col class="cell-name">
+                            <col class="cell-type">
+                            <col class="cell-privilege" span="<?= count(get_data('privileges')) ?>">
+                            <col class="cell-actions">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th><?= __('Name') ?></th>
+                                <th><?= __('Type') ?></th>
+                                <?php foreach (get_data('privileges') as $privilegeLabel):?>
+                                <th><?= ucfirst($privilegeLabel) ?></th>
+                                <?php endforeach;?>
+                                <th><?= __('Actions') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach (get_data('users') as $uri => $user):?>
+                            <tr>
+                                <td><?= $user['label'] ?></td>
+                                <td>
+                                    <?= __('user') ?>
+                                    <input type="hidden" name="users[<?= $uri ?>][type]" value="user">
+                                </td>
+                                <?php foreach (get_data('privileges') as $privilege => $privilegeLabel):?>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" class="privilege-<?= $privilege ?>" name="users[<?= $uri ?>][<?= $privilege ?>]" value="1" <?= (in_array($privilege, $user['privileges'])) ? 'checked' : '' ?>>
+                                        <span class="icon-checkbox"></span>
+                                    </label>
+                                </td>
+                                <?php endforeach;?>
+                                <td>
+                                    <button type="button" class="small delete_permission btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $user['label'] ?>" >
+                                        <span class="icon-bin"></span><?= __('Remove') ?>
+                                    </button>
+                                </td>
+                            </tr>
                             <?php endforeach;?>
-                            <th><?= __('Actions') ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach (get_data('users') as $uri => $user):?>
-                        <tr>
-                            <td><?= $user['label'] ?></td>
-                            <td>
-                                <?= __('user') ?>
-                                <input type="hidden" name="users[<?= $uri ?>][type]" value="user">
-                            </td>
-                            <?php foreach (get_data('privileges') as $privilege => $privilegeLabel):?>
-                            <td>
-                                <label>
-                                    <input type="checkbox" class="privilege-<?= $privilege ?>" name="users[<?= $uri ?>][<?= $privilege ?>]" value="1" <?= (in_array($privilege, $user['privileges'])) ? 'checked' : '' ?>>
-                                    <span class="icon-checkbox"></span>
-                                </label>
-                            </td>
-                            <?php endforeach;?>
-                            <td>
-                                <button type="button" class="small delete_permission btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $user['label'] ?>" >
-                                    <span class="icon-bin"></span><?= __('Remove') ?>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach;?>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="tab-roles" class="permission-tabs-panel">
@@ -82,48 +79,50 @@
                     </div>
                 </div>
 
-                <table class="matrix" id="permissions-table-roles">
-                    <colgroup>
-                        <col class="cell-name">
-                        <col class="cell-type">
-                        <col class="cell-privilege" span="<?= count(get_data('privileges')) ?>">
-                        <col class="cell-actions">
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th><?= __('Name') ?></th>
-                            <th><?= __('Type') ?></th>
-                            <?php foreach (get_data('privileges') as $privilegeLabel):?>
-                            <th><?= ucfirst($privilegeLabel) ?></th>
+                <div class="permission-table-container">
+                    <table class="matrix" id="permissions-table-roles">
+                        <colgroup>
+                            <col class="cell-name">
+                            <col class="cell-type">
+                            <col class="cell-privilege" span="<?= count(get_data('privileges')) ?>">
+                            <col class="cell-actions">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th><?= __('Name') ?></th>
+                                <th><?= __('Type') ?></th>
+                                <?php foreach (get_data('privileges') as $privilegeLabel):?>
+                                <th><?= ucfirst($privilegeLabel) ?></th>
+                                <?php endforeach;?>
+                                <th><?= __('Actions') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach (get_data('roles') as $uri => $role):?>
+                            <tr>
+                                <td><?= $role['label'] ?></td>
+                                <td>
+                                    <?= __('role') ?>
+                                    <input type="hidden" name="users[<?= $uri ?>][type]" value="role">
+                                </td>
+                                <?php foreach (get_data('privileges') as $privilege => $privilegeLabel):?>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" class="privilege-<?= $privilege ?>" name="users[<?= $uri ?>][<?= $privilege ?>]" value="1" <?= (in_array($privilege, $role['privileges'])) ? 'checked' : '' ?>>
+                                        <span class="icon-checkbox"></span>
+                                    </label>
+                                </td>
+                                <?php endforeach;?>
+                                <td>
+                                    <button type="button" class="small delete_permission btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $role['label'] ?>" >
+                                        <span class="icon-bin"></span><?= __('Remove') ?>
+                                    </button>
+                                </td>
+                            </tr>
                             <?php endforeach;?>
-                            <th><?= __('Actions') ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach (get_data('roles') as $uri => $role):?>
-                        <tr>
-                            <td><?= $role['label'] ?></td>
-                            <td>
-                                <?= __('role') ?>
-                                <input type="hidden" name="users[<?= $uri ?>][type]" value="role">
-                            </td>
-                            <?php foreach (get_data('privileges') as $privilege => $privilegeLabel):?>
-                            <td>
-                                <label>
-                                    <input type="checkbox" class="privilege-<?= $privilege ?>" name="users[<?= $uri ?>][<?= $privilege ?>]" value="1" <?= (in_array($privilege, $role['privileges'])) ? 'checked' : '' ?>>
-                                    <span class="icon-checkbox"></span>
-                                </label>
-                            </td>
-                            <?php endforeach;?>
-                            <td>
-                                <button type="button" class="small delete_permission btn-warning" data-acl-user="<?= $uri ?>" data-acl-type="user" data-acl-label="<?= $role['label'] ?>" >
-                                    <span class="icon-bin"></span><?= __('Remove') ?>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach;?>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <div class="bottom-bar txt-rgt">
