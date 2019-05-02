@@ -23,17 +23,10 @@ define([
     'helpers',
     'ui/feedback',
     'ui/autocomplete',
-    'util/httpErrorParser',
     'ui/tooltip',
-    'jqueryui'
-], function ($, _, __, lineTpl, helpers, feedback, autocomplete, httpErrorParser, tooltip) {
+    'core/request'
+], function ($, _, __, lineTpl, helpers, feedback, autocomplete, tooltip, request) {
     'use strict';
-
-    /**
-     * The amount of displayed lines that fires the tabs mode
-     * @type {Number}
-     */
-    var linesThreshold = 10;
 
     /**
      * The warning message shown when all managers have been removed
@@ -150,7 +143,6 @@ define([
         }
 
         _preventManagerRemoval($container);
-        _manageTabsDisplay();
     };
 
     /**
@@ -194,7 +186,6 @@ define([
                 label: label
             }));
             _disableAccessOnGrant($container);
-            _manageTabsDisplay();
         }
     };
 
@@ -216,40 +207,6 @@ define([
         });
     };
 
-    /**
-     * Manages the display of tabs.
-     * If the total amount of lines per tables is too big, display the tabs. Otherwise, hide them.
-     * @private
-     */
-    var _manageTabsDisplay = function() {
-        var $tabs = $('.permission-tabs');
-        var needsTabs = $tabs.find('.privilege-GRANT').length > linesThreshold;
-        var $focused, index;
-
-        if (needsTabs) {
-            $tabs.find('ul').show();
-            if (!$tabs.hasClass('ui-tabs')) {
-                // get the current focused panel
-                $focused = $tabs.find(':focus').closest('.permission-tabs-panel');
-                index = Math.max(0, $focused.index() - 1);
-
-                // install the tabs, but keep the current panel focused
-                $tabs.tabs({
-                    // use two options to be compatible with both older and current version of jQueryUI
-                    selected: index,
-                    active: index
-                });
-            }
-            $('.msg-edit-area label span').hide();
-        } else {
-            if ($tabs.hasClass('ui-tabs')) {
-                $tabs.find('.ui-tabs-hide').removeClass('ui-tabs-hide');
-                $tabs.tabs('destroy');
-            }
-            $tabs.find('ul').hide();
-            $('.msg-edit-area label span').show();
-        }
-    };
 
     /**
      * Installs a search purpose autocompleter onto an element.
@@ -294,8 +251,6 @@ define([
             _installListeners('#permissions-table-users');
             _installListeners('#permissions-table-roles');
 
-            _manageTabsDisplay();
-
             $form.on('submit', function (e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -314,20 +269,20 @@ define([
 
                 $submitter.addClass('disabled');
 
-                $.ajax({
+                // submit form with tokenised request
+                request({
                     url : $form.attr('action'),
-                    type : 'POST',
-                    data : $form.serialize(),
-                    global : false
-                }).done(function (data) {
-                    feedback().success(__('Permissions saved'));
-                    if(data && data.tokenName && data.token) {
-                        $('[name="' + data.tokenName + '"]', $form).val(data.token);
+                    method : 'POST',
+                    data : $form.serialize()
+                })
+                .then(function(response) {
+                    if (response && response.success) {
+                        feedback().success(__('Permissions saved'));
                     }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    var error = httpErrorParser.parse(jqXHR, textStatus, errorThrown);
+                    $submitter.removeClass('disabled');
+                })
+                .catch(function(error) {
                     feedback().error(error.message);
-                }).complete(function () {
                     $submitter.removeClass('disabled');
                 });
             });
