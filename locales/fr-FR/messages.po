@@ -1,12 +1,12 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TAO 3.3.0-sprint96\n"
-"PO-Revision-Date: 2019-04-25T01:04:44\n"
+"PO-Revision-Date: 2019-04-25T01:08:51\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: nl-NL\n"
+"Language: fr-FR\n"
 "sourceLanguage: en-US\n"
-"targetLanguage: nl-NL\n"
+"targetLanguage: fr-FR\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Basepath: ../../\n"
@@ -17,59 +17,59 @@ msgid "Access can not be revoked for the current user."
 msgstr ""
 
 msgid "Access control"
-msgstr "Toegangscontrole"
+msgstr "Contrôle d'accès"
 
 msgid "Access Permissions for"
-msgstr "Toegangspermissies voor"
+msgstr "Permissions d'accès pour"
 
 msgid "Actions"
-msgstr "Acties"
+msgstr "Actions"
 
 msgid "Add role(s)"
-msgstr "Voeg rol(len) toe"
+msgstr "Ajouter un ou des rôles"
 
 msgid "Add user(s)"
-msgstr "Voeg gebruiker(s) toe"
+msgstr "Ajouter un ou des utilisateurs"
 
 msgid "grant"
-msgstr "geven"
+msgstr "permettre"
 
 msgid "Name"
-msgstr "Naam"
+msgstr "Nom"
 
 msgid "Permissions saved"
-msgstr "Permissies opgeslagen"
+msgstr "Permissions enregistrées"
 
 msgid "read"
-msgstr "lezen"
+msgstr "lecture"
 
 msgid "Recursive"
-msgstr "Recursief"
+msgstr "Récursif"
 
 msgid "Remove"
-msgstr "Verwijderen"
+msgstr "Supprimer"
 
 msgid "role"
-msgstr "rol"
+msgstr "rôle"
 
 msgid "Roles"
-msgstr "Rollen"
+msgstr "Rôles"
 
 msgid "Save"
-msgstr "Opslaan"
+msgstr "Enregistrer"
 
 msgid "Type"
 msgstr "Type"
 
 msgid "user"
-msgstr "gebruiker"
+msgstr "utilisateur"
 
 msgid "Users"
-msgstr "Gebruikers"
+msgstr "Utilisateurs"
 
 msgid "write"
-msgstr "schrijven"
+msgstr "écriture"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr "U dient een rol of gebruiker te hebben met toestemming om dit element te beheren"
+msgstr "Vous devez avoir un rôle ou un utilisateur ayant la permission de gérer cet élément."
 

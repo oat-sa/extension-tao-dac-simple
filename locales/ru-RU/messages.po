@@ -1,0 +1,75 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TAO 3.3.0-sprint96\n"
+"PO-Revision-Date: 2019-04-25T01:12:44\n"
+"Last-Translator: TAO Translation Team <translation@tao.lu>\n"
+"MIME-Version: 1.0\n"
+"Language: ru-RU\n"
+"sourceLanguage: en-US\n"
+"targetLanguage: ru-RU\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../../\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-SearchPath-0: .\n"
+
+msgid "Access can not be revoked for the current user."
+msgstr ""
+
+msgid "Access control"
+msgstr "Контроль доступа"
+
+msgid "Access Permissions for"
+msgstr "Разрешения на доступ для"
+
+msgid "Actions"
+msgstr "Действия"
+
+msgid "Add role(s)"
+msgstr "Добавить роль (роли)"
+
+msgid "Add user(s)"
+msgstr "Добавить пользователя (пользователей)"
+
+msgid "grant"
+msgstr "предоставить"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "Permissions saved"
+msgstr "Разршения сохранены"
+
+msgid "read"
+msgstr "читать"
+
+msgid "Recursive"
+msgstr "Рекурсивный"
+
+msgid "Remove"
+msgstr "Удалить"
+
+msgid "role"
+msgstr "роль"
+
+msgid "Roles"
+msgstr "Роли"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Type"
+msgstr "Тип"
+
+msgid "user"
+msgstr "пользователь"
+
+msgid "Users"
+msgstr "Пользователи"
+
+msgid "write"
+msgstr "писать"
+
+msgid "You must have one role or user that have the manage permission on this element."
+msgstr "Необходимо иметь одну роль или пользователя, которые имеют разрешение «Управление» для этого элемента."
+
