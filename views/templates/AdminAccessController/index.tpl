@@ -2,9 +2,8 @@
 <div class="permission-container flex-container-full">
     <h2><?= __('Access Permissions for') ?> <em><?= get_data('label') ?></em></h2>
 
-    <form action="<?= _url('savePermissions') ?>" method="POST" class="list-container">
+    <form action="<?= _url('savePermissions') ?>" method="POST" class="list-container" data-use-csrf-token="true">
         <input type="hidden" name="resource_id" id="resource_id" value="<?= get_data('uri') ?>">
-        <input type="hidden" name="<?= get_data('xsrf-token-name') ?>" value="<?= get_data('xsrf-token-value') ?>">
 
         <div class="permission-tabs">
             <div id="tab-users" class="permission-tabs-panel">
