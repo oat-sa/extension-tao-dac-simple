@@ -25,6 +25,7 @@ use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
+use oat\generis\persistence\PersistenceManager;
 
 /**
  * Class to handle the storage and retrieval of permissions
@@ -243,8 +244,7 @@ class DataBaseAccess extends ConfigurableService
     private function getPersistence()
     {
         if (!$this->persistence){
-
-            $this->persistence = $this->getServiceManager()->get(\common_persistence_Manager::SERVICE_ID)->getPersistence($this->getOption(self::OPTION_PERSISTENCE));
+            $this->persistence = $this->getServiceManager()->get(PersistenceManager::SERVICE_ID)->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
         }
         return $this->persistence;
     }
