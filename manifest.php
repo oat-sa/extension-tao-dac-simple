@@ -28,11 +28,11 @@ return array(
 	'label' => 'extension-tao-dac-simple',
 	'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '5.0.0',
+    'version' => '5.0.1',
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'taoBackOffice' => '>=3.0.0',
-       'generis' => '>=5.9.0',
+       'generis' => '>=12.3.0',
        'tao' => '>=34.0.0'
     ),
 	// for compatibility
