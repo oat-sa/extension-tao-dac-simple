@@ -23,6 +23,7 @@ namespace oat\taoDacSimple\test\unit\model;
 
 use oat\generis\test\TestCase;
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\generis\test\MockObject;
 
 /**
  * Test database access
@@ -47,7 +48,7 @@ class DataBaseAccessTest extends TestCase {
 
     /**
      * Return a persistence Mock object
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject
      */
     public function getPersistenceMock($queryParams, $queryFixture, $resultFixture) {
 
