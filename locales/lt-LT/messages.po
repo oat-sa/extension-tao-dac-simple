@@ -1,0 +1,78 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TAO 3.4.0-sprint112\n"
+"PO-Revision-Date: 2019-10-09T09:03:05\n"
+"Last-Translator: TAO Translation Team <translation@tao.lu>\n"
+"MIME-Version: 1.0\n"
+"Language: lt-LT\n"
+"sourceLanguage: en-US\n"
+"targetLanguage: lt-LT\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../../\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-SearchPath-0: .\n"
+
+msgid "Access can not be revoked for the current user."
+msgstr "Prieiga negali būti panaikinta iš dabartinio vartotojo."
+
+msgid "Access control"
+msgstr "Prieigos valdymas"
+
+msgid "Access Permissions for"
+msgstr "Prieigos Leidimas"
+
+msgid "Actions"
+msgstr "Veiksmai"
+
+msgid "Add role(s)"
+msgstr "Pridėti rolę(–es)"
+
+msgid "Add user(s)"
+msgstr "Pridėti vartotoją(–us)"
+
+msgid "grant"
+msgstr "suteikti"
+
+msgid "Name"
+msgstr "Pavadinimas"
+
+msgid "Permissions saved"
+msgstr "Leidimai išsaugoti"
+
+msgid "read"
+msgstr "skaityti"
+
+msgid "Recursive"
+msgstr "Rekursyvus"
+
+msgid "Remove"
+msgstr "Ištrinti"
+
+msgid "role"
+msgstr "rolė"
+
+msgid "Roles"
+msgstr "Rolės"
+
+msgid "Save"
+msgstr "Išsaugoti"
+
+msgid "Type"
+msgstr "Tipas"
+
+msgid "Unable to process your request"
+msgstr ""
+
+msgid "user"
+msgstr "vartotojas"
+
+msgid "Users"
+msgstr "Vartotojai"
+
+msgid "write"
+msgstr "įrašymas"
+
+msgid "You must have one role or user that have the manage permission on this element."
+msgstr "Jūs privalote turėti bent vieną rolę arba vartotoją, kuris tvarkymo leidimą šiam elementui."
+
