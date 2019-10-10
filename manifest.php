@@ -32,7 +32,7 @@ return array(
 	'author' => 'Open Assessment Technologies SA',
 	'requires' => array(
 	   'taoBackOffice' => '>=3.0.0',
-       'generis' => '>=12.3.0',
+       'generis' => '>=12.5.0',
        'tao' => '>=34.0.0'
     ),
 	// for compatibility
