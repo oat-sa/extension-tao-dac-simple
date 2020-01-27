@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,6 +19,7 @@
  *
  *
  */
+
 namespace oat\taoDacSimple\scripts\uninstall;
 
 use oat\taoDacSimple\model\DataBaseAccess;
@@ -44,9 +46,8 @@ class RemoveDataAccess extends UninstallAction
             $databaseAccess->removeTables();
 
             $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, new FreeAccess());
-
         } catch (\Exception $e) {
-            return \common_report_Report::createFailure(__("something went wrong during taoDacSimple uninstallation\n".$e->getMessage()));
+            return \common_report_Report::createFailure(__("something went wrong during taoDacSimple uninstallation\n" . $e->getMessage()));
         }
 
         return \common_report_Report::createSuccess(__('taoDacSimple extension correctly uninstalled'));
