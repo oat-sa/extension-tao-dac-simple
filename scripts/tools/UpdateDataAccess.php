@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,13 +19,13 @@
  *
  *
  */
+
 namespace oat\taoDacSimple\scripts\tools;
 
 use oat\oatbox\extension\AbstractAction;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\tao\model\user\TaoRoles;
-
 
 /**
  * Class UpdateDataAccess
@@ -60,12 +61,12 @@ class UpdateDataAccess extends AbstractAction
         /** @var DataBaseAccess $databaseAccess */
         $databaseAccess = $this->getServiceLocator()->get(DataBaseAccess::SERVICE_ID);
 
-        if(empty($databaseAccess->getResourcePermissions($class->getUri()))){
+        if (empty($databaseAccess->getResourcePermissions($class->getUri()))) {
             $databaseAccess->addPermissions(TaoRoles::BACK_OFFICE, $class->getUri(), $rights);
             $updated++;
         }
         foreach ($class->getInstances(false) as $instance) {
-            if(empty($databaseAccess->getResourcePermissions($instance->getUri()))){
+            if (empty($databaseAccess->getResourcePermissions($instance->getUri()))) {
                 $databaseAccess->addPermissions(TaoRoles::BACK_OFFICE, $instance->getUri(), $rights);
                 $updated++;
             }

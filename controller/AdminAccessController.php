@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,7 +26,6 @@ use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\oatbox\log\LoggerAwareTrait;
-
 
 /**
  * This controller is used to manage permission administration
@@ -65,20 +65,20 @@ class AdminAccessController extends \tao_actions_CommonModule
 
         $this->setData('privileges', PermissionProvider::getRightLabels());
 
-        $users = array();
-        $roles = array();
+        $users = [];
+        $roles = [];
         foreach ($accessRights as $uri => $privileges) {
             $identity = new \core_kernel_classes_Resource($uri);
             if ($identity->isInstanceOf(\tao_models_classes_RoleService::singleton()->getRoleClass())) {
-                $roles[$uri] = array(
+                $roles[$uri] = [
                     'label' => $identity->getLabel(),
                     'privileges' => $privileges,
-                );
+                ];
             } else {
-                $users[$uri] = array(
+                $users[$uri] = [
                     'label' => $identity->getLabel(),
                     'privileges' => $privileges,
-                );
+                ];
             }
         }
 
@@ -121,7 +121,7 @@ class AdminAccessController extends \tao_actions_CommonModule
         }
 
         $resources = [$class];
-        if($recursive){
+        if ($recursive) {
             $resources = array_merge($resources, $class->getSubClasses(true));
             $resources = array_merge($resources, $class->getInstances(true));
         }

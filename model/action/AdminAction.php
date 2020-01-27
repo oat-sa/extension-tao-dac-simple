@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,6 +19,7 @@
  *
  *
  */
+
 namespace oat\taoDacSimple\model\action;
 
 use oat\tao\model\menu\Icon;
@@ -32,8 +34,8 @@ use oat\oatbox\PhpSerializable;
  *     <icon id="icon-unlock" />
  * </action>
  */
-class AdminAction implements MenuAction, PhpSerializable {
-
+class AdminAction implements MenuAction, PhpSerializable
+{
     use PhpSerializeStateless;
 
     /**
@@ -89,11 +91,11 @@ class AdminAction implements MenuAction, PhpSerializable {
      */
     public function getIcon()
     {
-        return new Icon(array(
+        return new Icon([
             'id' =>  'icon-unlock',
             'ext' => 'taoDacSimple',
             'src' => null
-        ));
+        ]);
     }
 
     /**
