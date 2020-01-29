@@ -26,6 +26,9 @@ use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\oatbox\log\LoggerAwareTrait;
+use oat\oatbox\user\UserService;
+use oat\generis\model\data\Ontology;
+use oat\generis\model\OntologyRdfs;
 
 /**
  * This controller is used to manage permission administration
@@ -148,6 +151,31 @@ class AdminAccessController extends \tao_actions_CommonModule
             'success'   => $success,
             'message'   => $message
         ], $code);
+    }
+
+    /**
+     * Find users to assign access rights
+     */
+    public function findUser()
+    {
+        $query = $this->getGetParameter('query');
+        $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
+        $data = [];
+        foreach ($userService->findUser($query) as $user) {
+            $labels = $user->getPropertyValues(OntologyRdfs::RDFS_LABEL);
+            $data[] = [
+                'id' => $user->getIdentifier(),
+                OntologyRdfs::RDFS_LABEL => empty($labels) ? 'unknown user' : reset($labels)
+            ];
+        }
+        $response = [
+            'success' => true,
+            'page' => 1,
+            'total' => 1,
+            'records' => count($data),
+            'data' => $data,
+        ];
+        return $this->returnJson($response);
     }
 
     /**
