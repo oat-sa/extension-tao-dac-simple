@@ -1,21 +1,22 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; under version 2
  * of the License (non-upgradable).
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  * Copyright (c) 2014 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
- * 
+ *
  */
 
 namespace oat\taoDacSimple\model;
@@ -29,7 +30,7 @@ use oat\oatbox\service\ConfigurableService;
 
 /**
  * Simple permissible Permission model
- * 
+ *
  * does not require privileges
  * does not grant privileges
  *
@@ -43,10 +44,11 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
      * (non-PHPdoc)
      * @see \oat\generis\model\data\PermissionInterface::getPermissions()
      */
-    public function getPermissions(User $user, array $resourceIds) {
+    public function getPermissions(User $user, array $resourceIds)
+    {
 
         if (in_array(DacRoles::DAC_ADMINISTRATOR, $user->getRoles())) {
-            $permissions = array();
+            $permissions = [];
             foreach ($resourceIds as $id) {
                 $permissions[$id] = $this->getSupportedRights();
             }
@@ -83,30 +85,33 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
      * (non-PHPdoc)
      * @see \oat\generis\model\data\permission\PermissionInterface::getSupportedRights()
      */
-    public function getSupportedRights() {
-        return array('GRANT', 'WRITE', 'READ');
+    public function getSupportedRights()
+    {
+        return ['GRANT', 'WRITE', 'READ'];
     }
     
     
     /**
      * Returns an associativ array with permission ids as keys
      * and labels as values
-     * 
+     *
      * @return array
      */
-    public static function getRightLabels() {
-        return array(
+    public static function getRightLabels()
+    {
+        return [
             'GRANT' => __('grant'),
             'WRITE' => __('write'),
             'READ' => __('read')
-        );
+        ];
     }
     
-    public static function getSupportedRootClasses() {
-        return array(
+    public static function getSupportedRootClasses()
+    {
+        return [
             new core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI),
             new core_kernel_classes_Class(GenerisRdf::CLASS_GENERIS_USER),
             new core_kernel_classes_Class(GenerisRdf::CLASS_ROLE)
-        );
+        ];
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,6 +19,7 @@
  *
  *
  */
+
 namespace oat\taoDacSimple\scripts\install;
 
 use oat\generis\model\data\permission\implementation\FreeAccess;
@@ -47,8 +49,8 @@ class SetupDataAccess extends InstallAction
         }
 
         $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
-        if(!$currentService instanceof FreeAccess && !$currentService instanceof NoAccess){
-            if($currentService instanceof IntersectionUnionSupported){
+        if (!$currentService instanceof FreeAccess && !$currentService instanceof NoAccess) {
+            if ($currentService instanceof IntersectionUnionSupported) {
                 $toRegister = $currentService->add($impl);
             } else {
                 $toRegister = new IntersectionUnionSupported(['inner' => [$currentService, $impl]]);

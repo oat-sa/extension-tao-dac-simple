@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,14 +39,16 @@ use oat\tao\scripts\update\OntologyUpdater;
  *
  * @author Joel Bout <joel@taotesting.com>
  */
-class Updater extends \common_ext_ExtensionUpdater {
+class Updater extends \common_ext_ExtensionUpdater
+{
 
     /**
      *
      * @param string $currentVersion
      * @return string $versionUpdatedTo
      */
-    public function update($initialVersion) {
+    public function update($initialVersion)
+    {
 
 
         if ($this->isVersion('1.0')) {
@@ -53,7 +56,7 @@ class Updater extends \common_ext_ExtensionUpdater {
 
             // add read access to Items
             $class = new \core_kernel_classes_Class(TaoOntology::ITEM_CLASS_URI);
-            AdminService::addPermissionToClass($class, TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE, array('READ'));
+            AdminService::addPermissionToClass($class, TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE, ['READ']);
 
             // add backoffice user rights to Tests
             $class = new \core_kernel_classes_Class(TaoOntology::TEST_CLASS_URI);
@@ -64,7 +67,7 @@ class Updater extends \common_ext_ExtensionUpdater {
         if ($this->isVersion('1.0.1')) {
             $this->setVersion('1.0.2');
         }
-        if ($this->isVersion( '1.0.2')) {
+        if ($this->isVersion('1.0.2')) {
             $taoClass = new \core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI);
             $classAdmin = new AdminAction();
             ClassActionRegistry::getRegistry()->registerAction($taoClass, $classAdmin);
@@ -72,10 +75,10 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('1.1');
         }
         if ($this->isVersion('1.1')) {
-            $classesToAdd = array(
+            $classesToAdd = [
                 new \core_kernel_classes_Class(GenerisRdf::CLASS_GENERIS_USER),
                 new \core_kernel_classes_Class(GenerisRdf::CLASS_ROLE)
-            );
+            ];
 
             // add admin to new instances
             $classAdmin = new AdminAction();
@@ -86,7 +89,7 @@ class Updater extends \common_ext_ExtensionUpdater {
             // add base permissions to new classes
             $taoClass = new \core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI);
             foreach ($taoClass->getSubClasses(false) as $class) {
-                if (!in_array($class->getUri(), array(TaoOntology::ITEM_CLASS_URI,TaoOntology::TEST_CLASS_URI))) {
+                if (!in_array($class->getUri(), [TaoOntology::ITEM_CLASS_URI,TaoOntology::TEST_CLASS_URI])) {
                     $classesToAdd[] = $class;
                 }
             }
@@ -95,7 +98,7 @@ class Updater extends \common_ext_ExtensionUpdater {
                 if (count(AdminService::getUsersPermissions($class->getUri())) == 0) {
                     AdminService::addPermissionToClass($class, TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE, $rights);
                 } else {
-                    \common_Logger::w('Unexpected rights present for '.$class->getUri());
+                    \common_Logger::w('Unexpected rights present for ' . $class->getUri());
                 }
             }
             $this->setVersion('1.2.0');
@@ -104,10 +107,9 @@ class Updater extends \common_ext_ExtensionUpdater {
         $this->skip('1.2.0', '2.0.3');
 
 
-        if ($this->isVersion( '2.0.3')) {
-
+        if ($this->isVersion('2.0.3')) {
             $dataAccess = new DataBaseAccess([
-                DataBaseAccess::OPTION_PERSISTENCE =>'default'
+                DataBaseAccess::OPTION_PERSISTENCE => 'default'
             ]);
 
             $this->getServiceManager()->register(DataBaseAccess::SERVICE_ID, $dataAccess);
@@ -115,11 +117,10 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('2.1.0');
         }
 
-        if ($this->isVersion( '2.1.0')) {
-
+        if ($this->isVersion('2.1.0')) {
             $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
-            if(!$currentService instanceof PermissionProvider && !$currentService instanceof FreeAccess && !$currentService instanceof NoAccess){
-                if($currentService instanceof IntersectionUnionSupported){
+            if (!$currentService instanceof PermissionProvider && !$currentService instanceof FreeAccess && !$currentService instanceof NoAccess) {
+                if ($currentService instanceof IntersectionUnionSupported) {
                     $toRegister = $currentService->add(new PermissionProvider());
                 } else {
                     $toRegister = new IntersectionUnionSupported(['inner' => [$currentService, new PermissionProvider()]]);
@@ -137,6 +138,6 @@ class Updater extends \common_ext_ExtensionUpdater {
             $this->setVersion('2.7.0');
         }
 
-        $this->skip('2.7.0', '5.1.0');
+        $this->skip('2.7.0', '5.1.1');
     }
 }

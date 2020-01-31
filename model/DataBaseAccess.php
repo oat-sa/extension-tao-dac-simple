@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,7 +30,7 @@ use oat\generis\persistence\PersistenceManager;
 
 /**
  * Class to handle the storage and retrieval of permissions
- * 
+ *
  * @author Antoine Robin <antoine.robin@vesperiagroup.com>
  * @author Joel Bout <joel@taotesting.com>
  */
@@ -78,9 +79,10 @@ class DataBaseAccess extends ConfigurableService
      * @param  array $resourceIds
      * @return array
      */
-    public function getPermissions($userIds, array $resourceIds){
+    public function getPermissions($userIds, array $resourceIds)
+    {
         // get privileges for a user/roles and a resource
-        $returnValue = array();
+        $returnValue = [];
 
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
@@ -92,7 +94,7 @@ class DataBaseAccess extends ConfigurableService
         }
 
         //If resource doesn't have permission don't return null
-        foreach($resourceIds as $resourceId){
+        foreach ($resourceIds as $resourceId) {
             $returnValue[$resourceId] = [];
         }
 
@@ -100,12 +102,12 @@ class DataBaseAccess extends ConfigurableService
         $statement = $this->getPersistence()->query($query, $params);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
-         foreach ($results as $result) {
+        foreach ($results as $result) {
             $returnValue[$result['resource_id']][] = $result['privilege'];
-         }
+        }
 
          return $returnValue;
-     }
+    }
 
     /**
      * add permissions of a user to a resource
@@ -123,7 +125,7 @@ class DataBaseAccess extends ConfigurableService
             // add a line with user URI, resource Id and privilege
             $this->getPersistence()->insert(
                 self::TABLE_PRIVILEGES_NAME,
-                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege)
+                ['user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege]
             );
         }
 
@@ -143,12 +145,12 @@ class DataBaseAccess extends ConfigurableService
     public function getResourcePermissions($resourceId)
     {
         // get privileges for a user/roles and a resource
-        $returnValue = array();
+        $returnValue = [];
 
         $query = "SELECT user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ?";
 
         /** @var \PDOStatement $statement */
-        $statement = $this->getPersistence()->query($query, array($resourceId));
+        $statement = $this->getPersistence()->query($query, [$resourceId]);
         $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($results as $result) {
@@ -170,22 +172,22 @@ class DataBaseAccess extends ConfigurableService
     {
         $privileges = $this->getResourcePermissions($resourceId);
 
-        foreach($rights as $userId => $privilegeIds){
+        foreach ($rights as $userId => $privilegeIds) {
             //if privileges are in request but not in db we add then
-            if(!isset($privileges[$userId])){
+            if (!isset($privileges[$userId])) {
                 $add[$userId] = $privilegeIds;
             }
             // compare privileges in db and request
-            else{
-                $add[$userId] = array_diff($privilegeIds,$privileges[$userId]);
-                $remove[$userId] = array_diff($privileges[$userId],$privilegeIds);
+            else {
+                $add[$userId] = array_diff($privilegeIds, $privileges[$userId]);
+                $remove[$userId] = array_diff($privileges[$userId], $privilegeIds);
                 // unset already compare db variable
                 unset($privileges[$userId]);
             }
         }
 
         //remaining privileges has to be removed
-        foreach($privileges as $userId => $privilegeIds){
+        foreach ($privileges as $userId => $privilegeIds) {
             $remove[$userId] = $privilegeIds;
         }
 
@@ -207,7 +209,7 @@ class DataBaseAccess extends ConfigurableService
         //get all entries that match (user,resourceId) and remove them
         $inQueryPrivilege = implode(',', array_fill(0, count($rights), '?'));
         $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ? AND privilege IN ($inQueryPrivilege) AND user_id = ?";
-        $params = array($resourceId);
+        $params = [$resourceId];
         foreach ($rights as $rightId) {
             $params[] = $rightId;
         }
@@ -243,26 +245,27 @@ class DataBaseAccess extends ConfigurableService
      */
     private function getPersistence()
     {
-        if (!$this->persistence){
+        if (!$this->persistence) {
             $this->persistence = $this->getServiceManager()->get(PersistenceManager::SERVICE_ID)->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
         }
         return $this->persistence;
     }
 
 
-    public function createTables(){
+    public function createTables()
+    {
 
         $schemaManager = $this->getPersistence()->getDriver()->getSchemaManager();
         $schema = $schemaManager->createSchema();
         $fromSchema = clone $schema;
         $table = $schema->createtable(self::TABLE_PRIVILEGES_NAME);
-        $table->addColumn('user_id',"string", ["notnull" => null,"length" => 255]);
-        $table->addColumn('resource_id',"string", ["notnull" => null,"length" => 255]);
-        $table->addColumn('privilege',"string", ["notnull" => null,"length" => 255]);
+        $table->addColumn('user_id', "string", ["notnull" => null,"length" => 255]);
+        $table->addColumn('resource_id', "string", ["notnull" => null,"length" => 255]);
+        $table->addColumn('privilege', "string", ["notnull" => null,"length" => 255]);
         $table->setPrimaryKey(["user_id","resource_id","privilege"]);
 
         $queries = $this->getPersistence()->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
-        foreach ($queries as $query){
+        foreach ($queries as $query) {
             $this->getPersistence()->exec($query);
         }
     }
@@ -279,5 +282,4 @@ class DataBaseAccess extends ConfigurableService
             $persistence->exec($query);
         }
     }
-
 }

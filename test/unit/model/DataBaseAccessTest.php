@@ -1,22 +1,23 @@
 <?php
-/**  
+
+/**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; under version 2
  * of the License (non-upgradable).
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  * Copyright (c) 2014-2017 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT); *
- * 
- *  
+ *
+ *
  */
 
 namespace oat\taoDacSimple\test\unit\model;
@@ -27,22 +28,25 @@ use oat\generis\test\MockObject;
 
 /**
  * Test database access
- * 
+ *
  * @author Antoine Robin, <antoine.robin@vesperiagroup.com>
  * @package taodacSimple
  *
  */
-class DataBaseAccessTest extends TestCase {
+class DataBaseAccessTest extends TestCase
+{
     /**
      * @var DataBaseAccess
      */
     protected $instance;
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->instance = new DataBaseAccess();
     }
 
-    public function tearDown() {
+    public function tearDown()
+    {
         $this->instance = null;
     }
 
@@ -50,7 +54,8 @@ class DataBaseAccessTest extends TestCase {
      * Return a persistence Mock object
      * @return MockObject
      */
-    public function getPersistenceMock($queryParams, $queryFixture, $resultFixture) {
+    public function getPersistenceMock($queryParams, $queryFixture, $resultFixture)
+    {
 
 
         $statementMock = $this->createMock(\PDOStatement::class);
@@ -60,19 +65,19 @@ class DataBaseAccessTest extends TestCase {
             ->will($this->returnValue($resultFixture));
 
         
-        $driverMock =$this->getMockForAbstractClass('common_persistence_Driver', array(), 'common_persistence_Driver_Mock', false, false, true, array('query'), false);
+        $driverMock = $this->getMockForAbstractClass('common_persistence_Driver', [], 'common_persistence_Driver_Mock', false, false, true, ['query'], false);
 
         
         $persistenceMock = $this->createMock(\common_persistence_SqlPersistence::class);
         $persistenceMock
             ->method('getDriver')
-            ->with(array(),$driverMock)
+            ->with([], $driverMock)
             ->will($this->returnValue($driverMock));
         
         $persistenceMock
             ->method('query')
             ->with($queryFixture, $queryParams)
-            ->will($this->returnValue($statementMock)); 
+            ->will($this->returnValue($statementMock));
         
         return $persistenceMock;
     }
@@ -80,12 +85,13 @@ class DataBaseAccessTest extends TestCase {
     /**
      * @return array
      */
-    public function resourceIdsProvider() {
-        return array(
-            array(array(1)),
-            array(array(1, 2, 3, 4)),
-            array(array(1, 2)),
-        );
+    public function resourceIdsProvider()
+    {
+        return [
+            [[1]],
+            [[1, 2, 3, 4]],
+            [[1, 2]],
+        ];
     }
 
     /**
@@ -99,9 +105,9 @@ class DataBaseAccessTest extends TestCase {
         $queryFixture = "SELECT resource_id, user_id, privilege FROM " . \oat\taoDacSimple\model\DataBaseAccess::TABLE_PRIVILEGES_NAME . "
         WHERE resource_id IN ($inQuery)";
 
-        $resultFixture = array(
-            array('fixture')
-        );
+        $resultFixture = [
+            ['fixture']
+        ];
 
         $persistenceMock = $this->getPersistenceMock($resourceIds, $queryFixture, $resultFixture);
 
@@ -114,11 +120,12 @@ class DataBaseAccessTest extends TestCase {
     /**
      * @return array
      */
-    public function getPermissionProvider() {
-        return array(
-            array(array(1,2,3), array(1, 2, 3)),
-            array(array(1), array(2)),
-        );
+    public function getPermissionProvider()
+    {
+        return [
+            [[1,2,3], [1, 2, 3]],
+            [[1], [2]],
+        ];
     }
 
     /**
@@ -132,7 +139,7 @@ class DataBaseAccessTest extends TestCase {
     public function testGetPermissions($userIds, array $resourceIds)
     {
         // get privileges for a user/roles and a resource
-        $returnValue = array();
+        $returnValue = [];
 
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
@@ -140,18 +147,18 @@ class DataBaseAccessTest extends TestCase {
             . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
 
-        $fetchResultFixture = array(
-            array('resource_id' => 1, 'privilege' => 'open'),
-            array('resource_id' => 2, 'privilege' => 'close'),
-            array('resource_id' => 3, 'privilege' => 'create'),
-            array('resource_id' => 3, 'privilege' => 'delete'),
-        );
+        $fetchResultFixture = [
+            ['resource_id' => 1, 'privilege' => 'open'],
+            ['resource_id' => 2, 'privilege' => 'close'],
+            ['resource_id' => 3, 'privilege' => 'create'],
+            ['resource_id' => 3, 'privilege' => 'delete'],
+        ];
 
-        $resultFixture = array(
-            1 => array('open'),
-            2 => array('close'),
-            3 => array('create', 'delete')
-        );
+        $resultFixture = [
+            1 => ['open'],
+            2 => ['close'],
+            3 => ['create', 'delete']
+        ];
 
         $params = $resourceIds;
         foreach ($userIds as $userId) {
@@ -179,7 +186,7 @@ class DataBaseAccessTest extends TestCase {
             // add a line with user URI, resource Id and privilege
             $this->persistence->insert(
                 self::TABLE_PRIVILEGES_NAME,
-                array('user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege)
+                ['user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege]
             );
         }
         return true;
@@ -199,7 +206,7 @@ class DataBaseAccessTest extends TestCase {
         //get all entries that match (user,resourceId) and remove them
         $inQueryPrivilege = implode(',', array_fill(0, count($rights), '?'));
         $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ? AND privilege IN ($inQueryPrivilege) AND user_id = ?";
-        $params = array($resourceId);
+        $params = [$resourceId];
         foreach ($rights as $rightId) {
             $params[] = $rightId;
         }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,31 +26,32 @@ use oat\oatbox\service\ServiceManager;
 
 /**
  * Service to administer the privileges
- * 
+ *
  * @author Joel Bout <joel@taotesting.com>
  */
 class AdminService
 {
     /**
      * Set a new Owener, removing the old owner(s)
-     * 
+     *
      * @param string $resourceUri
      * @param string $userUri
      * @return boolean
      */
-    public static function setOwner($resourceUri, $userUri) {
+    public static function setOwner($resourceUri, $userUri)
+    {
         /** @var DataBaseAccess $db */
         $db = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
         
         // Needs better abstraction
-        $dbRow = $db->getUsersWithPermissions(array($resourceUri));
+        $dbRow = $db->getUsersWithPermissions([$resourceUri]);
         foreach ($dbRow as $row) {
             if ($row['resource_id'] == $resourceUri && $row['privilege'] == 'OWNER') {
-                $db->removePermissions($row['user_id'], $resourceUri, array('OWNER'));
+                $db->removePermissions($row['user_id'], $resourceUri, ['OWNER']);
             }
         }
         
-        return $db->addPermissions($userUri, $resourceUri, array('OWNER'));
+        return $db->addPermissions($userUri, $resourceUri, ['OWNER']);
     }
 
     /**
@@ -64,14 +66,14 @@ class AdminService
     {
         /** @var DataBaseAccess $db */
         $db = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
-        $results = $db->getUsersWithPermissions(array($resourceUri));
+        $results = $db->getUsersWithPermissions([$resourceUri]);
     
-        $permissions = array();
+        $permissions = [];
         foreach ($results as $result) {
             $user = $result['user_id'];
             
             if (!isset($permissions[$user])) {
-                $permissions[$user] = array();
+                $permissions[$user] = [];
             }
             $permissions[$user][] = $result['privilege'];
         }
@@ -85,7 +87,8 @@ class AdminService
      * @param $userUri
      * @param $rights
      */
-    public static function addPermissionToClass(\core_kernel_classes_Class $class, $userUri, $rights) {
+    public static function addPermissionToClass(\core_kernel_classes_Class $class, $userUri, $rights)
+    {
 
         /** @var DataBaseAccess $dbAccess */
         $dbAccess = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
@@ -98,8 +101,8 @@ class AdminService
         }
     }
 
-    public static function getServiceManager(){
+    public static function getServiceManager()
+    {
         return ServiceManager::getServiceManager();
     }
-
 }
