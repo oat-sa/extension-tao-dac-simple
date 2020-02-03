@@ -27,7 +27,6 @@ use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\oatbox\log\LoggerAwareTrait;
 use oat\oatbox\user\UserService;
-use oat\generis\model\data\Ontology;
 use oat\generis\model\OntologyRdfs;
 
 /**
@@ -43,7 +42,7 @@ class AdminAccessController extends \tao_actions_CommonModule
 {
     use LoggerAwareTrait;
 
-    /** @var DataBaseAccess  */
+    /** @var DataBaseAccess */
     private $dataAccess;
 
     /**
@@ -74,12 +73,15 @@ class AdminAccessController extends \tao_actions_CommonModule
             $identity = new \core_kernel_classes_Resource($uri);
             if ($identity->isInstanceOf(\tao_models_classes_RoleService::singleton()->getRoleClass())) {
                 $roles[$uri] = [
-                    'label' => $identity->getLabel(),
+                    'label'      => $identity->getLabel(),
                     'privileges' => $privileges,
                 ];
             } else {
+                $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
+                $identity = $userService->getUser($uri);
+                $labels = $identity->getPropertyValues(OntologyRdfs::RDFS_LABEL);
                 $users[$uri] = [
-                    'label' => $identity->getLabel(),
+                    'label'      => empty($labels) ? 'unknown user' : reset($labels),
                     'privileges' => $privileges,
                 ];
             }
@@ -148,8 +150,8 @@ class AdminAccessController extends \tao_actions_CommonModule
         }
 
         return $this->returnJson([
-            'success'   => $success,
-            'message'   => $message
+            'success' => $success,
+            'message' => $message
         ], $code);
     }
 
@@ -158,24 +160,28 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     public function findUser()
     {
-        $query = $this->getGetParameter('query');
-        $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
-        $data = [];
-        foreach ($userService->findUser($query) as $user) {
-            $labels = $user->getPropertyValues(OntologyRdfs::RDFS_LABEL);
-            $data[] = [
-                'id' => $user->getIdentifier(),
-                OntologyRdfs::RDFS_LABEL => empty($labels) ? 'unknown user' : reset($labels)
+
+            $params = $this->getGetParameter('params');
+            $query = $params['query'];
+            //$query = $this->getGetParameter('query');
+            $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
+            $data = [];
+            foreach ($userService->findUser($query) as $user) {
+                $labels = $user->getPropertyValues(OntologyRdfs::RDFS_LABEL);
+                $data[] = [
+                    'id'                     => $user->getIdentifier(),
+                    OntologyRdfs::RDFS_LABEL => empty($labels) ? 'unknown user' : reset($labels)
+                ];
+            }
+            $response = [
+                'success' => true,
+                'page'    => 1,
+                'total'   => 1,
+                'records' => count($data),
+                'data'    => $data,
             ];
-        }
-        $response = [
-            'success' => true,
-            'page' => 1,
-            'total' => 1,
-            'records' => count($data),
-            'data' => $data,
-        ];
-        return $this->returnJson($response);
+            return $this->returnJson($response);
+
     }
 
     /**
