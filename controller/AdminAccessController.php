@@ -160,10 +160,8 @@ class AdminAccessController extends \tao_actions_CommonModule
      */
     public function findUser()
     {
-
             $params = $this->getGetParameter('params');
             $query = $params['query'];
-            //$query = $this->getGetParameter('query');
             $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
             $data = [];
             foreach ($userService->findUser($query) as $user) {
