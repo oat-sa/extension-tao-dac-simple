@@ -161,41 +161,6 @@ class DataBaseAccess extends ConfigurableService
     }
 
     /**
-     * get the delta between existing permissions and new permissions
-     *
-     * @access public
-     * @param  string $resourceId
-     * @param  array $rights associative array $user_id => $permissions
-     * @return array
-     */
-    public function getDeltaPermissions($resourceId, $rights)
-    {
-        $privileges = $this->getResourcePermissions($resourceId);
-
-        foreach ($rights as $userId => $privilegeIds) {
-            //if privileges are in request but not in db we add then
-            if (!isset($privileges[$userId])) {
-                $add[$userId] = $privilegeIds;
-            }
-            // compare privileges in db and request
-            else {
-                $add[$userId] = array_diff($privilegeIds, $privileges[$userId]);
-                $remove[$userId] = array_diff($privileges[$userId], $privilegeIds);
-                // unset already compare db variable
-                unset($privileges[$userId]);
-            }
-        }
-
-        //remaining privileges has to be removed
-        foreach ($privileges as $userId => $privilegeIds) {
-            $remove[$userId] = $privilegeIds;
-        }
-
-
-        return compact("remove", "add");
-    }
-
-    /**
      * remove permissions to a resource for a user
      *
      * @access public
@@ -214,7 +179,7 @@ class DataBaseAccess extends ConfigurableService
             $params[] = $rightId;
         }
         $params[] = $user;
-        
+
         $this->getPersistence()->exec($query, $params);
         $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
 
