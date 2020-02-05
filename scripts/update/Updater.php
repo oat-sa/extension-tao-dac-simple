@@ -34,6 +34,8 @@ use oat\taoBackOffice\model\menuStructure\ClassActionRegistry;
 use oat\generis\model\data\permission\PermissionInterface;
 use oat\taoDacSimple\model\action\AdminAction;
 use oat\tao\scripts\update\OntologyUpdater;
+use oat\taoDacSimple\model\PermissionServiceFactory;
+use oat\taoDacSimple\model\SyncPermissionsStrategy;
 
 /**
  *
@@ -139,5 +141,14 @@ class Updater extends \common_ext_ExtensionUpdater
         }
 
         $this->skip('2.7.0', '5.1.1');
+
+        if ($this->isVersion('5.1.1')) {
+            $this->getServiceManager()->register(PermissionServiceFactory::SERVICE_ID,
+                new PermissionServiceFactory([
+                    PermissionServiceFactory::OPTION_SAVE_STRATEGY => SyncPermissionsStrategy::class
+                ]));
+
+            $this->setVersion('5.2.0');
+        }
     }
 }
