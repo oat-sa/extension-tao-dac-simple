@@ -25,14 +25,11 @@ namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Class;
 
-class SyncPermissionsStrategy extends PermissionsStrategyAbstract
+class SavePermissionsStrategy extends PermissionsStrategyAbstract
 {
     public function normalizeRequest(array $currentPrivileges, array $privilegesToSet, core_kernel_classes_Class $resource): array
     {
-        // we are going to add everything what current item has and remove the rest
-        return [
-            'add' => $privilegesToSet
-        ];
+        return $this->getDeltaPermissions($currentPrivileges, $privilegesToSet);
     }
 
     public function getItemsToAdd(array $currentPrivileges, array $addRemove): array
@@ -41,17 +38,15 @@ class SyncPermissionsStrategy extends PermissionsStrategyAbstract
             return [];
         }
 
-        // we are adding everything except we already have
         return $this->arrayDiffRecursive($addRemove['add'], $currentPrivileges);
     }
 
     public function getItemsToRemove(array $currentPrivileges, array $addRemove): array
     {
-        if (empty($addRemove['add'])) {
+        if (empty($addRemove['remove'])) {
             return [];
         }
 
-        // we are removing everything we do not need
-        return $this->arrayDiffRecursive($currentPrivileges, $addRemove['add']);
+        return $this->arrayIntersectRecursive($currentPrivileges, $addRemove['remove']);
     }
 }

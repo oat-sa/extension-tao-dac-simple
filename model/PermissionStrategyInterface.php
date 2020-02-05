@@ -27,9 +27,11 @@ use core_kernel_classes_Class;
 
 interface PermissionStrategyInterface
 {
-    public function normalizeRequest(array $privilegesToSet, core_kernel_classes_Class $resource): array;
+    public function normalizeRequest(array $currentPrivileges, array $privilegesToSet, core_kernel_classes_Class $resource): array;
 
     public function getItemsToAdd(array $currentPrivileges, array $addRemove): array;
 
     public function getItemsToRemove(array $currentPrivileges, array $addRemove): array;
+
+    public function getDeltaPermissions(array $currentPrivileges, array $privilegesToSet): array;
 }
