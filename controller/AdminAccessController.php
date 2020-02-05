@@ -124,8 +124,8 @@ class AdminAccessController extends \tao_actions_CommonModule
 
     private function getPermissionService(): PermissionsService
     {
-        $service = new PermissionsService([]);
-        $service->setServiceLocator($this->serviceLocator);
+        $service = new PermissionsService();
+//        $service->setServiceLocator($this->serviceLocator);
 
         return $service;
     }

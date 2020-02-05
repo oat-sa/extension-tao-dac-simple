@@ -33,12 +33,12 @@ use oat\oatbox\service\ConfigurableService;
 use oat\oatbox\service\exception\InvalidServiceManagerException;
 use RuntimeException;
 
-class PermissionsService extends ConfigurableService
+class PermissionsService
 {
     /**
      * @param bool                      $recursive
      * @param core_kernel_classes_Class $class
-     * @param array                     $privileges
+     * @param array                     $privilegesToSet
      * @param string                    $resourceId
      *
      * @throws InvalidServiceManagerException
@@ -48,10 +48,18 @@ class PermissionsService extends ConfigurableService
     public function savePermissions(
         bool $recursive,
         core_kernel_classes_Class $class,
-        array $privileges,
+        array $privilegesToSet,
         string $resourceId
     ): void {
-        $this->validatePermissions($privileges);
+        $strategy = $this->getStrategy();
+
+        $addRemove = $strategy->normalizeRequest($privilegesToSet, $class);
+
+        if (empty($addRemove)) {
+            return;
+        }
+
+        $this->validatePermissions($privilegesToSet);
 
         $resources = [$class];
 
@@ -64,13 +72,22 @@ class PermissionsService extends ConfigurableService
 
         try {
             foreach ($resources as $resource) {
-                $permissions = $this->getDeltaPermissions($resource->getUri(), $privileges);
-                $this->removePermissions($permissions['remove'], $resource, $resourceId);
-                $this->addPermissions($permissions['add'], $resource);
+                $currentPrivileges = $this->getDatabaseAccess()->getResourcePermissions($resource->getUri());
+
+                $remove = $strategy->getItemsToRemove($currentPrivileges, $addRemove);
+                if ($remove) {
+                    $this->removePermissions($remove, $resource, $resourceId);
+                }
+
+                $add = $strategy->getItemsToAdd($currentPrivileges, $addRemove);
+                if ($add) {
+                    $this->addPermissions($add, $resource);
+                }
+
                 $processedResources[] = $resource;
             }
         } catch (common_exception_InconsistentData $e) {
-            $this->rollback($processedResources, $privileges, $resourceId);
+            $this->rollback($processedResources, $privilegesToSet, $resourceId);
 
             throw new RuntimeException($e->getMessage());
         }
@@ -79,35 +96,40 @@ class PermissionsService extends ConfigurableService
     /**
      * get the delta between existing permissions and new permissions
      *
-     * @access public
-     *
-     * @param string $resourceId
-     * @param array  $rights associative array $user_id => $permissions
+     * @param array $currentPrivileges
+     * @param array $privilegesToSet associative array $user_id => $permissions
      *
      * @return array
      */
-    private function getDeltaPermissions($resourceId, $rights): array
+    private function getDeltaPermissions(array $currentPrivileges, array $privilegesToSet): array
     {
-        $privileges = $this->getDatabaseAccess()->getResourcePermissions($resourceId);
-
-        foreach ($rights as $userId => $privilegeIds) {
+        foreach ($privilegesToSet as $userId => $privilegeIds) {
             //if privileges are in request but not in db we add then
-            if (!isset($privileges[$userId])) {
-                $add[$userId] = $privilegeIds;
+            if (!isset($currentPrivileges[$userId])) {
+                if ($privilegeIds) {
+                    $add[$userId] = $privilegeIds;
+                }
             } // compare privileges in db and request
             else {
-                $add[$userId] = array_diff($privilegeIds, $privileges[$userId]);
-                $remove[$userId] = array_diff($privileges[$userId], $privilegeIds);
+                $tmp = array_diff($privilegeIds, $currentPrivileges[$userId]);
+                if ($tmp) {
+                    $add[$userId] = $tmp;
+                }
+
+                $tmp = array_diff($currentPrivileges[$userId], $privilegeIds);
+
+                if ($tmp) {
+                    $remove[$userId] = $tmp;
+                }
                 // unset already compare db variable
-                unset($privileges[$userId]);
+                unset($currentPrivileges[$userId]);
             }
         }
 
         //remaining privileges has to be removed
-        foreach ($privileges as $userId => $privilegeIds) {
+        foreach ($currentPrivileges as $userId => $privilegeIds) {
             $remove[$userId] = $privilegeIds;
         }
-
 
         return compact('remove', 'add');
     }
@@ -145,8 +167,8 @@ class PermissionsService extends ConfigurableService
     {
         $supportedRights = $this->getPermissionProvider()->getSupportedRights();
 
-        foreach ($usersPrivileges as $user => $options) {
-            if (array_diff($options, $supportedRights) === array_diff($supportedRights, $options)) {
+        foreach ($usersPrivileges as $user => $privileges) {
+            if (array_diff($privileges, $supportedRights) === array_diff($supportedRights, $privileges)) {
                 return;
             }
         }
@@ -222,5 +244,10 @@ class PermissionsService extends ConfigurableService
     private function getSessionManager(): common_session_Session
     {
         return common_session_SessionManager::getSession();
+    }
+
+    private function getStrategy(): PermissionStrategyInterface
+    {
+        return new SyncPermissionsStrategy();
     }
 }
