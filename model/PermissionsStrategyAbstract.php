@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
+use RuntimeException;
+
 abstract class PermissionsStrategyAbstract implements PermissionStrategyInterface
 {
     protected function arrayDiffRecursive(array $array1, array $array2): array
@@ -37,10 +39,10 @@ abstract class PermissionsStrategyAbstract implements PermissionStrategyInterfac
             if (array_key_exists($array1key, $array2)) {
                 if (is_array($array1value) && is_array($array2[$array1key])) {
                     $outputDiff[$array1key] = $this->arrayDiffRecursive($array1value, $array2[$array1key]);
-                } else if (!in_array($array1value, $array2, true)) {
-                    $outputDiff[$array1key] = $array1value;
+                } else  {
+                    throw new RuntimeException('Inconsistent data');
                 }
-            } else if (!in_array($array1value, $array2, true)) {
+            } else {
                 $outputDiff[$array1key] = $array1value;
             }
         }
