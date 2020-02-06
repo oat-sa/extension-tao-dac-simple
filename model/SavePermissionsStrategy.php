@@ -32,7 +32,7 @@ class SavePermissionsStrategy extends PermissionsStrategyAbstract
         return $this->getDeltaPermissions($currentPrivileges, $privilegesToSet);
     }
 
-    public function getItemsToAdd(array $currentPrivileges, array $addRemove): array
+    public function getPermissionsToAdd(array $currentPrivileges, array $addRemove): array
     {
         if (empty($addRemove['add'])) {
             return [];
@@ -41,7 +41,7 @@ class SavePermissionsStrategy extends PermissionsStrategyAbstract
         return $this->arrayDiffRecursive($addRemove['add'], $currentPrivileges);
     }
 
-    public function getItemsToRemove(array $currentPrivileges, array $addRemove): array
+    public function getPermissionsToRemove(array $currentPrivileges, array $addRemove): array
     {
         if (empty($addRemove['remove'])) {
             return [];

@@ -28,7 +28,7 @@ use Exception;
 use oat\oatbox\log\LoggerAwareTrait;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
-use oat\taoDacSimple\model\PermissionServiceFactory;
+use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\PermissionsService;
 use tao_actions_CommonModule;
 
@@ -126,7 +126,7 @@ class AdminAccessController extends tao_actions_CommonModule
 
     private function getPermissionService(): PermissionsService
     {
-        return $this->serviceLocator->get(PermissionServiceFactory::SERVICE_ID)->create();
+        return $this->serviceLocator->get(PermissionsServiceFactory::SERVICE_ID)->create();
     }
 
     private function getPrivilegesFromRequest(): array

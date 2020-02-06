@@ -41,13 +41,13 @@ class PermissionsService
     private $permissionProvider;
     /** @var DataBaseAccess */
     private $dataBaseAccess;
-    /** @var PermissionStrategyInterface */
+    /** @var PermissionsStrategyInterface */
     private $strategy;
 
     public function __construct(
         PermissionProvider $permissionProvider,
         DataBaseAccess $dataBaseAccess,
-        PermissionStrategyInterface $strategy
+        PermissionsStrategyInterface $strategy
     ) {
         $this->permissionProvider = $permissionProvider;
         $this->dataBaseAccess = $dataBaseAccess;
@@ -93,12 +93,12 @@ class PermissionsService
             foreach ($resources as $resource) {
                 $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
 
-                $remove = $this->strategy->getItemsToRemove($currentPrivileges, $addRemove);
+                $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
                 if ($remove) {
                     $this->removePermissions($remove, $resource, $resourceId);
                 }
 
-                $add = $this->strategy->getItemsToAdd($currentPrivileges, $addRemove);
+                $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
                 if ($add) {
                     $this->addPermissions($add, $resource);
                 }

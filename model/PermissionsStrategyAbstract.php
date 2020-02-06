@@ -25,7 +25,7 @@ namespace oat\taoDacSimple\model;
 
 use RuntimeException;
 
-abstract class PermissionsStrategyAbstract implements PermissionStrategyInterface
+abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterface
 {
     protected function arrayDiffRecursive(array $array1, array $array2): array
     {

@@ -1,10 +1,10 @@
 <?php
 
-use oat\taoDacSimple\model\PermissionServiceFactory;
+use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\SyncPermissionsStrategy;
 
-return new PermissionServiceFactory(
+return new PermissionsServiceFactory(
     [
-        PermissionServiceFactory::OPTION_SAVE_STRATEGY => SyncPermissionsStrategy::class
+        PermissionsServiceFactory::OPTION_SAVE_STRATEGY => SyncPermissionsStrategy::class
     ]
 );

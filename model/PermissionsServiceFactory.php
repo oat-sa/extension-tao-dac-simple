@@ -26,7 +26,7 @@ namespace oat\taoDacSimple\model;
 use oat\oatbox\service\ConfigurableService;
 use RuntimeException;
 
-class PermissionServiceFactory extends ConfigurableService
+class PermissionsServiceFactory extends ConfigurableService
 {
     public const SERVICE_ID = 'taoDacSimple/PermissionsService';
 
