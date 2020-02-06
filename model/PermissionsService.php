@@ -125,7 +125,8 @@ class PermissionsService
     {
         try {
             foreach ($resources as $resource) {
-                $permissions = $this->strategy->getDeltaPermissions($resource->getUri(), $privileges);
+                $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
+                $permissions = $this->strategy->getDeltaPermissions($currentPrivileges, $privileges);
                 $this->removePermissions($permissions['add'], $resource, $resourceId);
                 $this->addPermissions($permissions['remove'], $resource);
             }
