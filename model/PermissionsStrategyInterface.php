@@ -27,7 +27,7 @@ use core_kernel_classes_Class;
 
 interface PermissionsStrategyInterface
 {
-    public function normalizeRequest(array $currentPrivileges, array $privilegesToSet, core_kernel_classes_Class $resource): array;
+    public function normalizeRequest(array $currentPrivileges, array $privilegesToSet): array;
 
     public function getPermissionsToAdd(array $currentPrivileges, array $addRemove): array;
 

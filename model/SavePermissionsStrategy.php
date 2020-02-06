@@ -27,7 +27,7 @@ use core_kernel_classes_Class;
 
 class SavePermissionsStrategy extends PermissionsStrategyAbstract
 {
-    public function normalizeRequest(array $currentPrivileges, array $privilegesToSet, core_kernel_classes_Class $resource): array
+    public function normalizeRequest(array $currentPrivileges, array $privilegesToSet): array
     {
         return $this->getDeltaPermissions($currentPrivileges, $privilegesToSet);
     }

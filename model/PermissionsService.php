@@ -75,7 +75,7 @@ class PermissionsService
     ): void {
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($class->getUri());
 
-        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet, $class);
+        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
 
         if (empty($addRemove)) {
             return;

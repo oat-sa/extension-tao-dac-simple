@@ -27,7 +27,7 @@ use core_kernel_classes_Class;
 
 class SyncPermissionsStrategy extends PermissionsStrategyAbstract
 {
-    public function normalizeRequest(array $currentPrivileges, array $privilegesToSet, core_kernel_classes_Class $resource): array
+    public function normalizeRequest(array $currentPrivileges, array $privilegesToSet): array
     {
         // we are going to add everything what current item has and remove the rest
         return [

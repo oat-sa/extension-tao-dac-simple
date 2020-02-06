@@ -1,7 +1,4 @@
 <?php
-
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,77 +18,19 @@ declare(strict_types=1);
  *
  */
 
-namespace oat\taoDacSimple\test\unit\model;
+namespace oat\taoDacSimple\test;
 
-use core_kernel_classes_Class;
-use oat\taoDacSimple\model\SavePermissionsStrategy;
+use oat\taoDacSimple\model\SyncPermissionsStrategy;
 use PHPUnit\Framework\TestCase;
 
-class SavePermissionsStrategyTest extends TestCase
+class SyncPermissionsStrategyTest extends TestCase
 {
-    public function testGetPermissionsToRemove(): void
-    {
-        $strategy = new SavePermissionsStrategy();
-
-        $result = $strategy->getPermissionsToRemove(
-            [
-                'p1' => ['READ'],
-                'p2' => ['READ'],
-                'p3' => ['READ', 'WRITE', 'GRANT'],
-            ],
-            [
-                'remove' => [
-                    'p2' => ['READ', 'WRITE'],
-                    'p3' => ['READ'],
-                ]
-            ]
-        );
-
-        $this->assertEquals(
-            [
-                'p2' => ['READ'],
-                'p3' => ['READ'],
-            ],
-            $result
-        );
-    }
-
-    public function testGetPermissionsToAdd(): void
-    {
-        $strategy = new SavePermissionsStrategy();
-
-        $result = $strategy->getPermissionsToAdd(
-            [
-                'p1' => ['READ'],
-                'p2' => ['READ'],
-                'p3' => ['READ', 'WRITE', 'GRANT'],
-            ],
-            [
-                'add' => [
-                    'p2' => ['READ', 'WRITE'],
-                    'p3' => ['READ'],
-                ]
-            ]
-        );
-
-        $this->assertEquals(
-            [
-                'p2' => ['WRITE'],
-            ],
-            $result
-        );
-    }
-
     public function testNormalizeRequest(): void
     {
-        $strategy = new SavePermissionsStrategy();
+        $strategy = new SyncPermissionsStrategy();
 
         $result = $strategy->normalizeRequest(
-            [
-                'p1' => ['READ'],
-                'p2' => ['READ'],
-                'p3' => ['READ', 'WRITE', 'GRANT'],
-            ],
+            [],
             [
                 'p1' => ['READ', 'WRITE'],
                 'p2' => ['READ'],
@@ -102,12 +41,63 @@ class SavePermissionsStrategyTest extends TestCase
         $this->assertEquals(
             [
                 'add' => [
-                    'p1' => ['WRITE'],
-                ],
-                'remove' => [
-                    'p3' => ['GRANT']
+                    'p1' => ['READ', 'WRITE'],
+                    'p2' => ['READ'],
+                    'p3' => ['READ', 'WRITE'],
                 ]
+            ],
+            $result
+        );
+    }
 
+    public function testGetPermissionsToAdd(): void
+    {
+        $strategy = new SyncPermissionsStrategy();
+
+        $result = $strategy->getPermissionsToAdd(
+            [
+                'p2' => ['READ'],
+                'p3' => ['READ', 'WRITE'],
+            ],
+            [
+                'add' => [
+                    'p1' => ['READ', 'WRITE'],
+                    'p2' => ['READ', 'GRANT'],
+                    'p3' => ['READ',],
+                ]
+            ]
+        );
+
+        $this->assertEquals(
+            [
+                'p1' => ['READ', 'WRITE'],
+                'p2' => ['GRANT'],
+            ],
+            $result
+        );
+    }
+
+    public function testGetPermissionsToRemove(): void
+    {
+        $strategy = new SyncPermissionsStrategy();
+
+        $result = $strategy->getPermissionsToRemove(
+            [
+                'p2' => ['READ'],
+                'p3' => ['READ', 'WRITE'],
+            ],
+            [
+                'add' => [
+                    'p1' => ['READ', 'WRITE'],
+                    'p2' => ['READ', 'GRANT'],
+                    'p3' => ['READ',],
+                ]
+            ]
+        );
+
+        $this->assertEquals(
+            [
+                'p3' => ['WRITE',],
             ],
             $result
         );
