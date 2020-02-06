@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
+use common_exception_Error;
+use common_session_SessionManager;
 use oat\oatbox\service\ConfigurableService;
 use RuntimeException;
 
@@ -32,6 +34,10 @@ class PermissionsServiceFactory extends ConfigurableService
 
     public const OPTION_SAVE_STRATEGY = 'save_strategy';
 
+    /**
+     * @return PermissionsService
+     * @throws common_exception_Error
+     */
     public function create(): PermissionsService
     {
         if (!$this->hasOption(self::OPTION_SAVE_STRATEGY)) {
@@ -45,7 +51,8 @@ class PermissionsServiceFactory extends ConfigurableService
         return new PermissionsService(
             $this->serviceLocator->get(PermissionProvider::SERVICE_ID),
             $this->serviceLocator->get(DataBaseAccess::SERVICE_ID),
-            new $strategyClass()
+            new $strategyClass(),
+            common_session_SessionManager::getSession()
         );
     }
 }

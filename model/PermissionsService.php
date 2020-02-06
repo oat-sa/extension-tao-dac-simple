@@ -23,10 +23,8 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
-use common_exception_Error;
 use common_exception_InconsistentData;
 use common_session_Session;
-use common_session_SessionManager;
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use oat\oatbox\log\LoggerAwareTrait;
@@ -43,15 +41,21 @@ class PermissionsService
     private $dataBaseAccess;
     /** @var PermissionsStrategyInterface */
     private $strategy;
+    /**
+     * @var common_session_Session
+     */
+    private $session;
 
     public function __construct(
         PermissionProvider $permissionProvider,
         DataBaseAccess $dataBaseAccess,
-        PermissionsStrategyInterface $strategy
+        PermissionsStrategyInterface $strategy,
+        common_session_Session $session
     ) {
         $this->permissionProvider = $permissionProvider;
         $this->dataBaseAccess = $dataBaseAccess;
         $this->strategy = $strategy;
+        $this->session = $session;
     }
 
     /**
@@ -61,7 +65,6 @@ class PermissionsService
      * @param string                    $resourceId
      *
      * @throws InvalidServiceManagerException
-     * @throws common_exception_Error
      * @throws common_exception_InconsistentData
      */
     public function savePermissions(
@@ -118,7 +121,6 @@ class PermissionsService
      * @param string                      $resourceId
      *
      * @throws InvalidServiceManagerException
-     * @throws common_exception_Error
      * @throws common_exception_InconsistentData
      */
     private function rollback(array $resources, array $privileges, string $resourceId): void
@@ -147,7 +149,7 @@ class PermissionsService
         $supportedRights = $this->permissionProvider->getSupportedRights();
 
         foreach ($usersPrivileges as $user => $privileges) {
-            if (array_diff($privileges, $supportedRights) === array_diff($supportedRights, $privileges)) {
+            if ($supportedRights === array_intersect($supportedRights, $privileges)) {
                 return;
             }
         }
@@ -162,14 +164,13 @@ class PermissionsService
      * @param string                       $resourceId
      *
      * @throws InvalidServiceManagerException
-     * @throws common_exception_Error
      * @throws common_exception_InconsistentData
      */
-    public function removePermissions(array $permissions, core_kernel_classes_Resource $resource, $resourceId): void
+    private function removePermissions(array $permissions, core_kernel_classes_Resource $resource, $resourceId): void
     {
         $supportedRights = $this->permissionProvider->getSupportedRights();
         sort($supportedRights);
-        $currentUser = $this->getSessionManager()->getUser();
+        $currentUser = $this->session->getUser();
         foreach ($permissions as $userId => $privilegeIds) {
             if (count($privilegeIds) > 0) {
                 $this->dataBaseAccess->removePermissions($userId, $resource->getUri(), $privilegeIds);
@@ -203,14 +204,5 @@ class PermissionsService
                 $this->dataBaseAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
             }
         }
-    }
-
-    /**
-     * @return common_session_Session
-     * @throws common_exception_Error
-     */
-    private function getSessionManager(): common_session_Session
-    {
-        return common_session_SessionManager::getSession();
     }
 }

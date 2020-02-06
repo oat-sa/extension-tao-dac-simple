@@ -59,7 +59,6 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
      */
     public function getPermissions(User $user, array $resourceIds)
     {
-
         if (in_array(DacRoles::DAC_ADMINISTRATOR, $user->getRoles(), true)) {
             $permissions = [];
             foreach ($resourceIds as $id) {
@@ -104,7 +103,7 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
      * (non-PHPdoc)
      * @see \oat\generis\model\data\permission\PermissionInterface::getSupportedRights()
      */
-    public function getSupportedRights(): array
+    public function getSupportedRights()
     {
         return [
             self::PERMISSION_GRANT,
@@ -120,7 +119,7 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
      *
      * @return array
      */
-    public static function getRightLabels(): array
+    public static function getRightLabels()
     {
         return [
             self::PERMISSION_GRANT => __('grant'),
@@ -129,7 +128,7 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
         ];
     }
 
-    public static function getSupportedRootClasses(): array
+    public static function getSupportedRootClasses()
     {
         return [
             new core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI),
