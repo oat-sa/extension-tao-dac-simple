@@ -106,12 +106,12 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
                 }
             } // compare privileges in db and request
             else {
-                $tmp = array_diff($privilegeIds, $currentPrivileges[$userId]);
+                $tmp = array_values(array_diff($privilegeIds, $currentPrivileges[$userId]));
                 if ($tmp) {
                     $add[$userId] = $tmp;
                 }
 
-                $tmp = array_diff($currentPrivileges[$userId], $privilegeIds);
+                $tmp = array_values(array_diff($currentPrivileges[$userId], $privilegeIds));
 
                 if ($tmp) {
                     $remove[$userId] = $tmp;
