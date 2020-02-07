@@ -200,7 +200,7 @@ class PermissionsService
     private function addPermissions(array $permissions, core_kernel_classes_Class $resource): void
     {
         foreach ($permissions as $userId => $privilegeIds) {
-            if (count($privilegeIds) > 0) {
+            if (!empty($privilegeIds)) {
                 $this->dataBaseAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
             }
         }
