@@ -179,7 +179,6 @@ class AdminAccessController extends \tao_actions_CommonModule
             'data'    => $data,
         ];
         return $this->returnJson($response);
-
     }
 
     /**
