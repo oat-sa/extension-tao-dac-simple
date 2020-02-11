@@ -69,8 +69,8 @@ class PermissionsService
         foreach ($resources as $resource) {
             $resourceIds[] = $resource->getUri();
         }
-        $userIds = array_keys($privilegesToSet);
-        $permissionsList = $this->dataBaseAccess->getResourcesPermissions($userIds, $resourceIds);
+
+        $permissionsList = $this->dataBaseAccess->getResourcesPermissions($resourceIds);
 
         $resultPermissions = $permissionsList;
 

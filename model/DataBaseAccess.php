@@ -109,7 +109,7 @@ class DataBaseAccess extends ConfigurableService
          return $returnValue;
     }
 
-    public function getResourcesPermissions($userIds, array $resourceIds): array
+    public function getResourcesPermissions(array $resourceIds): array
     {
         // get privileges for a user/roles and a resource
         $returnValue = [];
