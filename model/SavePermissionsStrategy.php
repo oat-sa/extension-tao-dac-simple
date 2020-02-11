@@ -36,7 +36,7 @@ class SavePermissionsStrategy extends PermissionsStrategyAbstract
             return [];
         }
 
-        $permissionsToAdd = $this->arrayDiffRecursive($addRemove['add'], $currentPrivileges);
+        $permissionsToAdd = $addRemove['add'];
 
         foreach ($permissionsToAdd as $userId => &$permissionToAdd) {
             $permissionsCount = count($permissionToAdd);
