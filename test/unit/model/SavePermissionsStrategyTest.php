@@ -37,11 +37,13 @@ class SavePermissionsStrategyTest extends TestCase
                 'p1' => ['READ'],
                 'p2' => ['READ'],
                 'p3' => ['READ', 'WRITE', 'GRANT'],
+                'p4' => ['READ', 'WRITE', 'GRANT'],
             ],
             [
                 'remove' => [
                     'p2' => ['READ', 'WRITE'],
                     'p3' => ['READ'],
+                    'p4' => ['WRITE'],
                 ]
             ]
         );
@@ -50,6 +52,7 @@ class SavePermissionsStrategyTest extends TestCase
             [
                 'p2' => ['READ'],
                 'p3' => ['READ', 'WRITE', 'GRANT'],
+                'p4' => ['WRITE', 'GRANT'],
             ],
             $result
         );

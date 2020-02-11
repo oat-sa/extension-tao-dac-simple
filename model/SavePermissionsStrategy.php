@@ -73,12 +73,21 @@ class SavePermissionsStrategy extends PermissionsStrategyAbstract
             return [];
         }
 
-        $permissionsToRemove = $this->arrayIntersectRecursive($currentPrivileges, $addRemove['remove']);
+        $permissionsToRemove = $addRemove['remove'];
 
         foreach ($permissionsToRemove as $userId => &$permissionToRemove) {
-            if (empty(array_diff($permissionToRemove, [PermissionProvider::PERMISSION_READ]))) {
-                $permissionToRemove = $currentPrivileges[$userId];
+            $mandatoryFields = [];
+
+            if (in_array(PermissionProvider::PERMISSION_READ, $permissionToRemove, true)) {
+                $mandatoryFields = [PermissionProvider::PERMISSION_WRITE, PermissionProvider::PERMISSION_GRANT];
+            } elseif (in_array(PermissionProvider::PERMISSION_WRITE, $permissionToRemove, true)) {
+                $mandatoryFields = [PermissionProvider::PERMISSION_GRANT];
             }
+
+            $permissionToRemove = array_values(array_intersect(
+                array_unique(array_merge($permissionToRemove, $mandatoryFields)),
+                $currentPrivileges[$userId] ?? []
+            ));
         }
 
         return $permissionsToRemove;

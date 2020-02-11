@@ -82,10 +82,12 @@ class PermissionsService
             $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
             if ($remove) {
                 foreach ($remove as $userToRemove => $permissionToRemove) {
-                    $resultPermissions[$resource->getUri()][$userToRemove] = array_diff(
-                        $resultPermissions[$resource->getUri()][$userToRemove],
-                        $permissionToRemove
-                    );
+                    if (!empty($resultPermissions[$resource->getUri()][$userToRemove])) {
+                        $resultPermissions[$resource->getUri()][$userToRemove] = array_diff(
+                            $resultPermissions[$resource->getUri()][$userToRemove],
+                            $permissionToRemove
+                        );
+                    }
                 }
 
                 $actions[] = function () use ($remove, $resource) {
@@ -113,7 +115,6 @@ class PermissionsService
         }
 
         $this->validateResources($resultPermissions);
-
 
         foreach ($actions as $processedResource) {
             $processedResource();
