@@ -29,6 +29,7 @@ use oat\oatbox\log\LoggerAwareTrait;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\PermissionsService;
+use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
 use RuntimeException;
 use tao_actions_CommonModule;
@@ -119,7 +120,7 @@ class AdminAccessController extends tao_actions_CommonModule
             );
         } catch (common_exception_Unauthorized $e) {
             $this->response = $this->getPsrResponse()->withStatus(403, __('Unable to process your request'));
-        } catch (RuntimeException $e) {
+        } catch (PermissionsServiceException $e) {
             $this->response = $this->getPsrResponse()
                 ->withStatus(400, $e->getMessage())
                 ->withBody(stream_for(json_encode(['success' => false, 'message' => $e->getMessage()])))

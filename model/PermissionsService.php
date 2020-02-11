@@ -26,7 +26,6 @@ namespace oat\taoDacSimple\model;
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use oat\oatbox\log\LoggerAwareTrait;
-use RuntimeException;
 
 class PermissionsService
 {
@@ -109,28 +108,34 @@ class PermissionsService
             }
         }
 
+        $this->validateResources($resultPermissions);
+
+
+        foreach ($actions as $processedResource) {
+            $processedResource();
+        }
+    }
+
+    private function validateResources(array $resultPermissions): void
+    {
         // check if all resources after all actions are applied will have al least one user with GRANT permission
         foreach ($resultPermissions as $resultResources => $resultUsers) {
             $grunt = false;
-            foreach ($resultUsers as $resultPermissions) {
-                if (in_array(PermissionProvider::PERMISSION_GRANT, $resultPermissions, true)) {
+            foreach ($resultUsers as $permissions) {
+                if (in_array(PermissionProvider::PERMISSION_GRANT, $permissions, true)) {
                     $grunt = true;
                     break;
                 }
             }
 
             if (!$grunt) {
-                throw new RuntimeException(
+                throw new PermissionsServiceException(
                     sprintf(
                         'Resource %s should have at least one user with GRANT access',
                         $resultResources
                     )
                 );
             }
-        }
-
-        foreach ($actions as $processedResource) {
-            $processedResource();
         }
     }
 
