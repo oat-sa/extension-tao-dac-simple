@@ -96,10 +96,14 @@ class PermissionsService
             $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
             if ($add) {
                 foreach ($add as $userToAdd => $permissionToAdd) {
-                    $resultPermissions[$resource->getUri()][$userToAdd] = array_merge(
-                        (array)$resultPermissions[$resource->getUri()][$userToAdd],
-                        $permissionToAdd
-                    );
+                    if (empty($resultPermissions[$resource->getUri()][$userToAdd])) {
+                        $resultPermissions[$resource->getUri()][$userToAdd] = $permissionToAdd;
+                    } else {
+                        $resultPermissions[$resource->getUri()][$userToAdd] = array_merge(
+                            (array)$resultPermissions[$resource->getUri()][$userToAdd],
+                            $permissionToAdd
+                        );
+                    }
                 }
 
                 $actions[] = function () use ($add, $resource) {
