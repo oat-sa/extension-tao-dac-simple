@@ -23,8 +23,6 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
-use core_kernel_classes_Class;
-
 class SavePermissionsStrategy extends PermissionsStrategyAbstract
 {
     public function normalizeRequest(array $currentPrivileges, array $privilegesToSet): array
@@ -38,7 +36,31 @@ class SavePermissionsStrategy extends PermissionsStrategyAbstract
             return [];
         }
 
-        return $this->arrayDiffRecursive($addRemove['add'], $currentPrivileges);
+        $permissionsToAdd = $this->arrayDiffRecursive($addRemove['add'], $currentPrivileges);
+
+        foreach ($permissionsToAdd as $userId => &$permissionToAdd) {
+            $permissionsCount = count($permissionToAdd);
+
+            if ($permissionsCount < 3) {
+                $mandatoryFields = [];
+
+                // check attempt to add only one permission which depend on other (w on r, g on w and r) and add
+                // dependent permissions if necessary
+
+                if (in_array(PermissionProvider::PERMISSION_GRANT, $permissionToAdd, true)) {
+                    $mandatoryFields = [PermissionProvider::PERMISSION_WRITE, PermissionProvider::PERMISSION_READ];
+                } elseif (in_array(PermissionProvider::PERMISSION_WRITE, $permissionToAdd, true)) {
+                    $mandatoryFields = [PermissionProvider::PERMISSION_READ];
+                }
+
+                $permissionToAdd = array_diff(
+                    array_unique(array_merge($permissionToAdd, $mandatoryFields)),
+                    $currentPrivileges[$userId] ?? []
+                );
+            }
+        }
+
+        return $permissionsToAdd;
     }
 
     public function getPermissionsToRemove(array $currentPrivileges, array $addRemove): array
@@ -47,6 +69,14 @@ class SavePermissionsStrategy extends PermissionsStrategyAbstract
             return [];
         }
 
-        return $this->arrayIntersectRecursive($currentPrivileges, $addRemove['remove']);
+        $permissionsToRemove = $this->arrayIntersectRecursive($currentPrivileges, $addRemove['remove']);
+
+        foreach ($permissionsToRemove as $userId => &$permissionToRemove) {
+            if (empty(array_diff($permissionToRemove, [PermissionProvider::PERMISSION_READ]))) {
+                $permissionToRemove = $currentPrivileges[$userId];
+            }
+        }
+
+        return $permissionsToRemove;
     }
 }

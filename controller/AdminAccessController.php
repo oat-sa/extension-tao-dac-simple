@@ -28,9 +28,12 @@ use Exception;
 use oat\oatbox\log\LoggerAwareTrait;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
-use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\PermissionsService;
+use oat\taoDacSimple\model\PermissionsServiceFactory;
+use RuntimeException;
 use tao_actions_CommonModule;
+use tao_models_classes_RoleService;
+use function GuzzleHttp\Psr7\stream_for;
 
 /**
  * This controller is used to manage permission administration
@@ -64,7 +67,7 @@ class AdminAccessController extends tao_actions_CommonModule
         $roles = [];
         foreach ($accessRights as $uri => $privileges) {
             $identity = new core_kernel_classes_Resource($uri);
-            if ($identity->isInstanceOf(\tao_models_classes_RoleService::singleton()->getRoleClass())) {
+            if ($identity->isInstanceOf(tao_models_classes_RoleService::singleton()->getRoleClass())) {
                 $roles[$uri] = [
                     'label'      => $identity->getLabel(),
                     'privileges' => $privileges,
@@ -104,8 +107,7 @@ class AdminAccessController extends tao_actions_CommonModule
             $service->savePermissions(
                 $recursive,
                 $this->getResourceFromRequest(),
-                $this->getPrivilegesFromRequest(),
-                $this->getRequest()->getParameter('resource_id')
+                $this->getPrivilegesFromRequest()
             );
 
             $this->returnJson(
@@ -117,6 +119,11 @@ class AdminAccessController extends tao_actions_CommonModule
             );
         } catch (common_exception_Unauthorized $e) {
             $this->response = $this->getPsrResponse()->withStatus(403, __('Unable to process your request'));
+        } catch (RuntimeException $e) {
+            $this->response = $this->getPsrResponse()
+                ->withStatus(400, $e->getMessage())
+                ->withBody(stream_for(json_encode(['success' => false, 'message' => $e->getMessage()])))
+                ->withHeader('Content-Type', 'application/json');
         } catch (Exception $e) {
             $this->logError($e->getMessage());
 

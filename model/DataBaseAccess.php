@@ -109,6 +109,33 @@ class DataBaseAccess extends ConfigurableService
          return $returnValue;
     }
 
+    public function getResourcesPermissions($userIds, array $resourceIds): array
+    {
+        // get privileges for a user/roles and a resource
+        $returnValue = [];
+
+        $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
+
+        $query = 'SELECT user_id, resource_id, privilege FROM ' . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource)";
+
+        $params = $resourceIds;
+
+        //If resource doesn't have permission don't return null
+        foreach ($resourceIds as $resourceId) {
+            $returnValue[$resourceId] = [];
+        }
+
+        /** @var \PDOStatement $statement */
+        $statement = $this->getPersistence()->query($query, $params);
+        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($results as $result) {
+            $returnValue[$result['resource_id']][$result['user_id']][] = $result['privilege'];
+        }
+
+        return $returnValue;
+    }
+
     /**
      * add permissions of a user to a resource
      *

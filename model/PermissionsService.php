@@ -23,55 +23,32 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
-use common_exception_InconsistentData;
-use common_session_Session;
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use oat\oatbox\log\LoggerAwareTrait;
-use oat\oatbox\service\exception\InvalidServiceManagerException;
 use RuntimeException;
 
 class PermissionsService
 {
     use LoggerAwareTrait;
 
-    /** @var PermissionProvider */
-    private $permissionProvider;
     /** @var DataBaseAccess */
     private $dataBaseAccess;
     /** @var PermissionsStrategyInterface */
     private $strategy;
-    /**
-     * @var common_session_Session
-     */
-    private $session;
 
     public function __construct(
-        PermissionProvider $permissionProvider,
         DataBaseAccess $dataBaseAccess,
-        PermissionsStrategyInterface $strategy,
-        common_session_Session $session
+        PermissionsStrategyInterface $strategy
     ) {
-        $this->permissionProvider = $permissionProvider;
         $this->dataBaseAccess = $dataBaseAccess;
         $this->strategy = $strategy;
-        $this->session = $session;
     }
 
-    /**
-     * @param bool                      $recursive
-     * @param core_kernel_classes_Class $class
-     * @param array                     $privilegesToSet
-     * @param string                    $resourceId
-     *
-     * @throws InvalidServiceManagerException
-     * @throws common_exception_InconsistentData
-     */
     public function savePermissions(
         bool $recursive,
         core_kernel_classes_Class $class,
-        array $privilegesToSet,
-        string $resourceId
+        array $privilegesToSet
     ): void {
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($class->getUri());
 
@@ -81,8 +58,7 @@ class PermissionsService
             return;
         }
 
-        $this->validatePermissions($privilegesToSet);
-
+        /** @var core_kernel_classes_Resource[] $resources */
         $resources = [$class];
 
         if ($recursive) {
@@ -90,109 +66,84 @@ class PermissionsService
             $resources = array_merge($resources, $class->getInstances(true));
         }
 
-        $processedResources = [];
+        $resourceIds = [];
+        foreach ($resources as $resource) {
+            $resourceIds[] = $resource->getUri();
+        }
+        $userIds = array_keys($privilegesToSet);
+        $permissionsList = $this->dataBaseAccess->getResourcesPermissions($userIds, $resourceIds);
 
-        try {
-            foreach ($resources as $resource) {
-                $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
+        $resultPermissions = $permissionsList;
 
-                $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
-                if ($remove) {
-                    $this->removePermissions($remove, $resource, $resourceId);
+        $actions = [];
+
+        foreach ($resources as $resource) {
+            $currentPrivileges = $permissionsList[$resource->getUri()];
+
+            $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
+            if ($remove) {
+                foreach ($remove as $userToRemove => $permissionToRemove) {
+                    $resultPermissions[$resource->getUri()][$userToRemove] = array_diff(
+                        $resultPermissions[$resource->getUri()][$userToRemove],
+                        $permissionToRemove
+                    );
                 }
 
-                $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
-                if ($add) {
+                $actions[] = function () use ($remove, $resource) {
+                    $this->removePermissions($remove, $resource);
+                };
+            }
+
+            $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
+            if ($add) {
+                foreach ($add as $userToAdd => $permissionToAdd) {
+                    $resultPermissions[$resource->getUri()][$userToAdd] = array_merge(
+                        (array)$resultPermissions[$resource->getUri()][$userToAdd],
+                        $permissionToAdd
+                    );
+                }
+
+                $actions[] = function () use ($add, $resource) {
                     $this->addPermissions($add, $resource);
+                };
+            }
+        }
+
+        // check if all resources after all actions are applied will have al least one user with GRANT permission
+        foreach ($resultPermissions as $resultResources => $resultUsers) {
+            $grunt = false;
+            foreach ($resultUsers as $resultPermissions) {
+                if (in_array(PermissionProvider::PERMISSION_GRANT, $resultPermissions, true)) {
+                    $grunt = true;
+                    break;
                 }
-
-                $processedResources[] = $resource;
             }
-        } catch (common_exception_InconsistentData $e) {
-            $this->rollback($processedResources, $privilegesToSet, $resourceId);
 
-            throw new RuntimeException($e->getMessage());
-        }
-    }
-
-    /**
-     * @param core_kernel_classes_Class[] $resources
-     * @param array                       $privileges
-     * @param string                      $resourceId
-     *
-     * @throws InvalidServiceManagerException
-     * @throws common_exception_InconsistentData
-     */
-    private function rollback(array $resources, array $privileges, string $resourceId): void
-    {
-        try {
-            foreach ($resources as $resource) {
-                $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
-                $permissions = $this->strategy->getDeltaPermissions($currentPrivileges, $privileges);
-                $this->removePermissions($permissions['add'], $resource, $resourceId);
-                $this->addPermissions($permissions['remove'], $resource);
-            }
-        } catch (RuntimeException $e) {
-            $this->logWarning(
-                sprintf('Error occurred during rollback at %s: %s', self::class, $e->getMessage())
-            );
-        }
-    }
-
-    /**
-     * Check if the array to save contains a user that has all privileges
-     *
-     * @param array $usersPrivileges
-     */
-    protected function validatePermissions($usersPrivileges): void
-    {
-        $supportedRights = $this->permissionProvider->getSupportedRights();
-
-        foreach ($usersPrivileges as $user => $privileges) {
-            if ($supportedRights === array_intersect($supportedRights, $privileges)) {
-                return;
+            if (!$grunt) {
+                throw new RuntimeException(
+                    sprintf(
+                        'Resource %s should have at least one user with GRANT access',
+                        $resultResources
+                    )
+                );
             }
         }
 
-        throw new RuntimeException('Cannot save a list without a fully privileged user');
+        foreach ($actions as $processedResource) {
+            $processedResource();
+        }
     }
 
     /**
      * @param array                        $permissions
      * @param core_kernel_classes_Resource $resource
      *
-     * @param string                       $resourceId
-     *
-     * @throws InvalidServiceManagerException
-     * @throws common_exception_InconsistentData
      */
-    private function removePermissions(array $permissions, core_kernel_classes_Resource $resource, $resourceId): void
+    private function removePermissions(array $permissions, core_kernel_classes_Resource $resource): void
     {
-        $supportedRights = $this->permissionProvider->getSupportedRights();
-        sort($supportedRights);
-        $currentUser = $this->session->getUser();
         foreach ($permissions as $userId => $privilegeIds) {
-            if (count($privilegeIds) > 0) {
+            if (!empty($privilegeIds)) {
                 $this->dataBaseAccess->removePermissions($userId, $resource->getUri(), $privilegeIds);
-                $currentUserPermissions = current(
-                    $this->permissionProvider->getPermissions(
-                        $currentUser,
-                        [$resourceId]
-                    )
-                );
-                sort($currentUserPermissions);
-                if ($currentUserPermissions !== $supportedRights) {
-                    $this->dataBaseAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
-                    $this->logWarning(
-                        sprintf(
-                            'Attempt to revoke access to resource %s for current user: %s',
-                            $resource->getUri(),
-                            $currentUser->getIdentifier()
-                        )
-                    );
-
-                    throw new common_exception_InconsistentData(__('Access can not be revoked for the current user.'));
-                }
             }
         }
     }
