@@ -20,24 +20,16 @@
 
 namespace oat\taoDacSimple\test\unit\model;
 
-use common_exception_InconsistentData;
-use common_session_Session;
 use core_kernel_classes_Class;
 use oat\generis\test\MockObject;
-use oat\oatbox\service\exception\InvalidServiceManagerException;
-use oat\oatbox\user\AnonymousUser;
+use oat\generis\test\TestCase;
 use oat\taoDacSimple\model\DataBaseAccess;
-use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\PermissionsService;
+use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsStrategyInterface;
-use PHPUnit\Framework\TestCase;
 
 class PermissionsServiceTest extends TestCase
 {
-    /**
-     * @var MockObject|PermissionProvider
-     */
-    private $permissionProvider;
     /**
      * @var MockObject|DataBaseAccess
      */
@@ -50,39 +42,30 @@ class PermissionsServiceTest extends TestCase
      * @var MockObject|PermissionsStrategyInterface
      */
     private $strategy;
-    /**
-     * @var MockObject|common_session_Session
-     */
-    private $session;
 
     protected function setUp(): void
     {
-        $this->permissionProvider = $this->getMockBuilder(PermissionProvider::class)
-            ->setMethods(['getPermissions'])
-            ->disableOriginalConstructor()
-            ->getMock();
         $this->databaseAccess = $this->createMock(DataBaseAccess::class);
         $this->databaseAccess->method('getResourcePermissions')->willReturn([]);
 
         $this->strategy = $this->createMock(PermissionsStrategyInterface::class);
-        $this->session = $this->createMock(common_session_Session::class);
 
         $this->service = new PermissionsService(
-            $this->permissionProvider,
             $this->databaseAccess,
-            $this->strategy,
-            $this->session
+            $this->strategy
         );
     }
 
-    /**
-     * @throws common_exception_InconsistentData
-     * @throws InvalidServiceManagerException
-     */
     public function testSaveAddPermissions(): void
     {
         $this->databaseAccess->expects($this->atLeast(1))->method('addPermissions');
         $this->databaseAccess->expects($this->never())->method('removePermissions');
+
+        $this->databaseAccess->method('getResourcesPermissions')->willReturn(
+            [
+                'res1' => []
+            ]
+        );
 
         $this->strategy->method('normalizeRequest')->willReturn(
             [
@@ -92,28 +75,33 @@ class PermissionsServiceTest extends TestCase
             ]
         );
 
-        $this->strategy->method('getPermissionsToAdd')->willReturn([
-            'uid1' => ['GRANT', 'READ', 'WRITE']
-        ]);
+        $this->strategy->method('getPermissionsToAdd')->willReturn(
+            [
+                'uid1' => ['GRANT', 'READ', 'WRITE']
+            ]
+        );
 
         $resource = $this->createMock(core_kernel_classes_Class::class);
+        $resource->method('getUri')->willReturn('res1');
+
 
         $this->service->savePermissions(
             false,
             $resource,
             [
                 'uid1' => ['GRANT', 'READ', 'WRITE']
-            ],
-            'resourceId'
+            ]
         );
     }
 
-    /**
-     * @throws common_exception_InconsistentData
-     * @throws InvalidServiceManagerException
-     */
     public function testSavePermissionsAddRecursively(): void
     {
+        $this->databaseAccess->method('getResourcesPermissions')->willReturn(
+            [
+                'uid2uri' => []
+            ]
+        );
+
         $this->databaseAccess->expects($this->exactly(2))->method('addPermissions');
         $this->databaseAccess->expects($this->never())->method('removePermissions');
 
@@ -125,9 +113,11 @@ class PermissionsServiceTest extends TestCase
             ]
         );
 
-        $this->strategy->method('getPermissionsToAdd')->willReturn([
-            'uid1' => ['GRANT', 'READ', 'WRITE']
-        ]);
+        $this->strategy->method('getPermissionsToAdd')->willReturn(
+            [
+                'uid1' => ['GRANT', 'READ', 'WRITE']
+            ]
+        );
 
         /** @var MockObject|core_kernel_classes_Class $childResource */
         $childResource = $this->createMock(core_kernel_classes_Class::class);
@@ -135,36 +125,36 @@ class PermissionsServiceTest extends TestCase
 
         /** @var MockObject|core_kernel_classes_Class $resource */
         $resource = $this->createMock(core_kernel_classes_Class::class);
-        $resource->method('getSubClasses')->willReturn([
-            $childResource
-        ]);
+        $resource->method('getSubClasses')->willReturn(
+            [
+                $childResource
+            ]
+        );
 
         $resource->method('getInstances')->willReturn([]);
+        $resource->method('getUri')->willReturn('uid2uri');
 
         $this->service->savePermissions(
             true,
             $resource,
             [
                 'uid1' => ['GRANT', 'READ', 'WRITE']
-            ],
-            'resourceId'
+            ]
         );
     }
 
-    /**
-     * @throws common_exception_InconsistentData
-     * @throws InvalidServiceManagerException
-     */
-    public function testSaveRemovePermissions(): void
+
+    public function testCantRemoveResourceWithNoGrantLeft(): void
     {
-        $this->databaseAccess->expects($this->never())->method('addPermissions');
-        $this->databaseAccess->expects($this->once())->method('removePermissions');
+        $this->expectException(PermissionsServiceException::class);
 
-        $this->session->method('getUser')->willReturn(new AnonymousUser());
-
-        $this->permissionProvider->method('getPermissions')->willReturn([
-            'uid1' => ['GRANT', 'READ', 'WRITE']
-        ]);
+        $this->databaseAccess->method('getResourcesPermissions')->willReturn(
+            [
+                'uid2uri' => [
+                    'uid1' => ['GRANT', 'READ', 'WRITE']
+                ]
+            ]
+        );
 
         $this->strategy->method('normalizeRequest')->willReturn(
             [
@@ -174,19 +164,60 @@ class PermissionsServiceTest extends TestCase
             ]
         );
 
-        $this->strategy->method('getPermissionsToRemove')->willReturn([
-            'uid1' => ['GRANT', 'READ', 'WRITE']
-        ]);
+        $this->strategy->method('getPermissionsToRemove')->willReturn(
+            [
+                'uid1' => ['GRANT', 'READ', 'WRITE']
+            ]
+        );
 
         $resource = $this->createMock(core_kernel_classes_Class::class);
+        $resource->method('getUri')->willReturn('uid2uri');
 
         $this->service->savePermissions(
             false,
             $resource,
             [
                 'uid1' => ['GRANT', 'READ', 'WRITE']
-            ],
-            'resourceId'
+            ]
+        );
+    }
+
+    public function testSaveRemovePermissions(): void
+    {
+        $this->databaseAccess->method('getResourcesPermissions')->willReturn(
+            [
+                'uid2uri' => [
+                    'uid1' => ['GRANT', 'READ', 'WRITE']
+                ]
+            ]
+        );
+
+        $this->databaseAccess->expects($this->never())->method('addPermissions');
+        $this->databaseAccess->expects($this->once())->method('removePermissions');
+
+        $this->strategy->method('normalizeRequest')->willReturn(
+            [
+                'remove' => [
+                    'uid1' => ['GRANT', 'READ', 'WRITE']
+                ]
+            ]
+        );
+
+        $this->strategy->method('getPermissionsToRemove')->willReturn(
+            [
+                'uid1' => ['READ', 'WRITE']
+            ]
+        );
+
+        $resource = $this->createMock(core_kernel_classes_Class::class);
+        $resource->method('getUri')->willReturn('uid2uri');
+
+        $this->service->savePermissions(
+            false,
+            $resource,
+            [
+                'uid1' => ['READ', 'WRITE']
+            ]
         );
     }
 
