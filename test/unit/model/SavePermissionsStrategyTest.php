@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\test\unit\model;
 
-use core_kernel_classes_Class;
 use oat\taoDacSimple\model\SavePermissionsStrategy;
 use PHPUnit\Framework\TestCase;
 
@@ -50,7 +49,7 @@ class SavePermissionsStrategyTest extends TestCase
         $this->assertEquals(
             [
                 'p2' => ['READ'],
-                'p3' => ['READ'],
+                'p3' => ['READ', 'WRITE', 'GRANT'],
             ],
             $result
         );
@@ -65,11 +64,15 @@ class SavePermissionsStrategyTest extends TestCase
                 'p1' => ['READ'],
                 'p2' => ['READ'],
                 'p3' => ['READ', 'WRITE', 'GRANT'],
+                'p6' => ['READ'],
             ],
             [
                 'add' => [
                     'p2' => ['READ', 'WRITE'],
                     'p3' => ['READ'],
+                    'p4' => ['WRITE'],
+                    'p5' => ['GRANT'],
+                    'p6' => ['GRANT'],
                 ]
             ]
         );
@@ -77,6 +80,9 @@ class SavePermissionsStrategyTest extends TestCase
         $this->assertEquals(
             [
                 'p2' => ['WRITE'],
+                'p4' => ['WRITE', 'READ'],
+                'p5' => ['GRANT', 'WRITE', 'READ'],
+                'p6' => ['GRANT', 'WRITE'],
             ],
             $result
         );
@@ -101,7 +107,7 @@ class SavePermissionsStrategyTest extends TestCase
 
         $this->assertEquals(
             [
-                'add' => [
+                'add'    => [
                     'p1' => ['WRITE'],
                 ],
                 'remove' => [

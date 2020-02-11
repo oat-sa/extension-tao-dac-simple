@@ -53,10 +53,14 @@ class SavePermissionsStrategy extends PermissionsStrategyAbstract
                     $mandatoryFields = [PermissionProvider::PERMISSION_READ];
                 }
 
-                $permissionToAdd = array_diff(
+                $permissionToAdd = array_values(array_diff(
                     array_unique(array_merge($permissionToAdd, $mandatoryFields)),
                     $currentPrivileges[$userId] ?? []
-                );
+                ));
+
+                if (empty($permissionToAdd)) {
+                    unset($permissionsToAdd[$userId]);
+                }
             }
         }
 

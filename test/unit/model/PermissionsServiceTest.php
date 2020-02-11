@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -232,6 +235,6 @@ class PermissionsServiceTest extends TestCase
 
         $resource = $this->createMock(core_kernel_classes_Class::class);
 
-        $this->service->savePermissions(false, $resource, [], 'resourceId');
+        $this->service->savePermissions(false, $resource, []);
     }
 }
