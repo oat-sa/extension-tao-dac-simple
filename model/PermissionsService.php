@@ -153,7 +153,7 @@ class PermissionsService
         }
     }
 
-    private function addPermissions(array $permissions, core_kernel_classes_Class $resource): void
+    private function addPermissions(array $permissions, core_kernel_classes_Resource $resource): void
     {
         foreach ($permissions as $userId => $privilegeIds) {
             if (!empty($privilegeIds)) {
