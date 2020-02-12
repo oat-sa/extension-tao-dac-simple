@@ -31,10 +31,11 @@ use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
-use RuntimeException;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
 use function GuzzleHttp\Psr7\stream_for;
+use oat\oatbox\user\UserService;
+use oat\generis\model\OntologyRdfs;
 
 /**
  * This controller is used to manage permission administration
@@ -61,9 +62,7 @@ class AdminAccessController extends tao_actions_CommonModule
         $resource = new core_kernel_classes_Resource($this->getRequestParameter('id'));
 
         $accessRights = AdminService::getUsersPermissions($resource->getUri());
-
         $this->setData('privileges', PermissionProvider::getRightLabels());
-
         $users = [];
         $roles = [];
         foreach ($accessRights as $uri => $privileges) {
@@ -73,14 +72,20 @@ class AdminAccessController extends tao_actions_CommonModule
                     'label'      => $identity->getLabel(),
                     'privileges' => $privileges,
                 ];
-            } else {
+                unset($accessRights[$uri]);
+            }
+        }
+        if (!empty($accessRights)) {
+            $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
+            $usersInfo = $userService->getUsers(array_keys($accessRights));
+            foreach ($usersInfo as $uri => $user) {
+                $labels = $user->getPropertyValues(OntologyRdfs::RDFS_LABEL);
                 $users[$uri] = [
-                    'label'      => $identity->getLabel(),
-                    'privileges' => $privileges,
+                    'label'      => empty($labels) ? 'unknown user' : reset($labels),
+                    'privileges' => $accessRights[$uri],
                 ];
             }
         }
-
         $this->setData('users', $users);
         $this->setData('roles', $roles);
         $this->setData('isClass', $resource->isClass());
@@ -130,6 +135,32 @@ class AdminAccessController extends tao_actions_CommonModule
 
             $this->returnJson(['success' => false], 500);
         }
+    }
+
+    /**
+     * Find users to assign access rights
+     */
+    public function findUser()
+    {
+        $params = $this->getGetParameter('params');
+        $query = $params['query'];
+        $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
+        $data = [];
+        foreach ($userService->findUser($query) as $user) {
+            $labels = $user->getPropertyValues(OntologyRdfs::RDFS_LABEL);
+            $data[] = [
+                'id'                     => $user->getIdentifier(),
+                OntologyRdfs::RDFS_LABEL => empty($labels) ? 'unknown user' : reset($labels)
+            ];
+        }
+        $response = [
+            'success' => true,
+            'page'    => 1,
+            'total'   => 1,
+            'records' => count($data),
+            'data'    => $data,
+        ];
+        return $this->returnJson($response);
     }
 
     private function getPermissionService(): PermissionsService
