@@ -29,15 +29,17 @@ class DacAddedEvent implements Event, JsonSerializable
 
     /** @var  string */
     protected $userUri;
+    /** @var string */
     protected $resourceUri;
+    /** @var string[]  */
     protected $privilege;
 
     /**
-     * @param string $userUri
-     * @param string $resourceUri
-     * @param $privilege
+     * @param string   $userUri
+     * @param string   $resourceUri
+     * @param string[] $privilege
      */
-    public function __construct($userUri, $resourceUri, $privilege)
+    public function __construct(string $userUri, string $resourceUri, array $privilege)
     {
         $this->userUri = $userUri;
         $this->resourceUri = $resourceUri;
@@ -56,7 +58,7 @@ class DacAddedEvent implements Event, JsonSerializable
 
     /**
      * Specify data which should be serialized to JSON
-     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @link  http://php.net/manual/en/jsonserializable.jsonserialize.php
      * @return mixed data which can be serialized by <b>json_encode</b>,
      * which is a value of any type other than a resource.
      * @since 5.4.0
@@ -64,9 +66,33 @@ class DacAddedEvent implements Event, JsonSerializable
     public function jsonSerialize()
     {
         return [
-            'userUri' => $this->userUri,
+            'userUri'   => $this->userUri,
             'accessUri' => $this->resourceUri,
             'privilege' => $this->privilege
         ];
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserUri(): string
+    {
+        return $this->userUri;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResourceUri(): string
+    {
+        return $this->resourceUri;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getPrivilege(): array
+    {
+        return $this->privilege;
     }
 }
