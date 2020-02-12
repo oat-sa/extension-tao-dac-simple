@@ -53,7 +53,7 @@ class PermissionsService
     }
 
     public function savePermissions(
-        bool $recursive,
+        bool $isRecursive,
         core_kernel_classes_Class $class,
         array $privilegesToSet
     ): void {
@@ -65,38 +65,20 @@ class PermissionsService
             return;
         }
 
-        /** @var core_kernel_classes_Resource[] $resources */
-        $resources = [$class];
+        $resourcesToUpdate = $this->getResourcesToUpdate($class, $isRecursive);
 
-        if ($recursive) {
-            $resources = array_merge($resources, $class->getSubClasses(true));
-            $resources = array_merge($resources, $class->getInstances(true));
-        }
-
-        $resourceIds = [];
-        foreach ($resources as $resource) {
-            $resourceIds[] = $resource->getUri();
-        }
-
-        $permissionsList = $this->dataBaseAccess->getResourcesPermissions($resourceIds);
+        $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
 
         $resultPermissions = $permissionsList;
 
         $actions = [];
 
-        foreach ($resources as $resource) {
+        foreach ($resourcesToUpdate as $resource) {
             $currentPrivileges = $permissionsList[$resource->getUri()];
 
             $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
             if ($remove) {
-                foreach ($remove as $userToRemove => $permissionToRemove) {
-                    if (!empty($resultPermissions[$resource->getUri()][$userToRemove])) {
-                        $resultPermissions[$resource->getUri()][$userToRemove] = array_diff(
-                            $resultPermissions[$resource->getUri()][$userToRemove],
-                            $permissionToRemove
-                        );
-                    }
-                }
+                $this->dryRemove($resource, $remove, $resultPermissions);
 
                 $actions[] = function () use ($remove, $resource) {
                     $this->removePermissions($remove, $resource);
@@ -105,16 +87,7 @@ class PermissionsService
 
             $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
             if ($add) {
-                foreach ($add as $userToAdd => $permissionToAdd) {
-                    if (empty($resultPermissions[$resource->getUri()][$userToAdd])) {
-                        $resultPermissions[$resource->getUri()][$userToAdd] = $permissionToAdd;
-                    } else {
-                        $resultPermissions[$resource->getUri()][$userToAdd] = array_merge(
-                            $resultPermissions[$resource->getUri()][$userToAdd],
-                            $permissionToAdd
-                        );
-                    }
-                }
+                $this->dryAdd($resource, $add, $resultPermissions);
 
                 $actions[] = function () use ($add, $resource) {
                     $this->addPermissions($add, $resource);
@@ -134,6 +107,57 @@ class PermissionsService
                 array_keys($addRemove['remove'] ?? [])
             )
         );
+    }
+
+    private function dryRemove(core_kernel_classes_Resource $resource, array $remove, array &$resultPermissions): void
+    {
+        foreach ($remove as $userToRemove => $permissionToRemove) {
+            if (!empty($resultPermissions[$resource->getUri()][$userToRemove])) {
+                $resultPermissions[$resource->getUri()][$userToRemove] = array_diff(
+                    $resultPermissions[$resource->getUri()][$userToRemove],
+                    $permissionToRemove
+                );
+            }
+        }
+    }
+
+    private function dryAdd(core_kernel_classes_Resource $resource, array $add, array &$resultPermissions): void
+    {
+        foreach ($add as $userToAdd => $permissionToAdd) {
+            if (empty($resultPermissions[$resource->getUri()][$userToAdd])) {
+                $resultPermissions[$resource->getUri()][$userToAdd] = $permissionToAdd;
+            } else {
+                $resultPermissions[$resource->getUri()][$userToAdd] = array_merge(
+                    $resultPermissions[$resource->getUri()][$userToAdd],
+                    $permissionToAdd
+                );
+            }
+        }
+    }
+
+    private function getResourcesToUpdate(core_kernel_classes_Resource $resource, bool $isRecursive): array
+    {
+        $resources = [$resource];
+
+        if ($isRecursive) {
+            return array_merge($resources, $resource->getSubClasses(true), $resource->getInstances(true));
+        }
+
+        return $resources;
+    }
+
+    private function getResourcesPermissions(array $resources): array
+    {
+        if (empty($resources)) {
+            return [];
+        }
+
+        $resourceIds = [];
+        foreach ($resources as $resource) {
+            $resourceIds[] = $resource->getUri();
+        }
+
+        return $this->dataBaseAccess->getResourcesPermissions($resourceIds);
     }
 
     private function validateResources(array $resultPermissions): void
