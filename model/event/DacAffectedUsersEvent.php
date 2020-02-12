@@ -30,16 +30,16 @@ class DacAffectedUsersEvent implements Event
     /**
      * @var string[]
      */
-    private $listOfNewUserIds;
+    private $permissionsAdded;
     /**
      * @var string[]
      */
-    private $listOfRemovedUserIds;
+    private $permissionsRemoved;
 
-    public function __construct(array $listOfNewUserIds, array $listOfRemovedUserIds)
+    public function __construct(array $permissionsAdded, array $permissionsRemoved)
     {
-        $this->listOfNewUserIds = $listOfNewUserIds;
-        $this->listOfRemovedUserIds = $listOfRemovedUserIds;
+        $this->permissionsAdded = $permissionsAdded;
+        $this->permissionsRemoved = $permissionsRemoved;
     }
 
     public function getName(): string
@@ -47,13 +47,13 @@ class DacAffectedUsersEvent implements Event
         return __CLASS__;
     }
 
-    public function getListOfNewUserIds(): array
+    public function getPermissionsAdded(): array
     {
-        return $this->listOfNewUserIds;
+        return $this->permissionsAdded;
     }
 
-    public function getListOfRemovedUserIds(): array
+    public function getPermissionsRemoved(): array
     {
-        return $this->listOfRemovedUserIds;
+        return $this->permissionsRemoved;
     }
 }

@@ -25,7 +25,9 @@ namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
+use oat\oatbox\event\EventManager;
 use oat\oatbox\log\LoggerAwareTrait;
+use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
 
 class PermissionsService
 {
@@ -35,13 +37,19 @@ class PermissionsService
     private $dataBaseAccess;
     /** @var PermissionsStrategyInterface */
     private $strategy;
+    /**
+     * @var EventManager
+     */
+    private $eventManager;
 
     public function __construct(
         DataBaseAccess $dataBaseAccess,
-        PermissionsStrategyInterface $strategy
+        PermissionsStrategyInterface $strategy,
+        EventManager $eventManager
     ) {
         $this->dataBaseAccess = $dataBaseAccess;
         $this->strategy = $strategy;
+        $this->eventManager = $eventManager;
     }
 
     public function savePermissions(
@@ -102,7 +110,7 @@ class PermissionsService
                         $resultPermissions[$resource->getUri()][$userToAdd] = $permissionToAdd;
                     } else {
                         $resultPermissions[$resource->getUri()][$userToAdd] = array_merge(
-                            (array)$resultPermissions[$resource->getUri()][$userToAdd],
+                            $resultPermissions[$resource->getUri()][$userToAdd],
                             $permissionToAdd
                         );
                     }
@@ -119,6 +127,13 @@ class PermissionsService
         foreach ($actions as $processedResource) {
             $processedResource();
         }
+
+        $this->eventManager->trigger(
+            new DacAffectedUsersEvent(
+                array_keys($addRemove['add'] ?? []),
+                array_keys($addRemove['remove'] ?? [])
+            )
+        );
     }
 
     private function validateResources(array $resultPermissions): void
