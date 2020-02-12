@@ -143,11 +143,11 @@ class DataBaseAccess extends ConfigurableService
      * @param  string $user
      * @param  string $resourceId
      * @param  array $rights
-     * @return boolean
+     *
+     * @return bool
      */
     public function addPermissions($user, $resourceId, $rights)
     {
-
         foreach ($rights as $privilege) {
             // add a line with user URI, resource Id and privilege
             $this->getPersistence()->insert(
@@ -156,7 +156,7 @@ class DataBaseAccess extends ConfigurableService
             );
         }
 
-        $this->getEventManager()->trigger(new DacAddedEvent($user, $resourceId, $privilege));
+        $this->getEventManager()->trigger(new DacAddedEvent($user, $resourceId, (array)$rights));
 
         return true;
     }
