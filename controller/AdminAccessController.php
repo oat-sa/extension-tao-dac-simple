@@ -31,7 +31,6 @@ use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
-use RuntimeException;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
 use function GuzzleHttp\Psr7\stream_for;
