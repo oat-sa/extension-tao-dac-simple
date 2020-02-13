@@ -66,40 +66,11 @@ class PermissionsService
         }
 
         $resourcesToUpdate = $this->getResourcesToUpdate($class, $isRecursive);
-
         $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
+        $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
 
-        $resultPermissions = $permissionsList;
-
-        $actions = [];
-
-        foreach ($resourcesToUpdate as $resource) {
-            $currentPrivileges = $permissionsList[$resource->getUri()];
-
-            $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
-            if ($remove) {
-                $this->dryRemove($resource, $remove, $resultPermissions);
-
-                $actions[] = function () use ($remove, $resource) {
-                    $this->removePermissions($remove, $resource);
-                };
-            }
-
-            $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
-            if ($add) {
-                $this->dryAdd($resource, $add, $resultPermissions);
-
-                $actions[] = function () use ($add, $resource) {
-                    $this->addPermissions($add, $resource);
-                };
-            }
-        }
-
-        $this->validateResources($resultPermissions);
-
-        foreach ($actions as $processedResource) {
-            $processedResource();
-        }
+        $this->dryRun($actions, $permissionsList);
+        $this->wetRun($actions);
 
         $this->eventManager->trigger(
             new DacAffectedUsersEvent(
@@ -109,7 +80,51 @@ class PermissionsService
         );
     }
 
-    private function dryRemove(core_kernel_classes_Resource $resource, array $remove, array &$resultPermissions): void
+    private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
+    {
+        $actions = ['remove' => [], 'add' => []];
+
+        foreach ($resourcesToUpdate as $resource) {
+            $currentPrivileges = $permissionsList[$resource->getUri()];
+
+            $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
+            if ($remove) {
+                $actions['remove'][] = ['permissions' => $remove, 'resource' => $resource];
+            }
+
+            $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
+            if ($add) {
+                $actions['add'][] = ['permissions' => $add, 'resource' => $resource];
+            }
+        }
+
+        return $actions;
+    }
+    private function dryRun(array $actions, array $permissionsList): void
+    {
+        $resultPermissions = $permissionsList;
+
+        foreach ($actions['remove'] as $item) {
+            $this->dryRemove($item['permissions'], $item['resource'], $resultPermissions);
+        }
+        foreach ($actions['add'] as $item) {
+            $this->dryAdd($item['permissions'], $item['resource'], $resultPermissions);
+        }
+
+        $this->validateResources($resultPermissions);
+    }
+
+    private function wetRun(array $actions): void
+    {
+        foreach ($actions['remove'] as $item) {
+            $this->removePermissions($item['permissions'], $item['resource']);
+        }
+        foreach ($actions['add'] as $item) {
+            $this->addPermissions($item['permissions'], $item['resource']);
+        }
+    }
+
+    private function dryRemove(array $remove, core_kernel_classes_Resource $resource, array &$resultPermissions): void
     {
         foreach ($remove as $userToRemove => $permissionToRemove) {
             if (!empty($resultPermissions[$resource->getUri()][$userToRemove])) {
@@ -121,7 +136,7 @@ class PermissionsService
         }
     }
 
-    private function dryAdd(core_kernel_classes_Resource $resource, array $add, array &$resultPermissions): void
+    private function dryAdd(array $add, core_kernel_classes_Resource $resource, array &$resultPermissions): void
     {
         foreach ($add as $userToAdd => $permissionToAdd) {
             if (empty($resultPermissions[$resource->getUri()][$userToAdd])) {
