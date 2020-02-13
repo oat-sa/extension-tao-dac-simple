@@ -28,7 +28,6 @@ use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 use oat\generis\persistence\PersistenceManager;
-use PDOStatement;
 use PDO;
 
 /**
@@ -68,9 +67,15 @@ class DataBaseAccess extends ConfigurableService
     public function getUsersWithPermissions($resourceIds)
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = 'SELECT ' . self::COLUMN_RESOURCE_ID . ', ' . self::COLUMN_USER_ID . ', ' . self::COLUMN_PRIVILEGE
-            . ' FROM ' . self::TABLE_PRIVILEGES_NAME
-            . ' WHERE ' . self::COLUMN_RESOURCE_ID . ' IN (' . $inQuery . ')';
+        $query = sprintf(
+            'SELECT %s, %s, %s FROM %s WHERE %s IN (%s)',
+            self::COLUMN_RESOURCE_ID,
+            self::COLUMN_USER_ID,
+            self::COLUMN_PRIVILEGE,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            $inQuery
+        );
         return $this->fetchQuery($query, $resourceIds);
     }
 
@@ -87,10 +92,16 @@ class DataBaseAccess extends ConfigurableService
         // get privileges for a user/roles and a resource
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
-        $query = 'SELECT ' . self::COLUMN_RESOURCE_ID . ', ' . self::COLUMN_PRIVILEGE
-            . ' FROM ' . self::TABLE_PRIVILEGES_NAME
-            . ' WHERE ' . self::COLUMN_RESOURCE_ID . ' IN (' . $inQueryResource . ') AND '
-            . self::COLUMN_USER_ID . ' IN (' . $inQueryUser . ')';
+        $query = sprintf(
+            'SELECT %s, %s FROM %s WHERE %s IN (%s) AND %s IN (%s)',
+            self::COLUMN_RESOURCE_ID,
+            self::COLUMN_PRIVILEGE,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            $inQueryResource,
+            self::COLUMN_USER_ID,
+            $inQueryUser
+        );
 
         $params = array_merge(array_values($resourceIds), array_values($userIds));
 
@@ -149,9 +160,13 @@ class DataBaseAccess extends ConfigurableService
     public function getResourcePermissions($resourceId)
     {
         // get privileges for a user/roles and a resource
-        $query = 'SELECT ' . self::COLUMN_USER_ID . ', ' . self::COLUMN_PRIVILEGE
-            . ' FROM ' . self::TABLE_PRIVILEGES_NAME
-            . ' WHERE ' . self::COLUMN_RESOURCE_ID . ' = ?';
+        $query = sprintf(
+            'SELECT %s, %s FROM %s WHERE %s = ?',
+            self::COLUMN_USER_ID,
+            self::COLUMN_PRIVILEGE,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID
+        );
 
         $results = $this->fetchQuery($query, [$resourceId]);
         foreach ($results as $result) {
@@ -173,8 +188,14 @@ class DataBaseAccess extends ConfigurableService
     {
         //get all entries that match (user,resourceId) and remove them
         $inQueryPrivilege = implode(',', array_fill(0, count($rights), ' ? '));
-        $query = 'DELETE FROM ' . self::TABLE_PRIVILEGES_NAME . ' WHERE ' . self::COLUMN_RESOURCE_ID . ' = ? AND '
-            . self::COLUMN_PRIVILEGE . ' IN (' . $inQueryPrivilege . ') AND ' . self::COLUMN_USER_ID . ' = ?';
+        $query = sprintf(
+            'DELETE FROM %s WHERE %s = ? AND %s IN (%s) AND %s = ?',
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            self::COLUMN_PRIVILEGE,
+            $inQueryPrivilege,
+            self::COLUMN_USER_ID
+        );
         $params = array_merge([$resourceId], array_values($rights), [$user]);
         $this->getPersistence()->exec($query, $params);
         $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
@@ -193,8 +214,12 @@ class DataBaseAccess extends ConfigurableService
     {
         //get all entries that match (resourceId) and remove them
         $inQuery = implode(',', array_fill(0, count($resourceIds), ' ? '));
-        $query = 'DELETE FROM ' . self::TABLE_PRIVILEGES_NAME
-            . ' WHERE ' . self::COLUMN_RESOURCE_ID . ' IN (' . $inQuery . ')';
+        $query = sprintf(
+            'DELETE FROM %s WHERE %s IN (%s)',
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            $inQuery
+        );
 
         $this->getPersistence()->exec($query, $resourceIds);
         foreach ($resourceIds as $resourceId) {
@@ -213,8 +238,13 @@ class DataBaseAccess extends ConfigurableService
     public function checkPermissions($userIds)
     {
         $inQueryUser = implode(',', array_fill(0, count($userIds), ' ? '));
-        $query = 'SELECT ' . self::COLUMN_USER_ID . ' FROM ' . self::TABLE_PRIVILEGES_NAME
-            . ' WHERE ' . self::COLUMN_USER_ID . ' IN (' . $inQueryUser . ')';
+        $query = sprintf(
+            'SELECT %s FROM %s WHERE %s IN (%s)',
+            self::COLUMN_USER_ID,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_USER_ID,
+            $inQueryUser
+        );
         $results = $this->fetchQuery($query, array_values($userIds));
         foreach ($results as $result) {
             $existsUsers[$result[self::COLUMN_USER_ID]] = $result[self::COLUMN_USER_ID];
