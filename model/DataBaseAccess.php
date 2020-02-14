@@ -109,6 +109,33 @@ class DataBaseAccess extends ConfigurableService
          return $returnValue;
     }
 
+    public function getResourcesPermissions(array $resourceIds)
+    {
+        // get privileges for a user/roles and a resource
+        $returnValue = [];
+
+        $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
+
+        $query = 'SELECT user_id, resource_id, privilege FROM ' . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource)";
+
+        $params = $resourceIds;
+
+        //If resource doesn't have permission don't return null
+        foreach ($resourceIds as $resourceId) {
+            $returnValue[$resourceId] = [];
+        }
+
+        /** @var \PDOStatement $statement */
+        $statement = $this->getPersistence()->query($query, $params);
+        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($results as $result) {
+            $returnValue[$result['resource_id']][$result['user_id']][] = $result['privilege'];
+        }
+
+        return $returnValue;
+    }
+
     /**
      * add permissions of a user to a resource
      *
@@ -116,11 +143,11 @@ class DataBaseAccess extends ConfigurableService
      * @param  string $user
      * @param  string $resourceId
      * @param  array $rights
-     * @return boolean
+     *
+     * @return bool
      */
     public function addPermissions($user, $resourceId, $rights)
     {
-
         foreach ($rights as $privilege) {
             // add a line with user URI, resource Id and privilege
             $this->getPersistence()->insert(
@@ -129,7 +156,7 @@ class DataBaseAccess extends ConfigurableService
             );
         }
 
-        $this->getEventManager()->trigger(new DacAddedEvent($user, $resourceId, $privilege));
+        $this->getEventManager()->trigger(new DacAddedEvent($user, $resourceId, (array)$rights));
 
         return true;
     }
@@ -161,41 +188,6 @@ class DataBaseAccess extends ConfigurableService
     }
 
     /**
-     * get the delta between existing permissions and new permissions
-     *
-     * @access public
-     * @param  string $resourceId
-     * @param  array $rights associative array $user_id => $permissions
-     * @return array
-     */
-    public function getDeltaPermissions($resourceId, $rights)
-    {
-        $privileges = $this->getResourcePermissions($resourceId);
-
-        foreach ($rights as $userId => $privilegeIds) {
-            //if privileges are in request but not in db we add then
-            if (!isset($privileges[$userId])) {
-                $add[$userId] = $privilegeIds;
-            }
-            // compare privileges in db and request
-            else {
-                $add[$userId] = array_diff($privilegeIds, $privileges[$userId]);
-                $remove[$userId] = array_diff($privileges[$userId], $privilegeIds);
-                // unset already compare db variable
-                unset($privileges[$userId]);
-            }
-        }
-
-        //remaining privileges has to be removed
-        foreach ($privileges as $userId => $privilegeIds) {
-            $remove[$userId] = $privilegeIds;
-        }
-
-
-        return compact("remove", "add");
-    }
-
-    /**
      * remove permissions to a resource for a user
      *
      * @access public
@@ -214,7 +206,7 @@ class DataBaseAccess extends ConfigurableService
             $params[] = $rightId;
         }
         $params[] = $user;
-        
+
         $this->getPersistence()->exec($query, $params);
         $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
 

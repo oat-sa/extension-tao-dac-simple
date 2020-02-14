@@ -13,7 +13,7 @@
                         <div class="col-10 txt-rgt">
                             <?= tao_helpers_Icon::iconAdd(); ?>
                             <input type="text" id="add-user" style="width:100%" placeholder="<?= __('Add user(s)') ?>"
-                                   data-url="<?= _url('search', 'Search', 'tao') ?>"
+                                   data-url="<?= _url('findUser', 'AdminAccessController', 'taoDacSimple') ?>"
                                    data-ontology="http://www.tao.lu/Ontologies/TAO.rdf#User"
                                    data-params-root="params" />
                         </div>

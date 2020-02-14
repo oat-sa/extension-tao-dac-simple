@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -64,21 +66,21 @@ class DataBaseAccessTest extends TestCase
             ->with(\PDO::FETCH_ASSOC)
             ->will($this->returnValue($resultFixture));
 
-        
+
         $driverMock = $this->getMockForAbstractClass('common_persistence_Driver', [], 'common_persistence_Driver_Mock', false, false, true, ['query'], false);
 
-        
+
         $persistenceMock = $this->createMock(\common_persistence_SqlPersistence::class);
         $persistenceMock
             ->method('getDriver')
             ->with([], $driverMock)
             ->will($this->returnValue($driverMock));
-        
+
         $persistenceMock
             ->method('query')
             ->with($queryFixture, $queryParams)
             ->will($this->returnValue($statementMock));
-        
+
         return $persistenceMock;
     }
 
