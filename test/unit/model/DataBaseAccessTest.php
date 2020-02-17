@@ -24,9 +24,12 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\test\unit\model;
 
+use common_persistence_SqlPersistence;
 use oat\generis\test\TestCase;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\generis\test\MockObject;
+use PDO;
+use PDOStatement;
 
 /**
  * Test database access
@@ -58,28 +61,33 @@ class DataBaseAccessTest extends TestCase
      */
     public function getPersistenceMock($queryParams, $queryFixture, $resultFixture)
     {
-
-
-        $statementMock = $this->createMock(\PDOStatement::class);
+        $statementMock = $this->createMock(PDOStatement::class);
         $statementMock->expects($this->once())
             ->method('fetchAll')
-            ->with(\PDO::FETCH_ASSOC)
-            ->will($this->returnValue($resultFixture));
+            ->with(PDO::FETCH_ASSOC)
+            ->willReturn($resultFixture);
+        $driverMock = $this->getMockForAbstractClass(
+            'common_persistence_Driver',
+            [],
+            'common_persistence_Driver_Mock',
+            false,
+            false,
+            true,
+            ['query'],
+            false
+        );
 
 
-        $driverMock = $this->getMockForAbstractClass('common_persistence_Driver', [], 'common_persistence_Driver_Mock', false, false, true, ['query'], false);
-
-
-        $persistenceMock = $this->createMock(\common_persistence_SqlPersistence::class);
+        $persistenceMock = $this->createMock(common_persistence_SqlPersistence::class);
         $persistenceMock
             ->method('getDriver')
             ->with([], $driverMock)
-            ->will($this->returnValue($driverMock));
+            ->willReturn($driverMock);
 
         $persistenceMock
             ->method('query')
             ->with($queryFixture, $queryParams)
-            ->will($this->returnValue($statementMock));
+            ->willReturn($statementMock);
 
         return $persistenceMock;
     }
@@ -104,8 +112,9 @@ class DataBaseAccessTest extends TestCase
     public function testGetUsersWithPermissions($resourceIds)
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $queryFixture = "SELECT resource_id, user_id, privilege FROM " . \oat\taoDacSimple\model\DataBaseAccess::TABLE_PRIVILEGES_NAME . "
-        WHERE resource_id IN ($inQuery)";
+        $queryFixture = 'SELECT ' . DataBaseAccess::COLUMN_RESOURCE_ID . ', ' . DataBaseAccess::COLUMN_USER_ID . ', '
+            . DataBaseAccess::COLUMN_PRIVILEGE . ' FROM ' . DataBaseAccess::TABLE_PRIVILEGES_NAME
+            . " WHERE resource_id IN ($inQuery)";
 
         $resultFixture = [
             ['fixture']
@@ -125,7 +134,7 @@ class DataBaseAccessTest extends TestCase
     public function getPermissionProvider()
     {
         return [
-            [[1,2,3], [1, 2, 3]],
+            [[1, 2, 3], [1, 2, 3]],
             [[1], [2]],
         ];
     }
@@ -134,8 +143,8 @@ class DataBaseAccessTest extends TestCase
      * Get the permissions a user has on a list of ressources
      * @dataProvider getPermissionProvider
      * @access public
-     * @param  array $userIds
-     * @param  array $resourceIds
+     * @param array $userIds
+     * @param array $resourceIds
      * @return array()
      */
     public function testGetPermissions($userIds, array $resourceIds)
@@ -145,7 +154,8 @@ class DataBaseAccessTest extends TestCase
 
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
-        $query = "SELECT resource_id, privilege FROM " . DataBaseAccess::TABLE_PRIVILEGES_NAME
+        $query = 'SELECT ' . DataBaseAccess::COLUMN_RESOURCE_ID . ', ' . DataBaseAccess::COLUMN_PRIVILEGE
+            . ' FROM ' . DataBaseAccess::TABLE_PRIVILEGES_NAME
             . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
 
 
@@ -171,69 +181,6 @@ class DataBaseAccessTest extends TestCase
         $this->setPersistence($this->instance, $persistenceMock);
 
         $this->assertEquals($resultFixture, $this->instance->getPermissions($userIds, $resourceIds));
-    }
-
-    /**
-     * add permissions of a user to a resource
-     *
-     * @access public
-     * @param  string $user
-     * @param  string $resourceId
-     * @param  array $rights
-     * @return boolean
-     */
-    public function addPermissions($user, $resourceId, $rights)
-    {
-        foreach ($rights as $privilege) {
-            // add a line with user URI, resource Id and privilege
-            $this->persistence->insert(
-                self::TABLE_PRIVILEGES_NAME,
-                ['user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege]
-            );
-        }
-        return true;
-    }
-
-    /**
-     * remove permissions to a resource for a user
-     *
-     * @access public
-     * @param  string $user
-     * @param  string $resourceId
-     * @param  array $rights
-     * @return boolean
-     */
-    public function removePermissions($user, $resourceId, $rights)
-    {
-        //get all entries that match (user,resourceId) and remove them
-        $inQueryPrivilege = implode(',', array_fill(0, count($rights), '?'));
-        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ? AND privilege IN ($inQueryPrivilege) AND user_id = ?";
-        $params = [$resourceId];
-        foreach ($rights as $rightId) {
-            $params[] = $rightId;
-        }
-        $params[] = $user;
-
-        $this->persistence->exec($query, $params);
-
-        return true;
-    }
-
-    /**
-     * Remove all permissions from a resource
-     *
-     * @access public
-     * @param  array $resourceIds
-     * @return boolean
-     */
-    public function removeAllPermissions($resourceIds)
-    {
-        //get all entries that match (resourceId) and remove them
-        $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
-        $this->persistence->exec($query, $resourceIds);
-
-        return true;
     }
 
     private function setPersistence($instance, $persistenceMock)

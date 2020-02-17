@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
+use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use RuntimeException;
 
@@ -47,7 +48,8 @@ class PermissionsServiceFactory extends ConfigurableService
 
         return new PermissionsService(
             $this->serviceLocator->get(DataBaseAccess::SERVICE_ID),
-            new $strategyClass()
+            new $strategyClass(),
+            $this->serviceLocator->get(EventManager::SERVICE_ID)
         );
     }
 }

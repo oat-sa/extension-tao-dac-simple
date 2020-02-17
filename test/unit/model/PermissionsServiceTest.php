@@ -26,6 +26,7 @@ namespace oat\taoDacSimple\test\unit\model;
 use core_kernel_classes_Class;
 use oat\generis\test\MockObject;
 use oat\generis\test\TestCase;
+use oat\oatbox\event\EventManager;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceException;
@@ -45,9 +46,15 @@ class PermissionsServiceTest extends TestCase
      * @var MockObject|PermissionsStrategyInterface
      */
     private $strategy;
+    /**
+     * @var MockObject|EventManager
+     */
+    private $eventManager;
 
     protected function setUp(): void
     {
+        $this->eventManager = $this->createMock(EventManager::class);
+
         $this->databaseAccess = $this->createMock(DataBaseAccess::class);
         $this->databaseAccess->method('getResourcePermissions')->willReturn([]);
 
@@ -55,7 +62,8 @@ class PermissionsServiceTest extends TestCase
 
         $this->service = new PermissionsService(
             $this->databaseAccess,
-            $this->strategy
+            $this->strategy,
+            $this->eventManager
         );
     }
 

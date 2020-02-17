@@ -22,11 +22,13 @@
 
 namespace oat\taoDacSimple\model;
 
+use common_persistence_SqlPersistence;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 use oat\generis\persistence\PersistenceManager;
+use PDO;
 
 /**
  * Class to handle the storage and retrieval of permissions
@@ -41,9 +43,13 @@ class DataBaseAccess extends ConfigurableService
 
     const OPTION_PERSISTENCE = 'persistence';
 
+    const COLUMN_USER_ID = 'user_id';
+    const COLUMN_RESOURCE_ID = 'resource_id';
+    const COLUMN_PRIVILEGE = 'privilege';
+    const TABLE_PRIVILEGES_NAME = 'data_privileges';
+
     private $persistence;
 
-    const TABLE_PRIVILEGES_NAME = 'data_privileges';
 
     /**
      * @return EventManager
@@ -56,19 +62,21 @@ class DataBaseAccess extends ConfigurableService
     /**
      * We can know which users have a privilege on a resource
      * @param array $resourceIds
-     * @param array $userType ('role' or 'user' or both)
      * @return array list of users
      */
     public function getUsersWithPermissions($resourceIds)
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "SELECT resource_id, user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . "
-        WHERE resource_id IN ($inQuery)";
-        /** @var \PDOStatement $statement */
-        $statement = $this->getPersistence()->query($query, $resourceIds);
-        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
-
-        return $results;
+        $query = sprintf(
+            'SELECT %s, %s, %s FROM %s WHERE %s IN (%s)',
+            self::COLUMN_RESOURCE_ID,
+            self::COLUMN_USER_ID,
+            self::COLUMN_PRIVILEGE,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            $inQuery
+        );
+        return $this->fetchQuery($query, $resourceIds);
     }
 
     /**
@@ -76,63 +84,45 @@ class DataBaseAccess extends ConfigurableService
      *
      * @access public
      * @param array $userIds
-     * @param  array $resourceIds
+     * @param array $resourceIds
      * @return array
      */
     public function getPermissions($userIds, array $resourceIds)
     {
         // get privileges for a user/roles and a resource
-        $returnValue = [];
-
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
-        $query = "SELECT resource_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource) AND user_id IN ($inQueryUser)";
+        $query = sprintf(
+            'SELECT %s, %s FROM %s WHERE %s IN (%s) AND %s IN (%s)',
+            self::COLUMN_RESOURCE_ID,
+            self::COLUMN_PRIVILEGE,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            $inQueryResource,
+            self::COLUMN_USER_ID,
+            $inQueryUser
+        );
 
-        $params = $resourceIds;
-        foreach ($userIds as $userId) {
-            $params[] = $userId;
-        }
+        $params = array_merge(array_values($resourceIds), array_values($userIds));
 
         //If resource doesn't have permission don't return null
-        foreach ($resourceIds as $resourceId) {
-            $returnValue[$resourceId] = [];
-        }
+        $returnValue = array_fill_keys($resourceIds, []);
 
-        /** @var \PDOStatement $statement */
-        $statement = $this->getPersistence()->query($query, $params);
-        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
-
+        $results = $this->fetchQuery($query, $params);
         foreach ($results as $result) {
-            $returnValue[$result['resource_id']][] = $result['privilege'];
+            $returnValue[$result[self::COLUMN_RESOURCE_ID]][] = $result[self::COLUMN_PRIVILEGE];
         }
-
-         return $returnValue;
+        return $returnValue;
     }
 
     public function getResourcesPermissions(array $resourceIds)
     {
-        // get privileges for a user/roles and a resource
-        $returnValue = [];
-
-        $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
-
-        $query = 'SELECT user_id, resource_id, privilege FROM ' . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQueryResource)";
-
-        $params = $resourceIds;
-
         //If resource doesn't have permission don't return null
-        foreach ($resourceIds as $resourceId) {
-            $returnValue[$resourceId] = [];
-        }
-
-        /** @var \PDOStatement $statement */
-        $statement = $this->getPersistence()->query($query, $params);
-        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
-
+        $returnValue = array_fill_keys($resourceIds, []);
+        $results = $this->getUsersWithPermissions($resourceIds);
         foreach ($results as $result) {
-            $returnValue[$result['resource_id']][$result['user_id']][] = $result['privilege'];
+            $returnValue[$result[self::COLUMN_RESOURCE_ID]][$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
         }
-
         return $returnValue;
     }
 
@@ -140,9 +130,9 @@ class DataBaseAccess extends ConfigurableService
      * add permissions of a user to a resource
      *
      * @access public
-     * @param  string $user
-     * @param  string $resourceId
-     * @param  array $rights
+     * @param string $user
+     * @param string $resourceId
+     * @param array $rights
      *
      * @return bool
      */
@@ -152,61 +142,61 @@ class DataBaseAccess extends ConfigurableService
             // add a line with user URI, resource Id and privilege
             $this->getPersistence()->insert(
                 self::TABLE_PRIVILEGES_NAME,
-                ['user_id' => $user, 'resource_id' => $resourceId, 'privilege' => $privilege]
+                [self::COLUMN_USER_ID => $user, self::COLUMN_RESOURCE_ID => $resourceId, self::COLUMN_PRIVILEGE => $privilege]
             );
         }
-
         $this->getEventManager()->trigger(new DacAddedEvent($user, $resourceId, (array)$rights));
-
         return true;
     }
 
 
     /**
-     * Get the permissions for a list of resources
+     * Get the permissions to resource
      *
      * @access public
-     * @param  string $resourceId
+     * @param string $resourceId
      * @return array
      */
     public function getResourcePermissions($resourceId)
     {
         // get privileges for a user/roles and a resource
-        $returnValue = [];
+        $query = sprintf(
+            'SELECT %s, %s FROM %s WHERE %s = ?',
+            self::COLUMN_USER_ID,
+            self::COLUMN_PRIVILEGE,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID
+        );
 
-        $query = "SELECT user_id, privilege FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ?";
-
-        /** @var \PDOStatement $statement */
-        $statement = $this->getPersistence()->query($query, [$resourceId]);
-        $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
-
+        $results = $this->fetchQuery($query, [$resourceId]);
         foreach ($results as $result) {
-            $returnValue[$result['user_id']][] = $result['privilege'];
+            $returnValue[$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
         }
-
-        return $returnValue;
+        return $returnValue ?? [];
     }
 
     /**
      * remove permissions to a resource for a user
      *
      * @access public
-     * @param  string $user
-     * @param  string $resourceId
-     * @param  array $rights
+     * @param string $user
+     * @param string $resourceId
+     * @param array $rights
      * @return boolean
      */
     public function removePermissions($user, $resourceId, $rights)
     {
         //get all entries that match (user,resourceId) and remove them
-        $inQueryPrivilege = implode(',', array_fill(0, count($rights), '?'));
-        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id = ? AND privilege IN ($inQueryPrivilege) AND user_id = ?";
-        $params = [$resourceId];
-        foreach ($rights as $rightId) {
-            $params[] = $rightId;
-        }
-        $params[] = $user;
-
+        $inQueryPrivilege = implode(',', array_fill(0, count($rights), ' ? '));
+        $query = sprintf(
+            'DELETE FROM %s WHERE %s = ? AND %s IN (%s) AND %s = ?',
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            self::COLUMN_PRIVILEGE,
+            $inQueryPrivilege,
+            self::COLUMN_USER_ID
+        );
+        $params = array_merge([$resourceId], array_values($rights), [$user]);
         $this->getPersistence()->exec($query, $params);
         $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
 
@@ -217,44 +207,85 @@ class DataBaseAccess extends ConfigurableService
      * Remove all permissions from a resource
      *
      * @access public
-     * @param  array $resourceIds
+     * @param array $resourceIds
      * @return boolean
      */
     public function removeAllPermissions($resourceIds)
     {
         //get all entries that match (resourceId) and remove them
-        $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $query = "DELETE FROM " . self::TABLE_PRIVILEGES_NAME . " WHERE resource_id IN ($inQuery)";
+        $inQuery = implode(',', array_fill(0, count($resourceIds), ' ? '));
+        $query = sprintf(
+            'DELETE FROM %s WHERE %s IN (%s)',
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_RESOURCE_ID,
+            $inQuery
+        );
+
         $this->getPersistence()->exec($query, $resourceIds);
-
-        $this->getEventManager()->trigger(new DacRemovedEvent('-', $resourceIds, '-'));
-
+        foreach ($resourceIds as $resourceId) {
+            $this->getEventManager()->trigger(new DacRemovedEvent('-', $resourceId, '-'));
+        }
         return true;
     }
 
     /**
-     * @return \common_persistence_SqlPersistence
+     * Filter users\roles that have no permissions
+     *
+     * @access public
+     * @param array $userIds
+     * @return array
+     */
+    public function checkPermissions($userIds)
+    {
+        $inQueryUser = implode(',', array_fill(0, count($userIds), ' ? '));
+        $query = sprintf(
+            'SELECT %s FROM %s WHERE %s IN (%s)',
+            self::COLUMN_USER_ID,
+            self::TABLE_PRIVILEGES_NAME,
+            self::COLUMN_USER_ID,
+            $inQueryUser
+        );
+        $results = $this->fetchQuery($query, array_values($userIds));
+        foreach ($results as $result) {
+            $existsUsers[$result[self::COLUMN_USER_ID]] = $result[self::COLUMN_USER_ID];
+        }
+        return $existsUsers ?? [];
+    }
+
+    /**
+     * @return common_persistence_SqlPersistence
      */
     private function getPersistence()
     {
         if (!$this->persistence) {
-            $this->persistence = $this->getServiceManager()->get(PersistenceManager::SERVICE_ID)->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
+            $this->persistence = $this->getServiceLocator()->get(PersistenceManager::SERVICE_ID)
+                ->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
         }
         return $this->persistence;
     }
 
 
+    /**
+     * @param string $query
+     * @param array $params
+     * @return array
+     */
+    private function fetchQuery($query, $params)
+    {
+        $statement = $this->getPersistence()->query($query, $params);
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function createTables()
     {
-
         $schemaManager = $this->getPersistence()->getDriver()->getSchemaManager();
         $schema = $schemaManager->createSchema();
         $fromSchema = clone $schema;
         $table = $schema->createtable(self::TABLE_PRIVILEGES_NAME);
-        $table->addColumn('user_id', "string", ["notnull" => null,"length" => 255]);
-        $table->addColumn('resource_id', "string", ["notnull" => null,"length" => 255]);
-        $table->addColumn('privilege', "string", ["notnull" => null,"length" => 255]);
-        $table->setPrimaryKey(["user_id","resource_id","privilege"]);
+        $table->addColumn(self::COLUMN_USER_ID, 'string', ['notnull' => null, 'length' => 255]);
+        $table->addColumn(self::COLUMN_RESOURCE_ID, 'string', ['notnull' => null, 'length' => 255]);
+        $table->addColumn(self::COLUMN_PRIVILEGE, 'string', ['notnull' => null, 'length' => 255]);
+        $table->setPrimaryKey([self::COLUMN_USER_ID, self::COLUMN_RESOURCE_ID, self::COLUMN_PRIVILEGE]);
 
         $queries = $this->getPersistence()->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
         foreach ($queries as $query) {
