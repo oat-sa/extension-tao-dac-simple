@@ -69,4 +69,20 @@ class DacRemovedEvent implements Event, JsonSerializable
             'privilege' => $this->rights
         ];
     }
+
+    /**
+     * @return string
+     */
+    public function getUserUri(): string
+    {
+        return $this->userUri;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResourceUri(): string
+    {
+        return $this->resourceUri;
+    }
 }
