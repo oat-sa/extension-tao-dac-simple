@@ -149,6 +149,39 @@ class DataBaseAccess extends ConfigurableService
         return true;
     }
 
+    /**
+     * add batch permissions
+     *
+     * @access public
+     * @param array $permissionData
+     * @return bool
+     */
+    public function addMultiplePermissions(array $permissionData)
+    {
+        $insert = [];
+        foreach ($permissionData as $permissionItem) {
+            foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
+                if (!empty($privilegeIds)) {
+                    foreach ($privilegeIds as $privilegeId) {
+                        $insert [] = [
+                            self::COLUMN_USER_ID     => $userId,
+                            self::COLUMN_RESOURCE_ID => $permissionItem['resource']->getUri(),
+                            self::COLUMN_PRIVILEGE   => $privilegeId
+                        ];
+                    }
+                }
+            }
+        }
+        $this->getPersistence()->insertMultiple(self::TABLE_PRIVILEGES_NAME, $insert);
+        foreach ($insert as $inserted) {
+            $this->getEventManager()->trigger(new DacAddedEvent(
+                $inserted[self::COLUMN_USER_ID],
+                $inserted[self::COLUMN_RESOURCE_ID],
+                (array)$inserted[self::COLUMN_PRIVILEGE]
+            ));
+        }
+        return true;
+    }
 
     /**
      * Get the permissions to resource
@@ -199,6 +232,50 @@ class DataBaseAccess extends ConfigurableService
         $params = array_merge([$resourceId], array_values($rights), [$user]);
         $this->getPersistence()->exec($query, $params);
         $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
+
+        return true;
+    }
+
+    /**
+     * remove batch permissions
+     *
+     * @access public
+     * @param array $data
+     * @return boolean
+     */
+    public function removeMultiplePermissions(array $data)
+    {
+        $groupedRemove = [];
+        $eventsData = [];
+        foreach ($data as $permissionItem) {
+            foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
+                if (!empty($privilegeIds)) {
+                    $groupedRemove[$userId][implode($privilegeIds)]['resources'][] = $permissionItem['resource']->getUri();
+                    $groupedRemove[$userId][implode($privilegeIds)]['privileges'] = $privilegeIds;
+                    $eventsData[] = ['userId' => $userId, 'resourceId' => $permissionItem['resource']->getUri(), 'privileges' => $privilegeIds];
+                }
+            }
+        }
+        foreach ($groupedRemove as $userId => $resources) {
+            foreach ($resources as $permissions) {
+                $inQueryPrivilege = implode(',', array_fill(0, count($permissions['privileges']), ' ? '));
+                $inQueryResources = implode(',', array_fill(0, count($permissions['resources']), ' ? '));
+                $query = sprintf(
+                    'DELETE FROM %s WHERE %s IN (%s) AND %s IN (%s) AND %s = ?',
+                    self::TABLE_PRIVILEGES_NAME,
+                    self::COLUMN_RESOURCE_ID,
+                    $inQueryResources,
+                    self::COLUMN_PRIVILEGE,
+                    $inQueryPrivilege,
+                    self::COLUMN_USER_ID
+                );
+                $params = array_merge(array_values($permissions['resources']), array_values($permissions['privileges']), [$userId]);
+                $this->getPersistence()->exec($query, $params);
+            }
+        }
+        foreach ($eventsData as $eventData) {
+            $this->getEventManager()->trigger(new DacRemovedEvent($eventData['userId'], $eventData['resourceId'], $eventData['privileges']));
+        }
 
         return true;
     }

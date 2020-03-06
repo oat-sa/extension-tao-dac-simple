@@ -112,11 +112,11 @@ class PermissionsService
 
     private function wetRun(array $actions): void
     {
-        foreach ($actions['remove'] as $item) {
-            $this->removePermissions($item['permissions'], $item['resource']);
+        if(!empty($actions['remove'])){
+            $this->dataBaseAccess->removeMultiplePermissions($actions['remove']);
         }
-        foreach ($actions['add'] as $item) {
-            $this->addPermissions($item['permissions'], $item['resource']);
+        if(!empty($actions['add'])){
+            $this->dataBaseAccess->addMultiplePermissions($actions['add']);
         }
     }
 
@@ -195,27 +195,9 @@ class PermissionsService
     }
 
     /**
-     * @param array                        $permissions
-     * @param core_kernel_classes_Resource $resource
-     *
+     * @param array $addRemove
+     * @param string $resourceId
      */
-    private function removePermissions(array $permissions, core_kernel_classes_Resource $resource): void
-    {
-        foreach ($permissions as $userId => $privilegeIds) {
-            if (!empty($privilegeIds)) {
-                $this->dataBaseAccess->removePermissions($userId, $resource->getUri(), $privilegeIds);
-            }
-        }
-    }
-
-    private function addPermissions(array $permissions, core_kernel_classes_Resource $resource): void
-    {
-        foreach ($permissions as $userId => $privilegeIds) {
-            if (!empty($privilegeIds)) {
-                $this->dataBaseAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
-            }
-        }
-    }
 
     private function triggerEvents(array $addRemove, string $resourceId): void
     {
