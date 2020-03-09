@@ -24,7 +24,7 @@ namespace oat\taoDacSimple\model\event;
 use JsonSerializable;
 use oat\oatbox\event\Event;
 
-class AbstractDacEvent implements Event, JsonSerializable
+abstract class AbstractDacEvent implements Event, JsonSerializable
 {
 
     /** @var  string */
