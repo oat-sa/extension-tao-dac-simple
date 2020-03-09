@@ -28,65 +28,6 @@ use oat\oatbox\event\Event;
  * Class DacRootRemovedEvent This event not triggered on removing child permissions with recursive
  * @package oat\taoDacSimple\model\event
  */
-class DacRootRemovedEvent implements Event, JsonSerializable
+class DacRootRemovedEvent extends AbstractDacEvent implements Event, JsonSerializable
 {
-
-    /** @var  string */
-    protected $userUri;
-    protected $resourceUri;
-    protected $rights;
-
-    /**
-     * @param string $userUri
-     * @param string $resourceUri
-     * @param $rights
-     */
-    public function __construct($userUri, $resourceUri, $rights)
-    {
-        $this->userUri = $userUri;
-        $this->resourceUri = $resourceUri;
-        $this->rights = $rights;
-    }
-
-
-    /**
-     * Return a unique name for this event
-     * @see \oat\oatbox\event\Event::getName()
-     */
-    public function getName()
-    {
-        return get_class($this);
-    }
-
-    /**
-     * Specify data which should be serialized to JSON
-     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
-     * @return mixed data which can be serialized by <b>json_encode</b>,
-     * which is a value of any type other than a resource.
-     * @since 5.4.0
-     */
-    public function jsonSerialize()
-    {
-        return [
-            'userUri' => $this->userUri,
-            'accessUri' => $this->resourceUri,
-            'privilege' => $this->rights
-        ];
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserUri(): string
-    {
-        return $this->userUri;
-    }
-
-    /**
-     * @return string
-     */
-    public function getResourceUri(): string
-    {
-        return $this->resourceUri;
-    }
 }

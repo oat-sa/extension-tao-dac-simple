@@ -154,7 +154,7 @@ class DataBaseAccess extends ConfigurableService
      *
      * @access public
      * @param array $permissionData
-     * @return bool
+     * @return void
      */
     public function addMultiplePermissions(array $permissionData)
     {
@@ -180,7 +180,6 @@ class DataBaseAccess extends ConfigurableService
                 (array)$inserted[self::COLUMN_PRIVILEGE]
             ));
         }
-        return true;
     }
 
     /**
@@ -241,7 +240,7 @@ class DataBaseAccess extends ConfigurableService
      *
      * @access public
      * @param array $data
-     * @return boolean
+     * @return void
      */
     public function removeMultiplePermissions(array $data)
     {
@@ -276,8 +275,6 @@ class DataBaseAccess extends ConfigurableService
         foreach ($eventsData as $eventData) {
             $this->getEventManager()->trigger(new DacRemovedEvent($eventData['userId'], $eventData['resourceId'], $eventData['privileges']));
         }
-
-        return true;
     }
 
     /**
