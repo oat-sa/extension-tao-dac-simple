@@ -27,7 +27,7 @@ use oat\oatbox\event\Event;
 abstract class AbstractDacEvent implements Event, JsonSerializable
 {
 
-    /** @var  string */
+    /** @var string */
     protected $userUri;
     /** @var string */
     protected $resourceUri;
