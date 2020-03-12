@@ -24,6 +24,10 @@ namespace oat\taoDacSimple\model\event;
 use JsonSerializable;
 use oat\oatbox\event\Event;
 
-class DacRemovedEvent extends AbstractDacEvent implements Event, JsonSerializable
+/**
+ * Class DacRootAddedEvent This event not triggered on adding child permissions with recursive option
+ * @package oat\taoDacSimple\model\event
+ */
+class DacRootAddedEvent extends AbstractDacEvent implements Event, JsonSerializable
 {
 }

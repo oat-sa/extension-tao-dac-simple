@@ -52,7 +52,6 @@ class Updater extends \common_ext_ExtensionUpdater
     public function update($initialVersion)
     {
 
-
         if ($this->isVersion('1.0')) {
             $impl = new PermissionProvider();
 
@@ -151,6 +150,6 @@ class Updater extends \common_ext_ExtensionUpdater
             $this->setVersion('5.2.0');
         }
 
-        $this->skip('5.2.0', '6.1.1');
+        $this->skip('5.2.0', '6.1.2');
     }
 }

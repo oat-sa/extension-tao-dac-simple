@@ -28,6 +28,8 @@ use core_kernel_classes_Resource;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\log\LoggerAwareTrait;
 use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
+use oat\taoDacSimple\model\event\DacRootAddedEvent;
+use oat\taoDacSimple\model\event\DacRootRemovedEvent;
 
 class PermissionsService
 {
@@ -71,13 +73,7 @@ class PermissionsService
 
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-
-        $this->eventManager->trigger(
-            new DacAffectedUsersEvent(
-                array_keys($addRemove['add'] ?? []),
-                array_keys($addRemove['remove'] ?? [])
-            )
-        );
+        $this->triggerEvents($addRemove, $class->getUri());
     }
 
     private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
@@ -116,11 +112,11 @@ class PermissionsService
 
     private function wetRun(array $actions): void
     {
-        foreach ($actions['remove'] as $item) {
-            $this->removePermissions($item['permissions'], $item['resource']);
+        if(!empty($actions['remove'])){
+            $this->dataBaseAccess->removeMultiplePermissions($actions['remove']);
         }
-        foreach ($actions['add'] as $item) {
-            $this->addPermissions($item['permissions'], $item['resource']);
+        if(!empty($actions['add'])){
+            $this->dataBaseAccess->addMultiplePermissions($actions['add']);
         }
     }
 
@@ -199,25 +195,27 @@ class PermissionsService
     }
 
     /**
-     * @param array                        $permissions
-     * @param core_kernel_classes_Resource $resource
-     *
+     * @param array $addRemove
+     * @param string $resourceId
      */
-    private function removePermissions(array $permissions, core_kernel_classes_Resource $resource): void
-    {
-        foreach ($permissions as $userId => $privilegeIds) {
-            if (!empty($privilegeIds)) {
-                $this->dataBaseAccess->removePermissions($userId, $resource->getUri(), $privilegeIds);
-            }
-        }
-    }
 
-    private function addPermissions(array $permissions, core_kernel_classes_Resource $resource): void
+    private function triggerEvents(array $addRemove, string $resourceId): void
     {
-        foreach ($permissions as $userId => $privilegeIds) {
-            if (!empty($privilegeIds)) {
-                $this->dataBaseAccess->addPermissions($userId, $resource->getUri(), $privilegeIds);
+        if (!empty($addRemove['add'])) {
+            foreach ($addRemove['add'] as $userId => $rights) {
+                $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, (array)$rights));
             }
         }
+        if (!empty($addRemove['remove'])) {
+            foreach ($addRemove['remove'] as $userId => $rights) {
+                $this->eventManager->trigger(new DacRootRemovedEvent($userId, $resourceId, (array)$rights));
+            }
+        }
+        $this->eventManager->trigger(
+            new DacAffectedUsersEvent(
+                array_keys($addRemove['add'] ?? []),
+                array_keys($addRemove['remove'] ?? [])
+            )
+        );
     }
 }
