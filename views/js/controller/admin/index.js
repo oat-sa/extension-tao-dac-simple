@@ -214,10 +214,11 @@ define([
      * @param {Function} onSelectItem - The selection callback
      * @returns {Autocompleter} Returns the instance of the autocompleter component
      */
-    var _searchFactory = function (element, onSelectItem) {
+    var _searchFactory = function (element, appendTo, onSelectItem) {
         var autocompleteOptions = {
             isProvider: true,
-            preventSubmit: true
+            preventSubmit: true,
+            appendTo: appendTo,
         };
         if (_.isFunction(onSelectItem)) {
             autocompleteOptions.onSelectItem = onSelectItem;
@@ -236,13 +237,13 @@ define([
             _disableAccessOnGrant('#permissions-table-roles');
 
             // install autocomplete for user add
-            _searchFactory('#add-user', function (event, value, label) {
+            _searchFactory('#add-user', '#add-user-wrapper', function (event, value, label) {
                 $('#add-user').focus();
                 _addPermission('#permissions-table-users', 'user', value, label);
             });
 
             // install autocomplete for role add
-            _searchFactory('#add-role', function (event, value, label) {
+            _searchFactory('#add-role','#add-role-wrapper', function (event, value, label) {
                 $('#add-role').focus();
                 _addPermission('#permissions-table-roles', 'role', value, label);
             });
