@@ -69,8 +69,8 @@ class PermissionsServiceTest extends TestCase
 
     public function testSaveAddPermissions(): void
     {
-        $this->databaseAccess->expects($this->atLeast(1))->method('addPermissions');
-        $this->databaseAccess->expects($this->never())->method('removePermissions');
+        $this->databaseAccess->expects($this->atLeast(1))->method('addMultiplePermissions');
+        $this->databaseAccess->expects($this->never())->method('removeMultiplePermissions');
 
         $this->databaseAccess->method('getResourcesPermissions')->willReturn(
             [
@@ -113,8 +113,8 @@ class PermissionsServiceTest extends TestCase
             ]
         );
 
-        $this->databaseAccess->expects($this->exactly(2))->method('addPermissions');
-        $this->databaseAccess->expects($this->never())->method('removePermissions');
+        $this->databaseAccess->expects($this->once())->method('addMultiplePermissions');
+        $this->databaseAccess->expects($this->never())->method('removeMultiplePermissions');
 
         $this->strategy->method('normalizeRequest')->willReturn(
             [
@@ -203,8 +203,8 @@ class PermissionsServiceTest extends TestCase
             ]
         );
 
-        $this->databaseAccess->expects($this->never())->method('addPermissions');
-        $this->databaseAccess->expects($this->once())->method('removePermissions');
+        $this->databaseAccess->expects($this->never())->method('addMultiplePermissions');
+        $this->databaseAccess->expects($this->once())->method('removeMultiplePermissions');
 
         $this->strategy->method('normalizeRequest')->willReturn(
             [
