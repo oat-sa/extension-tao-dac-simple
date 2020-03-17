@@ -12,10 +12,12 @@
                         <label class="col-2"><span><?= __('Users') ?></span></label>
                         <div class="col-10 txt-rgt">
                             <?= tao_helpers_Icon::iconAdd(); ?>
-                            <input type="text" id="add-user" style="width:100%" placeholder="<?= __('Add user(s)') ?>"
-                                   data-url="<?= _url('findUser', 'AdminAccessController', 'taoDacSimple') ?>"
-                                   data-ontology="http://www.tao.lu/Ontologies/TAO.rdf#User"
-                                   data-params-root="params" />
+                            <div id="add-user-wrapper">
+                                <input type="text" id="add-user" style="width:100%" placeholder="<?= __('Add user(s)') ?>"
+                                    data-url="<?= _url('findUser', 'AdminAccessController', 'taoDacSimple') ?>"
+                                    data-ontology="http://www.tao.lu/Ontologies/TAO.rdf#User"
+                                    data-params-root="params" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -71,10 +73,12 @@
                         <label class="col-2"><span><?= __('Roles') ?></span></label>
                         <div class="col-10 txt-rgt">
                             <?= tao_helpers_Icon::iconAdd(); ?>
-                            <input type="text" id="add-role" style="width:100%" placeholder="<?= __('Add role(s)') ?>"
-                                   data-url="<?= _url('search', 'Search', 'tao') ?>"
-                                   data-ontology="http://www.tao.lu/Ontologies/generis.rdf#ClassRole"
-                                   data-params-root="params" />
+                            <div id="add-role-wrapper">
+                                <input type="text" id="add-role" style="width:100%" placeholder="<?= __('Add role(s)') ?>"
+                                    data-url="<?= _url('search', 'Search', 'tao') ?>"
+                                    data-ontology="http://www.tao.lu/Ontologies/generis.rdf#ClassRole"
+                                    data-params-root="params" />
+                            </div>
                         </div>
                     </div>
                 </div>

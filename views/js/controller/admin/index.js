@@ -13,7 +13,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2015-2019 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2015-2020 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
 define([
     'jquery',
@@ -211,13 +211,15 @@ define([
     /**
      * Installs a search purpose autocompleter onto an element.
      * @param {jQuery|Element|String} element The element on which install the autocompleter
+     * @param {jQuery|Element|String} appendTo Container where suggestions will be appended. Default value document.body. Make sure to set position: absolute or position: relative for that element
      * @param {Function} onSelectItem - The selection callback
      * @returns {Autocompleter} Returns the instance of the autocompleter component
      */
-    var _searchFactory = function (element, onSelectItem) {
+    var _searchFactory = function (element, appendTo, onSelectItem) {
         var autocompleteOptions = {
             isProvider: true,
-            preventSubmit: true
+            preventSubmit: true,
+            appendTo: appendTo,
         };
         if (_.isFunction(onSelectItem)) {
             autocompleteOptions.onSelectItem = onSelectItem;
@@ -236,13 +238,13 @@ define([
             _disableAccessOnGrant('#permissions-table-roles');
 
             // install autocomplete for user add
-            _searchFactory('#add-user', function (event, value, label) {
+            _searchFactory('#add-user', '#add-user-wrapper', function (event, value, label) {
                 $('#add-user').focus();
                 _addPermission('#permissions-table-users', 'user', value, label);
             });
 
             // install autocomplete for role add
-            _searchFactory('#add-role', function (event, value, label) {
+            _searchFactory('#add-role','#add-role-wrapper', function (event, value, label) {
                 $('#add-role').focus();
                 _addPermission('#permissions-table-roles', 'role', value, label);
             });
