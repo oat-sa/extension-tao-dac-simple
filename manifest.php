@@ -34,7 +34,7 @@ return [
     'author' => 'Open Assessment Technologies SA',
     'requires' => [
        'taoBackOffice' => '>=3.0.0',
-       'generis' => '>=12.7.0',
+       'generis' => '>=12.15.0',
        'tao' => '>=40.9.0'
     ],
     // for compatibility
