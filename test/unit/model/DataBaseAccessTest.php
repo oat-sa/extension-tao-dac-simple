@@ -45,12 +45,12 @@ class DataBaseAccessTest extends TestCase
      */
     protected $instance;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->instance = new DataBaseAccess();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->instance = null;
     }
