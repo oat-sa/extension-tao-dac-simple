@@ -13,7 +13,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2015-2019 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2015-2020 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
 define([
     'jquery',
@@ -211,6 +211,7 @@ define([
     /**
      * Installs a search purpose autocompleter onto an element.
      * @param {jQuery|Element|String} element The element on which install the autocompleter
+     * @param {jQuery|Element|String} appendTo Container where suggestions will be appended. Default value document.body. Make sure to set position: absolute or position: relative for that element
      * @param {Function} onSelectItem - The selection callback
      * @returns {Autocompleter} Returns the instance of the autocompleter component
      */
