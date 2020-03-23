@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: TAO 3.3.0-sprint110\n"
-"PO-Revision-Date: 2019-09-13T11:07:30\n"
+"Project-Id-Version: TAO 3.4.0-sprint124\n"
+"PO-Revision-Date: 2020-03-20T11:17:04\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: nl-NL\n"
@@ -13,10 +13,10 @@ msgstr ""
 # http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator
 msgctxt "http://www.w3.org/2000/01/rdf-schema#label"
 msgid "Data Access Administrator"
-msgstr ""
+msgstr "Gegevenstoegang Beheerder"
 
 # http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator
 msgctxt "http://www.w3.org/2000/01/rdf-schema#comment"
 msgid "Data Access Administrator role"
-msgstr ""
+msgstr "Gegevenstoegang Beheerder rol"
 
