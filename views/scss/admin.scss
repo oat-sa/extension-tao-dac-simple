@@ -2,6 +2,13 @@
 @import "inc/buttons";
 
 .permission-container {
+    #add-user-wrapper, 
+    #add-role-wrapper {
+        position: absolute;
+        right: 20px;
+        width: 300px;
+        text-align: left;
+    }
     .bottom-bar {
         padding-top: 10px;
     }
@@ -9,17 +16,27 @@
     .grid-container {
         margin-top: 40px;
         margin-bottom: 20px;
+        overflow-x: visible;
     }
 
     .msg-edit-area {
         background: $canvas;
         padding: 20px 20px 10px 20px;
         @include simple-border($uiGeneralContentBorder);
+        position: relative;
 
         .icon-add {
             @include font-size(20, true);
             vertical-align: middle;
+            position: absolute;
+            right: 320px;
+            line-height: 24px;
         }
+
+        input {
+            margin: 0px;
+        }
+        
     }
 
     colgroup {

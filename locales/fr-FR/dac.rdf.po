@@ -4,19 +4,19 @@ msgstr ""
 "PO-Revision-Date: 2020-03-27T10:20:55\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: nl-NL\n"
+"Language: fr-FR\n"
 "sourceLanguage: en-US\n"
-"targetLanguage: nl-NL\n"
+"targetLanguage: fr-FR\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 # http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator
 msgctxt "http://www.w3.org/2000/01/rdf-schema#label"
 msgid "Data Access Administrator"
-msgstr "Gegevenstoegang Beheerder"
+msgstr "Administrateur d'accès aux données"
 
 # http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator
 msgctxt "http://www.w3.org/2000/01/rdf-schema#comment"
 msgid "Data Access Administrator role"
-msgstr "Gegevenstoegang Beheerder rol"
+msgstr "Rôle d'administrateur d'accès aux données"
 

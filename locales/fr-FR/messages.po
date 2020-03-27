@@ -4,9 +4,9 @@ msgstr ""
 "PO-Revision-Date: 2020-03-27T10:20:55\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: lt-LT\n"
+"Language: fr-FR\n"
 "sourceLanguage: en-US\n"
-"targetLanguage: lt-LT\n"
+"targetLanguage: fr-FR\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Basepath: ../../\n"
@@ -14,62 +14,62 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 
 msgid "Access control"
-msgstr "Prieigos valdymas"
+msgstr "Contrôle d'accès"
 
 msgid "Access Permissions for"
-msgstr "Prieigos Leidimas"
+msgstr "Permissions d'accès pour"
 
 msgid "Actions"
-msgstr "Veiksmai"
+msgstr "Actions"
 
 msgid "Add role(s)"
-msgstr "Pridėti rolę(–es)"
+msgstr "Ajouter un ou des rôles"
 
 msgid "Add user(s)"
-msgstr "Pridėti vartotoją(–us)"
+msgstr "Ajouter un ou des utilisateurs"
 
 msgid "grant"
-msgstr "suteikti"
+msgstr "permettre"
 
 msgid "Name"
-msgstr "Pavadinimas"
+msgstr "Nom"
 
 msgid "Permissions saved"
-msgstr "Leidimai išsaugoti"
+msgstr "Permissions enregistrées"
 
 msgid "read"
-msgstr "skaityti"
+msgstr "lecture"
 
 msgid "Recursive"
-msgstr "Rekursyvus"
+msgstr "Récursif"
 
 msgid "Remove"
-msgstr "Ištrinti"
+msgstr "Supprimer"
 
 msgid "role"
-msgstr "rolė"
+msgstr "rôle"
 
 msgid "Roles"
-msgstr "Rolės"
+msgstr "Rôles"
 
 msgid "Save"
-msgstr "Išsaugoti"
+msgstr "Enregistrer"
 
 msgid "Type"
-msgstr "Tipas"
+msgstr "Type"
 
 msgid "Unable to process your request"
 msgstr ""
 
 msgid "user"
-msgstr "vartotojas"
+msgstr "utilisateur"
 
 msgid "Users"
-msgstr "Vartotojai"
+msgstr "Utilisateurs"
 
 msgid "write"
-msgstr "įrašymas"
+msgstr "écriture"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr "Jūs privalote turėti bent vieną rolę arba vartotoją, kuris tvarkymo leidimą šiam elementui."
+msgstr "Vous devez avoir un rôle ou un utilisateur ayant la permission de gérer cet élément."
 
