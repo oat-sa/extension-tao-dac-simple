@@ -32,11 +32,11 @@ use oat\oatbox\service\ServiceManager;
 class AdminService
 {
     /**
-     * Set a new Owener, removing the old owner(s)
+     * Set a new Owner, removing the old owner(s)
      *
      * @param string $resourceUri
      * @param string $userUri
-     * @return boolean
+     * @return bool
      */
     public static function setOwner($resourceUri, $userUri)
     {
