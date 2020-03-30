@@ -36,6 +36,7 @@ use oat\taoDacSimple\model\action\AdminAction;
 use oat\tao\scripts\update\OntologyUpdater;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\SyncPermissionsStrategy;
+use oat\taoRevision\model\RepositoryService;
 
 /**
  *
@@ -151,5 +152,20 @@ class Updater extends \common_ext_ExtensionUpdater
         }
 
         $this->skip('5.2.0', '6.4.0');
+
+        if ($this->isVersion('6.4.0')) {
+
+            $permissionServiceFactory = $this->getServiceManager()->get(PermissionsServiceFactory::SERVICE_ID);
+
+            $serviceOptions = $permissionServiceFactory->getOptions();
+            $serviceOptions[PermissionsServiceFactory::OPTION_RECURSIVE_BY_DEFAULT] = false; // set false by default
+
+            $this->getServiceManager()->register(
+                PermissionsServiceFactory::SERVICE_ID,
+                new PermissionsServiceFactory($serviceOptions)
+            );
+
+            $this->setVersion('6.5.0');
+        }
     }
 }
