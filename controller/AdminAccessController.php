@@ -90,6 +90,9 @@ class AdminAccessController extends tao_actions_CommonModule
         $this->setData('roles', $roles);
         $this->setData('isClass', $resource->isClass());
 
+        $permissionsServiceFactory = $this->getServiceLocator()->get(PermissionsServiceFactory::SERVICE_ID);
+        $this->setData('recursive', $permissionsServiceFactory->getOption(PermissionsServiceFactory::OPTION_RECURSIVE_BY_DEFAULT));
+
         $this->setData('uri', $resource->getUri());
         $this->setData('label', _dh($resource->getLabel()));
 

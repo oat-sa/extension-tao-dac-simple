@@ -133,7 +133,7 @@
             <?php if (get_data('isClass')): ?>
             <label>
                 <?=__('Recursive') ?>
-                <input type="checkbox" name="recursive" value="1">
+                <input type="checkbox" name="recursive" value="1" <?php if (get_data('recursive')): ?>checked="checked"<?php endif; ?>>
                 <span class="icon-checkbox"></span>
             </label>
             <?php endif; ?>
