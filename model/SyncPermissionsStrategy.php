@@ -23,8 +23,6 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
-use core_kernel_classes_Class;
-
 class SyncPermissionsStrategy extends PermissionsStrategyAbstract
 {
     public function normalizeRequest(array $currentPrivileges, array $privilegesToSet): array
