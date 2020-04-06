@@ -36,7 +36,6 @@ use oat\taoDacSimple\model\action\AdminAction;
 use oat\tao\scripts\update\OntologyUpdater;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\SyncPermissionsStrategy;
-use oat\taoRevision\model\RepositoryService;
 
 /**
  *
