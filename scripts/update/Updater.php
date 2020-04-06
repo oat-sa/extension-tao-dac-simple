@@ -36,7 +36,6 @@ use oat\taoDacSimple\model\action\AdminAction;
 use oat\tao\scripts\update\OntologyUpdater;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\SyncPermissionsStrategy;
-use oat\taoRevision\model\RepositoryService;
 
 /**
  *
@@ -167,5 +166,7 @@ class Updater extends \common_ext_ExtensionUpdater
 
             $this->setVersion('6.5.0');
         }
+
+        $this->skip('6.5.0', '6.5.1');
     }
 }
