@@ -37,11 +37,11 @@ class PermissionsService
 
     /** @var DataBaseAccess */
     private $dataBaseAccess;
+
     /** @var PermissionsStrategyInterface */
     private $strategy;
-    /**
-     * @var EventManager
-     */
+
+    /** @var EventManager */
     private $eventManager;
 
     public function __construct(

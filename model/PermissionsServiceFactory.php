@@ -33,6 +33,8 @@ class PermissionsServiceFactory extends ConfigurableService
 
     public const OPTION_SAVE_STRATEGY = 'save_strategy';
 
+    public const OPTION_RECURSIVE_BY_DEFAULT = 'recursive_by_default';
+
     /**
      * @return PermissionsService
      */
@@ -44,12 +46,15 @@ class PermissionsServiceFactory extends ConfigurableService
             );
         }
 
-        $strategyClass = $this->getOption(self::OPTION_SAVE_STRATEGY);
+        /** @var DataBaseAccess $dataBaseAccess */
+        $dataBaseAccess = $this->serviceLocator->get(DataBaseAccess::SERVICE_ID);
 
-        return new PermissionsService(
-            $this->serviceLocator->get(DataBaseAccess::SERVICE_ID),
-            new $strategyClass(),
-            $this->serviceLocator->get(EventManager::SERVICE_ID)
-        );
+        /** @var EventManager $eventManager */
+        $eventManager = $this->serviceLocator->get(EventManager::SERVICE_ID);
+
+        $strategyClass = $this->getOption(self::OPTION_SAVE_STRATEGY);
+        $permissionsStrategy = new $strategyClass();
+
+        return new PermissionsService($dataBaseAccess, $permissionsStrategy, $eventManager);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use oat\taoDacSimple\scripts\update\Updater;
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,9 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014 (original work) Open Assessment Technologies SA;
- *
- *
+ * Copyright (c) 2014-2020 (original work) Open Assessment Technologies SA;
  */
 
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
@@ -30,7 +30,7 @@ return [
     'label' => 'extension-tao-dac-simple',
     'description' => 'extension that allows admin to give access to some resources to other people',
     'license' => 'GPL-2.0',
-    'version' => '6.4.0',
+    'version' => '6.5.1',
     'author' => 'Open Assessment Technologies SA',
     'requires' => [
        'taoBackOffice' => '>=3.0.0',
@@ -59,13 +59,13 @@ return [
             RemoveDataAccess::class
         ]
     ],
-    'update' => 'oat\\taoDacSimple\\scripts\\update\\Updater',
+    'update' => Updater::class,
     'routes' => [
         '/taoDacSimple' => 'oat\\taoDacSimple\\controller'
     ],
     'constants' => [
         # views directory
-        "DIR_VIEWS" => dirname(__FILE__) . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR,
+        'DIR_VIEWS' => __DIR__ . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR,
 
         #BASE URL (usually the domain root)
         'BASE_URL' => ROOT_URL . 'taoDacSimple/',
