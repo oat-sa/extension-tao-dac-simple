@@ -26,6 +26,8 @@ use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use Exception;
 use oat\oatbox\log\LoggerAwareTrait;
+use oat\tao\model\taskQueue\QueueDispatcher;
+use oat\tao\model\taskQueue\TaskLogActionTrait;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\PermissionsService;
@@ -33,6 +35,7 @@ use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
+use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
 use function GuzzleHttp\Psr7\stream_for;
 use oat\oatbox\user\UserService;
 use oat\generis\model\OntologyRdfs;
@@ -48,6 +51,7 @@ use oat\generis\model\OntologyRdfs;
  */
 class AdminAccessController extends tao_actions_CommonModule
 {
+    use TaskLogActionTrait;
     use LoggerAwareTrait;
 
     /**
@@ -109,23 +113,16 @@ class AdminAccessController extends tao_actions_CommonModule
         $recursive = ($this->getRequest()->getParameter('recursive') === '1');
 
         try {
-            $this->validateCsrf();
 
-            $service = $this->getPermissionService();
-
-            $service->savePermissions(
-                $recursive,
-                $this->getResourceFromRequest(),
-                $this->getPrivilegesFromRequest()
-            );
-
-            $this->returnJson(
-                [
-                    'success' => true,
-                    'message' => __('Permissions saved')
-                ],
-                200
-            );
+            $taskParameters = [
+                ChangePermissionsTask::PARAM_RECURSIVE  => $recursive,
+                ChangePermissionsTask::PARAM_RESOURCE   => $this->getResourceFromRequest(),
+                ChangePermissionsTask::PARAM_PRIVILEGES => $this->getPrivilegesFromRequest()
+            ];
+            /** @var QueueDispatcher $queueDispatcher */
+            $queueDispatcher = $this->getServiceLocator()->get(QueueDispatcher::SERVICE_ID);
+            $task = $queueDispatcher->createTask(new ChangePermissionsTask(), $taskParameters, 'Processing permissions');
+            $this->returnTaskJson($task);
         } catch (common_exception_Unauthorized $e) {
             $this->response = $this->getPsrResponse()->withStatus(403, __('Unable to process your request'));
         } catch (PermissionsServiceException $e) {
@@ -187,11 +184,11 @@ class AdminAccessController extends tao_actions_CommonModule
     }
 
     /**
-     * @return core_kernel_classes_Class
+     * @return string
      *
      * @throws common_exception_Error
      */
-    private function getResourceFromRequest(): core_kernel_classes_Class
+    private function getResourceFromRequest(): string
     {
         if ($this->hasRequestParameter('uri')) {
             $resourceId = $this->getRequest()->getParameter('uri');
@@ -199,6 +196,6 @@ class AdminAccessController extends tao_actions_CommonModule
             $resourceId = (string)$this->getRequest()->getParameter('resource_id');
         }
 
-        return new core_kernel_classes_Class($resourceId);
+        return $resourceId;
     }
 }

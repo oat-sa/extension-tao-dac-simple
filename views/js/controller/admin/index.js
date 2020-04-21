@@ -24,8 +24,22 @@ define([
     'ui/feedback',
     'ui/autocomplete',
     'ui/tooltip',
-    'core/request'
-], function ($, _, __, lineTpl, helpers, feedback, autocomplete, tooltip, request) {
+    'core/request',
+    'ui/taskQueue/taskQueue',
+    'ui/taskQueueButton/standardButton',
+], function (
+    $,
+    _,
+    __,
+    lineTpl,
+    helpers,
+    feedback,
+    autocomplete,
+    tooltip,
+    request,
+    taskQueue,
+    taskCreationButtonFactory
+) {
     'use strict';
 
     /**
@@ -232,7 +246,7 @@ define([
 
             var $container = $('.permission-container');
             var $form = $('form', $container);
-            var $submitter = $(':submit', $form);
+            var $oldSubmitter = $(':submit', $form);
 
             _disableAccessOnGrant('#permissions-table-users');
             _disableAccessOnGrant('#permissions-table-roles');
@@ -253,40 +267,41 @@ define([
             _installListeners('#permissions-table-users');
             _installListeners('#permissions-table-roles');
 
+            //find the old submitter and replace it with the new component
+            var taskCreationButton = taskCreationButtonFactory({
+                type : 'info',
+                icon : 'save',
+                title : __('Save'),
+                label : __('Save'),
+                taskQueue : taskQueue,
+                taskCreationUrl : $form.attr('action'),
+                taskCreationData : function getTaskCreationData(){
+                    return $form.serializeArray();
+                },
+                taskReportContainer : $container
+            }).on('finished', function(result){
+                if (result.task
+                    && result.task.report
+                    && _.isArray(result.task.report.children)
+                    && result.task.report.children.length
+                    && result.task.report.children[0]) {
+                    if(result.task.report.children[0].type === 'success'){
+                        feedback().success(__('Permissions saved'));
+                    } else {
+                        feedback().error( __('Error'));
+                    }
+                }
+            }).on('error', function(err){
+                //format and display error message to user
+                feedback().error(err);
+            }).render($oldSubmitter.closest('.bottom-bar'));
+
+            //replace the old submitter with the new one and apply its style
+            $oldSubmitter.replaceWith(taskCreationButton.getElement().css({float: 'right'}));
+
             $form.on('submit', function (e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-            });
-            $submitter.on('click', function (e) {
-                e.preventDefault();
-
-                if ($submitter.hasClass('disabled')) {
-                    return;
-                }
-
-                if (!_checkManagers('form')) {
-                    feedback().error(errorMsgManagePermission);
-                    return;
-                }
-
-                $submitter.addClass('disabled');
-
-                // submit form with tokenised request
-                request({
-                    url : $form.attr('action'),
-                    method : 'POST',
-                    data : $form.serialize()
-                })
-                .then(function(response) {
-                    if (response && response.success) {
-                        feedback().success(__('Permissions saved'));
-                    }
-                    $submitter.removeClass('disabled');
-                })
-                .catch(function(error) {
-                    feedback().error(error.message);
-                    $submitter.removeClass('disabled');
-                });
             });
         }
     };
