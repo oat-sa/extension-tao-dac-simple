@@ -61,7 +61,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 $this->getClass($params[self::PARAM_RESOURCE]),
                 $params[self::PARAM_PRIVILEGES]
             );
-            $result = Report::createSuccess('Permission applied');
+            $result = Report::createSuccess('Permissions saved');
         } catch (Exception $exception) {
             $errMessage = sprintf('Saving permissions failed: %s', $exception->getMessage());
             $this->getLogger()->error($errMessage);
@@ -80,7 +80,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     {
         $knownParams = [self::PARAM_RECURSIVE, self::PARAM_PRIVILEGES, self::PARAM_RESOURCE];
         foreach ($knownParams as $param) {
-            if (!isset($params[self::PARAM_RECURSIVE])) {
+            if (!isset($params[$param])) {
                 throw new common_exception_MissingParameter(sprintf(
                     'Missing parameter `%s` in %s',
                     $param,
