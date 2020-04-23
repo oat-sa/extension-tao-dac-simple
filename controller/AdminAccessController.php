@@ -163,11 +163,6 @@ class AdminAccessController extends tao_actions_CommonModule
         return $this->returnJson($response);
     }
 
-    private function getPermissionService(): PermissionsService
-    {
-        return $this->serviceLocator->get(PermissionsServiceFactory::SERVICE_ID)->create();
-    }
-
     private function getPrivilegesFromRequest(): array
     {
         if ($this->hasRequestParameter('privileges')) {

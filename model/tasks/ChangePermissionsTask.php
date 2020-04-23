@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -39,7 +41,6 @@ use oat\taoDacSimple\model\PermissionsServiceFactory;
  *
  * Handling permission changes in background
  */
-
 class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface, JsonSerializable
 {
     use ServiceManagerAwareTrait;
@@ -50,7 +51,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RESOURCE = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
 
-    public function __invoke(array $params = []): Report
+    public function __invoke($params = []): Report
     {
         $this->validateParams($params);
         try {
@@ -77,14 +78,15 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
 
     private function validateParams(array $params): void
     {
-        if (!isset($params[self::PARAM_RECURSIVE])) {
-            throw new common_exception_MissingParameter(sprintf('Missing parameter `%s` in %s', self::PARAM_RECURSIVE, self::class));
-        }
-        if (!isset($params[self::PARAM_PRIVILEGES])) {
-            throw new common_exception_MissingParameter(sprintf('Missing parameter `%s` in %s', self::PARAM_PRIVILEGES, self::class));
-        }
-        if (!isset($params[self::PARAM_RESOURCE])) {
-            throw new common_exception_MissingParameter(sprintf('Missing parameter `%s` in %s', self::PARAM_RESOURCE, self::class));
+        $knownParams = [self::PARAM_RECURSIVE, self::PARAM_PRIVILEGES, self::PARAM_RESOURCE];
+        foreach ($knownParams as $param) {
+            if (!isset($params[self::PARAM_RECURSIVE])) {
+                throw new common_exception_MissingParameter(sprintf(
+                    'Missing parameter `%s` in %s',
+                    $param,
+                    self::class
+                ));
+            }
         }
     }
 
