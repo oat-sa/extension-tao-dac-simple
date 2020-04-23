@@ -275,7 +275,7 @@ define([
                 label : __('Save'),
                 taskQueue : taskQueue,
                 taskCreationUrl : $form.attr('action'),
-                taskCreationData : function getTaskCreationData(){
+                taskCreationData : function taskCreationData() {
                     return $form.serializeArray();
                 },
                 taskReportContainer : $container

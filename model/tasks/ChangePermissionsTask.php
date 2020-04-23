@@ -50,17 +50,17 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RESOURCE = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
 
-    public function __invoke($params = []): Report
+    public function __invoke(array $params = []): Report
     {
         $this->validateParams($params);
         try {
             $service = $this->getPermissionService();
             $service->savePermissions(
-                $params[self::PARAM_RECURSIVE],
+                (bool)$params[self::PARAM_RECURSIVE],
                 $this->getClass($params[self::PARAM_RESOURCE]),
                 $params[self::PARAM_PRIVILEGES]
             );
-            $result = Report::createSuccess('Permission(s) applied');
+            $result = Report::createSuccess('Permission applied');
         } catch (Exception $exception) {
             $errMessage = sprintf('Saving permissions failed: %s', $exception->getMessage());
             $this->getLogger()->error($errMessage);
@@ -75,7 +75,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         return $this->serviceLocator->get(PermissionsServiceFactory::SERVICE_ID)->create();
     }
 
-    private function validateParams($params): void
+    private function validateParams(array $params): void
     {
         if (!isset($params[self::PARAM_RECURSIVE])) {
             throw new common_exception_MissingParameter(sprintf('Missing parameter `%s` in %s', self::PARAM_RECURSIVE, self::class));
