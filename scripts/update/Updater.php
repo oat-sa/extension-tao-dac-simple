@@ -180,8 +180,8 @@ class Updater extends \common_ext_ExtensionUpdater
             $schema = $schemaManager->createSchema();
             $fromSchema = clone $schema;
             $table = $schema->getTable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
-            if(!$table->hasIndex(DataBaseAccess::TABLE_PRIVILEGES_NAME . 'IDX_resource_id')){
-                $table->addIndex([DataBaseAccess::COLUMN_RESOURCE_ID], DataBaseAccess::TABLE_PRIVILEGES_NAME . 'IDX_resource_id');
+            if(!$table->hasIndex(DataBaseAccess::TABLE_PRIVILEGES_NAME . '_resource_id_index')){
+                $table->addIndex([DataBaseAccess::COLUMN_RESOURCE_ID], DataBaseAccess::TABLE_PRIVILEGES_NAME . '_resource_id_index');
                 $queries = $defaultPersistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
                 foreach ($queries as $query) {
                     $defaultPersistence->exec($query);

@@ -360,7 +360,7 @@ class DataBaseAccess extends ConfigurableService
         $table->addColumn(self::COLUMN_RESOURCE_ID, 'string', ['notnull' => null, 'length' => 255]);
         $table->addColumn(self::COLUMN_PRIVILEGE, 'string', ['notnull' => null, 'length' => 255]);
         $table->setPrimaryKey([self::COLUMN_USER_ID, self::COLUMN_RESOURCE_ID, self::COLUMN_PRIVILEGE]);
-        $table->addIndex([self::COLUMN_RESOURCE_ID], self::TABLE_PRIVILEGES_NAME . 'IDX_resource_id');
+        $table->addIndex([self::COLUMN_RESOURCE_ID], self::TABLE_PRIVILEGES_NAME . '_resource_id_index');
 
         $queries = $this->getPersistence()->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
         foreach ($queries as $query) {
