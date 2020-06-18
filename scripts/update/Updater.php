@@ -189,5 +189,7 @@ class Updater extends \common_ext_ExtensionUpdater
             }
             $this->setVersion('6.7.1');
         }
+
+        $this->skip('6.7.1', '6.7.2');
     }
 }
