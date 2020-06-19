@@ -47,6 +47,7 @@ class DataBaseAccess extends ConfigurableService
     const COLUMN_RESOURCE_ID = 'resource_id';
     const COLUMN_PRIVILEGE = 'privilege';
     const TABLE_PRIVILEGES_NAME = 'data_privileges';
+    const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
 
     private $persistence;
 
@@ -360,6 +361,7 @@ class DataBaseAccess extends ConfigurableService
         $table->addColumn(self::COLUMN_RESOURCE_ID, 'string', ['notnull' => null, 'length' => 255]);
         $table->addColumn(self::COLUMN_PRIVILEGE, 'string', ['notnull' => null, 'length' => 255]);
         $table->setPrimaryKey([self::COLUMN_USER_ID, self::COLUMN_RESOURCE_ID, self::COLUMN_PRIVILEGE]);
+        $table->addIndex([self::COLUMN_RESOURCE_ID], self::INDEX_RESOURCE_ID);
 
         $queries = $this->getPersistence()->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
         foreach ($queries as $query) {

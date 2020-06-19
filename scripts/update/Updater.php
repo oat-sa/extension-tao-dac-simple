@@ -25,6 +25,7 @@ namespace oat\taoDacSimple\scripts\update;
 use oat\generis\model\data\permission\implementation\FreeAccess;
 use oat\generis\model\data\permission\implementation\IntersectionUnionSupported;
 use oat\generis\model\data\permission\implementation\NoAccess;
+use oat\generis\persistence\PersistenceManager;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\generis\model\GenerisRdf;
 use oat\tao\model\TaoOntology;
@@ -90,7 +91,7 @@ class Updater extends \common_ext_ExtensionUpdater
             // add base permissions to new classes
             $taoClass = new \core_kernel_classes_Class(TaoOntology::OBJECT_CLASS_URI);
             foreach ($taoClass->getSubClasses(false) as $class) {
-                if (!in_array($class->getUri(), [TaoOntology::ITEM_CLASS_URI,TaoOntology::TEST_CLASS_URI])) {
+                if (!in_array($class->getUri(), [TaoOntology::ITEM_CLASS_URI, TaoOntology::TEST_CLASS_URI])) {
                     $classesToAdd[] = $class;
                 }
             }
@@ -167,6 +168,28 @@ class Updater extends \common_ext_ExtensionUpdater
             $this->setVersion('6.5.0');
         }
 
-        $this->skip('6.5.0', '6.6.1');
+        $this->skip('6.5.0', '6.7.0');
+
+        if ($this->isVersion('6.7.0')) {
+            /** @var \common_persistence_Persistence $defaultPersistence */
+            $defaultPersistence = $this->getServiceManager()
+                ->get(PersistenceManager::SERVICE_ID)
+                ->getPersistenceById('default');
+            /** @var \common_persistence_sql_SchemaManager $schemaManager */
+            $schemaManager = $defaultPersistence->getDriver()->getSchemaManager();
+            $schema = $schemaManager->createSchema();
+            $fromSchema = clone $schema;
+            $table = $schema->getTable(DataBaseAccess::TABLE_PRIVILEGES_NAME);
+            if (!$table->hasIndex(DataBaseAccess::INDEX_RESOURCE_ID)) {
+                $table->addIndex([DataBaseAccess::COLUMN_RESOURCE_ID], DataBaseAccess::INDEX_RESOURCE_ID);
+                $queries = $defaultPersistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
+                foreach ($queries as $query) {
+                    $defaultPersistence->exec($query);
+                }
+            }
+            $this->setVersion('6.7.1');
+        }
+
+        $this->skip('6.7.1', '6.7.2');
     }
 }
