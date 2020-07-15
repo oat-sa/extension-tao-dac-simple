@@ -27,6 +27,7 @@ use common_exception_Error;
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use oat\generis\model\data\permission\PermissionInterface;
+use oat\generis\model\data\permission\ReverseRightLookupInterface;
 use oat\generis\model\GenerisRdf;
 use oat\oatbox\service\ConfigurableService;
 use oat\oatbox\service\exception\InvalidServiceManagerException;
@@ -42,7 +43,7 @@ use oat\tao\model\TaoOntology;
  * @access public
  * @author Joel Bout, <joel@taotesting.com>
  */
-class PermissionProvider extends ConfigurableService implements PermissionInterface
+class PermissionProvider extends ConfigurableService implements PermissionInterface, ReverseRightLookupInterface
 {
     public const PERMISSION_GRANT = 'GRANT';
     public const PERMISSION_READ = 'READ';
@@ -135,5 +136,10 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
             new core_kernel_classes_Class(GenerisRdf::CLASS_GENERIS_USER),
             new core_kernel_classes_Class(GenerisRdf::CLASS_ROLE)
         ];
+    }
+
+    public function getResourceAccessData(core_kernel_classes_Resource $resource): array
+    {
+        return AdminService::getUsersPermissions($resource->getUri());
     }
 }
