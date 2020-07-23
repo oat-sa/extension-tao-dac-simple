@@ -138,8 +138,22 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
         ];
     }
 
-    public function getResourceAccessData(core_kernel_classes_Resource $resource): array
+    public function getResourceAccessData(string $resourceId): array
     {
-        return AdminService::getUsersPermissions($resource->getUri());
+        /** @var DataBaseAccess $db */
+        $db = $this->getServiceLocator()->get(DataBaseAccess::SERVICE_ID);
+        $results = $db->getUsersWithPermissions([$resourceId]);
+
+        $permissions = [];
+        foreach ($results as $result) {
+            $user = $result['user_id'];
+
+            if (!isset($permissions[$user])) {
+                $permissions[$user] = [];
+            }
+            $permissions[$user][] = $result['privilege'];
+        }
+
+        return $permissions;
     }
 }
