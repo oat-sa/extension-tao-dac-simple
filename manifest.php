@@ -34,7 +34,7 @@ return [
     'author' => 'Open Assessment Technologies SA',
     'requires' => [
        'taoBackOffice' => '>=3.0.0',
-       'generis' => 'dev-feature/TAO-10365-apply-access-control-to-queries',
+       'generis' => '>=13.1.0',
        'tao' => '>=40.9.0'
     ],
     // for compatibility
