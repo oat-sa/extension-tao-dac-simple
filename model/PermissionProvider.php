@@ -148,9 +148,6 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
         foreach ($results as $result) {
             $user = $result['user_id'];
 
-            if (!isset($permissions[$user])) {
-                $permissions[$user] = [];
-            }
             $permissions[$user][] = $result['privilege'];
         }
 

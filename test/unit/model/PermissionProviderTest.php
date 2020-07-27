@@ -33,7 +33,7 @@ class PermissionProviderTest extends TestCase
 
     public function setUp(): void
     {
-        $databaseAccess = $this->mockDatabaseAccess();
+        $databaseAccess = $this->createDatabaseAccessMock();
         $serviceLocator = $this->getServiceLocatorMock([
             DataBaseAccess::SERVICE_ID => $databaseAccess
         ]);
@@ -49,11 +49,10 @@ class PermissionProviderTest extends TestCase
             'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => ['READ', 'WRITE', 'GRANT']
         ];
 
-
         self::assertSame($expected, $result);
     }
 
-    private function mockDatabaseAccess()
+    private function createDatabaseAccessMock(): DataBaseAccess
     {
         $databaseAccess = $this->createMock(DataBaseAccess::class);
 
