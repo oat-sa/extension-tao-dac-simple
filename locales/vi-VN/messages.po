@@ -1,12 +1,12 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TAO 3.4.0-sprint121\n"
-"PO-Revision-Date: 2020-08-03T10:32:05\n"
+"PO-Revision-Date: 2020-08-03T10:32:06\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: nl-NL\n"
+"Language: vi-VN\n"
 "sourceLanguage: en-US\n"
-"targetLanguage: nl-NL\n"
+"targetLanguage: vi-VN\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Basepath: ../../\n"
@@ -14,65 +14,65 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 
 msgid "Access can not be revoked for the current user."
-msgstr "De toegang kan niet worden ingetrokken voor de huidige gebruiker."
+msgstr ""
 
 msgid "Access control"
-msgstr "Toegangscontrole"
+msgstr "Kiểm soát truy cập"
 
 msgid "Access Permissions for"
-msgstr "Toegangspermissies voor"
+msgstr "Quyền truy cập cho"
 
 msgid "Actions"
-msgstr "Acties"
+msgstr "Hành động"
 
 msgid "Add role(s)"
-msgstr "Voeg rol(len) toe"
+msgstr "Thêm vai trò"
 
 msgid "Add user(s)"
-msgstr "Voeg gebruiker(s) toe"
+msgstr "Thêm ngwif dùng"
 
 msgid "grant"
-msgstr "geven"
+msgstr "trao "
 
 msgid "Name"
-msgstr "Naam"
+msgstr "Tên"
 
 msgid "Permissions saved"
-msgstr "Permissies opgeslagen"
+msgstr "Đã lưu lại quyền"
 
 msgid "read"
-msgstr "lezen"
+msgstr "đọc"
 
 msgid "Recursive"
-msgstr "Recursief"
+msgstr ""
 
 msgid "Remove"
-msgstr "Verwijderen"
+msgstr "Gỡ bỏ"
 
 msgid "role"
-msgstr "rol"
+msgstr "vai trò"
 
 msgid "Roles"
-msgstr "Rollen"
+msgstr "Vai trò"
 
 msgid "Save"
-msgstr "Opslaan"
+msgstr "Lưu lại"
 
 msgid "Type"
-msgstr "Type"
+msgstr "Kiểu"
 
 msgid "Unable to process your request"
 msgstr ""
 
 msgid "user"
-msgstr "gebruiker"
+msgstr "người dùng"
 
 msgid "Users"
-msgstr "Gebruikers"
+msgstr "Người dùng"
 
 msgid "write"
-msgstr "schrijven"
+msgstr "viết"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr "U dient een rol of gebruiker te hebben met toestemming om dit element te beheren"
+msgstr "Bạn phải có một vai trò hoặc người dùng có quyền quản lý đối với phần tử này."
 

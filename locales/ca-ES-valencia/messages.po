@@ -1,12 +1,12 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TAO 3.4.0-sprint121\n"
-"PO-Revision-Date: 2020-08-03T10:32:05\n"
+"PO-Revision-Date: 2020-08-03T10:32:03\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: nl-NL\n"
+"Language: ca-ES-valencia\n"
 "sourceLanguage: en-US\n"
-"targetLanguage: nl-NL\n"
+"targetLanguage: ca-ES-valencia\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Basepath: ../../\n"
@@ -14,65 +14,65 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 
 msgid "Access can not be revoked for the current user."
-msgstr "De toegang kan niet worden ingetrokken voor de huidige gebruiker."
+msgstr ""
 
 msgid "Access control"
-msgstr "Toegangscontrole"
+msgstr "Control d'accés"
 
 msgid "Access Permissions for"
-msgstr "Toegangspermissies voor"
+msgstr "Permisos d'accés per a"
 
 msgid "Actions"
-msgstr "Acties"
+msgstr "Accions"
 
 msgid "Add role(s)"
-msgstr "Voeg rol(len) toe"
+msgstr "Afig rols"
 
 msgid "Add user(s)"
-msgstr "Voeg gebruiker(s) toe"
+msgstr "Afig usuaris"
 
 msgid "grant"
-msgstr "geven"
+msgstr "permet"
 
 msgid "Name"
-msgstr "Naam"
+msgstr "Nom"
 
 msgid "Permissions saved"
-msgstr "Permissies opgeslagen"
+msgstr "Permisos guardats"
 
 msgid "read"
-msgstr "lezen"
+msgstr "lectura"
 
 msgid "Recursive"
-msgstr "Recursief"
+msgstr "Recursiu"
 
 msgid "Remove"
-msgstr "Verwijderen"
+msgstr "Suprimeix"
 
 msgid "role"
 msgstr "rol"
 
 msgid "Roles"
-msgstr "Rollen"
+msgstr "Rols"
 
 msgid "Save"
-msgstr "Opslaan"
+msgstr "Guarda"
 
 msgid "Type"
-msgstr "Type"
+msgstr "Tipus"
 
 msgid "Unable to process your request"
 msgstr ""
 
 msgid "user"
-msgstr "gebruiker"
+msgstr "usuari"
 
 msgid "Users"
-msgstr "Gebruikers"
+msgstr "Usuaris"
 
 msgid "write"
-msgstr "schrijven"
+msgstr "escriptura"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr "U dient een rol of gebruiker te hebben met toestemming om dit element te beheren"
+msgstr "Heu de tindre un rol o usuari que tinga permisos per a gestionar aquest element."
 
