@@ -142,7 +142,7 @@ class Updater extends \common_ext_ExtensionUpdater
 
         $this->skip('2.7.0', '5.1.1');
 
-        if ($this->isVersion('5.1.1')) {
+        if ($this->isVersion('5.1.1') | $this->isVersion('5.1.2')) {
             $this->getServiceManager()->register(PermissionsServiceFactory::SERVICE_ID,
                 new PermissionsServiceFactory([
                     PermissionsServiceFactory::OPTION_SAVE_STRATEGY => SyncPermissionsStrategy::class
