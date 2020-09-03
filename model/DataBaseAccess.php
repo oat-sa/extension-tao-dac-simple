@@ -90,6 +90,10 @@ class DataBaseAccess extends ConfigurableService
      */
     public function getPermissions($userIds, array $resourceIds)
     {
+        // permission request for empty resources must return an empty array
+        if (!count($resourceIds)) {
+            return [];
+        }
         // get privileges for a user/roles and a resource
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
