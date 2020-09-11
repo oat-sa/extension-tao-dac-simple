@@ -181,6 +181,7 @@ class DataBaseAccessTest extends TestCase
         $this->setPersistence($this->instance, $persistenceMock);
 
         $this->assertEquals($resultFixture, $this->instance->getPermissions($userIds, $resourceIds));
+        $this->assertEquals([], $this->instance->getPermissions($userIds, []));
     }
 
     private function setPersistence($instance, $persistenceMock)
