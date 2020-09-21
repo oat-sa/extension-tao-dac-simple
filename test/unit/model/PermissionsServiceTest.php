@@ -27,7 +27,10 @@ use core_kernel_classes_Class;
 use oat\generis\test\MockObject;
 use oat\generis\test\TestCase;
 use oat\oatbox\event\EventManager;
+use oat\tao\model\event\DataAccessControlChangedEvent;
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
+use oat\taoDacSimple\model\event\DacRootAddedEvent;
 use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsStrategyInterface;
@@ -95,6 +98,7 @@ class PermissionsServiceTest extends TestCase
         $resource = $this->createMock(core_kernel_classes_Class::class);
         $resource->method('getUri')->willReturn('res1');
 
+        $this->mockTriggeredEvents('res1', 'uid1', false);
 
         $this->service->savePermissions(
             false,
@@ -145,6 +149,8 @@ class PermissionsServiceTest extends TestCase
         $resource->method('getInstances')->willReturn([]);
         $resource->method('getUri')->willReturn('uid2uri');
 
+        $this->mockTriggeredEvents('uid2uri', 'uid1', true);
+
         $this->service->savePermissions(
             true,
             $resource,
@@ -153,7 +159,6 @@ class PermissionsServiceTest extends TestCase
             ]
         );
     }
-
 
     public function testCantRemoveResourceWithNoGrantLeft(): void
     {
@@ -244,5 +249,33 @@ class PermissionsServiceTest extends TestCase
         $resource = $this->createMock(core_kernel_classes_Class::class);
 
         $this->service->savePermissions(false, $resource, []);
+    }
+
+    private function mockTriggeredEvents(string $resourceId, string $userId, bool $isRecursive): void
+    {
+        $this->eventManager->expects($this->at(0))
+            ->method('trigger')
+            ->with(new DacRootAddedEvent($userId, $resourceId, ['GRANT', 'READ', 'WRITE']));
+
+        $this->eventManager->expects($this->at(1))
+            ->method('trigger')
+            ->with(
+                new DacAffectedUsersEvent(
+                    [$userId],
+                    []
+                )
+            );
+
+        $this->eventManager->expects($this->at(2))
+            ->method('trigger')
+            ->with(
+                new DataAccessControlChangedEvent(
+                    $resourceId,
+                    [
+                        'add' => ['uid1' => ['GRANT', 'READ', 'WRITE']]
+                    ],
+                    $isRecursive
+                )
+            );
     }
 }
