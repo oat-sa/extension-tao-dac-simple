@@ -67,6 +67,11 @@ class DataBaseAccess extends ConfigurableService
      */
     public function getUsersWithPermissions($resourceIds)
     {
+        // permission request for empty users must return an empty array
+        if (!is_array($resourceIds) || !count($resourceIds)) {
+            return [];
+        }
+
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
         $query = sprintf(
             'SELECT %s, %s, %s FROM %s WHERE %s IN (%s)',
@@ -91,7 +96,7 @@ class DataBaseAccess extends ConfigurableService
     public function getPermissions($userIds, array $resourceIds)
     {
         // permission request for empty resources must return an empty array
-        if (!count($resourceIds)) {
+        if (!is_array($userIds) || !is_array($resourceIds) || !count($resourceIds) || !count($userIds)) {
             return [];
         }
         // get privileges for a user/roles and a resource
@@ -311,11 +316,15 @@ class DataBaseAccess extends ConfigurableService
      * Filter users\roles that have no permissions
      *
      * @access public
-     * @param array $userIds
+     * @param $userIds
      * @return array
      */
-    public function checkPermissions($userIds)
+    public function checkPermissions($userIds): array
     {
+        // permission request for empty users must return an empty array
+        if (!is_array($userIds) || !count($userIds)) {
+            return [];
+        }
         $inQueryUser = implode(',', array_fill(0, count($userIds), ' ? '));
         $query = sprintf(
             'SELECT %s FROM %s WHERE %s IN (%s)',
