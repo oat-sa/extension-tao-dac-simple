@@ -1,0 +1,88 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TAO 3.4.0-sprint117\n"
+"PO-Revision-Date: 2020-09-22T16:02:17\n"
+"Last-Translator: TAO Translation Team <translation@tao.lu>\n"
+"MIME-Version: 1.0\n"
+"Language: ja-JP\n"
+"sourceLanguage: en-US\n"
+"targetLanguage: ja-JP\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../../\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-SearchPath-0: .\n"
+
+msgid "%s classes and instances have been updated"
+msgstr ""
+
+msgid "Access can not be revoked for the current user."
+msgstr ""
+
+msgid "Access control"
+msgstr "アクセス制限"
+
+msgid "Access Permissions for"
+msgstr "アクセス権限"
+
+msgid "Actions"
+msgstr "アクション"
+
+msgid "Add role(s)"
+msgstr "ロール追加"
+
+msgid "Add user(s)"
+msgstr "ユーザー追加"
+
+msgid "grant"
+msgstr "付与"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "Permissions saved"
+msgstr "権限を保存しました"
+
+msgid "read"
+msgstr "読み込み"
+
+msgid "Recursive"
+msgstr "再帰的"
+
+msgid "Remove"
+msgstr "削除"
+
+msgid "role"
+msgstr "ロール"
+
+msgid "Roles"
+msgstr "ロール"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "something went wrong during taoDacSimple uninstallation\n"
+""
+msgstr ""
+
+msgid "taoDacSimple extension correctly uninstalled"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Unable to process your request"
+msgstr ""
+
+msgid "user"
+msgstr "ユーザー"
+
+msgid "Users"
+msgstr "ユーザー"
+
+msgid "write"
+msgstr "書き込み"
+
+msgid "You must have one role or user that have the manage permission on this element."
+msgstr "このエレメントに管理権限を持つロールまたはユーザーが1つ必要です。"
+
