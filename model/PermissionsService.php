@@ -27,6 +27,7 @@ use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\log\LoggerAwareTrait;
+use oat\tao\model\event\DataAccessControlChangedEvent;
 use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
 use oat\taoDacSimple\model\event\DacRootAddedEvent;
 use oat\taoDacSimple\model\event\DacRootRemovedEvent;
@@ -73,7 +74,7 @@ class PermissionsService
 
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $class->getUri());
+        $this->triggerEvents($addRemove, $class->getUri(), $isRecursive);
     }
 
     private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
@@ -197,9 +198,10 @@ class PermissionsService
     /**
      * @param array $addRemove
      * @param string $resourceId
+     * @param bool $isRecursive
      */
 
-    private function triggerEvents(array $addRemove, string $resourceId): void
+    private function triggerEvents(array $addRemove, string $resourceId, bool $isRecursive): void
     {
         if (!empty($addRemove['add'])) {
             foreach ($addRemove['add'] as $userId => $rights) {
@@ -215,6 +217,14 @@ class PermissionsService
             new DacAffectedUsersEvent(
                 array_keys($addRemove['add'] ?? []),
                 array_keys($addRemove['remove'] ?? [])
+            )
+        );
+
+        $this->eventManager->trigger(
+            new DataAccessControlChangedEvent(
+                $resourceId,
+                $addRemove,
+                $isRecursive
             )
         );
     }
