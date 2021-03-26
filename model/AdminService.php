@@ -22,6 +22,7 @@
 
 namespace oat\taoDacSimple\model;
 
+use oat\generis\model\data\permission\PermissionInterface;
 use oat\oatbox\service\ServiceManager;
 
 /**
@@ -42,7 +43,7 @@ class AdminService
     {
         /** @var DataBaseAccess $db */
         $db = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
-        
+
         // Needs better abstraction
         $dbRow = $db->getUsersWithPermissions([$resourceUri]);
         foreach ($dbRow as $row) {
@@ -50,7 +51,7 @@ class AdminService
                 $db->removePermissions($row['user_id'], $resourceUri, ['OWNER']);
             }
         }
-        
+
         return $db->addPermissions($userUri, $resourceUri, ['OWNER']);
     }
 
@@ -59,26 +60,15 @@ class AdminService
      *
      * Returns an associative array  with userid as key and an array of rights as value
      *
-     * @param $resourceUri
+     * @param $resourceId
      * @return array
      */
-    public static function getUsersPermissions($resourceUri)
+    public static function getUsersPermissions($resourceId)
     {
-        /** @var DataBaseAccess $db */
-        $db = self::getServiceManager()->get(DataBaseAccess::SERVICE_ID);
-        $results = $db->getUsersWithPermissions([$resourceUri]);
-    
-        $permissions = [];
-        foreach ($results as $result) {
-            $user = $result['user_id'];
-            
-            if (!isset($permissions[$user])) {
-                $permissions[$user] = [];
-            }
-            $permissions[$user][] = $result['privilege'];
-        }
-        
-        return $permissions;
+        /** @var PermissionProvider $permissionProvider */
+        $permissionProvider = self::getServiceManager()->get(PermissionInterface::SERVICE_ID);
+
+        return $permissionProvider->getResourceAccessData($resourceId);
     }
 
     /**
