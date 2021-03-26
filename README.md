@@ -1,7 +1,7 @@
 Simple Data Access Control
 =====================
 
-Simple Data Access Control allows the restriction of which user can access which resources.
+Simple Data Access Control allows the restriction of which user can access which resources, in a way compatible with Advanced Search
 
 Access Privileges are granted either to users directly or to roles, applying to all users who have that specific role.
 
