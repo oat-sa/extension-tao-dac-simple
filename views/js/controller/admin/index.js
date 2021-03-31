@@ -234,6 +234,14 @@ define([
             isProvider: true,
             preventSubmit: true,
             appendTo: appendTo,
+            ontologyParam: ['rootNode', 'parentNode'],
+            params: {
+                'params[structure]': '',
+                rows: 20,
+                page: 1,
+                parentNode: ''
+            },
+            labelField: 'label'
         };
         if (_.isFunction(onSelectItem)) {
             autocompleteOptions.onSelectItem = onSelectItem;
