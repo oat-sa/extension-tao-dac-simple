@@ -144,13 +144,16 @@ class AdminAccessController extends tao_actions_CommonModule
     {
         $params = $this->getGetParameter('params');
         $query = $params['query'];
+        /** @var  UserService $userService */
         $userService = $this->getServiceLocator()->get(UserService::SERVICE_ID);
         $data = [];
         foreach ($userService->findUser($query) as $user) {
             $labels = $user->getPropertyValues(OntologyRdfs::RDFS_LABEL);
+            $label = empty($labels) ? __('unknown user') : reset($labels);
             $data[] = [
-                'id'                     => $user->getIdentifier(),
-                OntologyRdfs::RDFS_LABEL => empty($labels) ? 'unknown user' : reset($labels)
+                'id' => $user->getIdentifier(),
+                'label' => $label,
+                OntologyRdfs::RDFS_LABEL => $label,//@deprecated
             ];
         }
         $response = [
