@@ -1,11 +1,13 @@
 Simple Data Access Control
 =====================
 
-Simple Data Access Control allows the restriction of which user can access which resources, in the way compatible with Advanced Search.
+Simple Data Access Control allows the restriction of which user can access which resources, in the way compatible with
+Advanced Search.
 
 Access Privileges are granted either to users directly or to roles, applying to all users who have that specific role.
 
-Privileges are given per resource, so that in order to remove the write access to all items within a class, the new access rights need to be applied recursively to all resources by checking "recursive" before saving the changes.
+Privileges are given per resource, so that in order to remove the write access to all items within a class, the new
+access rights need to be applied recursively to all resources by checking "recursive" before saving the changes.
 
 Privileges are additive, meaning that if:
 
@@ -17,35 +19,31 @@ Then User X he will have read and write access to Item 1
 
 ## How to enable ACL management
 
+In order to see the `Access control` button on the backoffice panel a few changes are necessary.
+
 ### Enable this in the actions
 
-Change the actions/structures.xml file by adding the actions attribute `allowClassActions="true"`:
+Change the `actions/structures.xml` file by adding the attribute `allowClassActions="true"` in the `actions` node:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE structures SYSTEM "../../tao/doc/structures.dtd">
 <structures>
     <structure>
         <sections>
-            <section id="manage_items" name="Manage items" url="/taoItems/Items/index">
-                <trees>
-                  <!-- Something here -->
-                </trees>
+            <section>
+                <trees><!-- Something here --></trees>
                 <actions allowClassActions="true">
-                    <action>
-                      <!-- Something here -->    
-                    </action>
+                    <action><!-- Something here --></action>
                 </actions>
             </section>
         </sections>
     </structure>
 </structures>
-
 ```
 
-### How support ACL in an endpoint? 
+### Enabling ACL in an endpoint
 
-Add the following annotation with proper `field` and `grant level` to check:
+Add the annotation `requiresRight` with proper `field` and `grant level` to check permissions:
 
 ```php
 class MyController extends tao_actions_SaSModule
@@ -60,38 +58,31 @@ class MyController extends tao_actions_SaSModule
 }
 ```
 
-### How to check for permission inside the endpoint implementation?
+### Check ACL internally (without annotations) in the endpoint
 
-On RDF controller, we can use a single method
+If extending `tao_actions_RdfController` we can use the method `hasWriteAccess`:
 
 ```php
 class MyController extends tao_actions_SaSModule
 {
-    /**
-     * Edit an item instance
- * 
-     * @requiresRight id READ
-     */
     public function editItem()
     {
         $item = $this->getCurrentInstance();
-
-        $itemUri = $item->getUri();
             
-        if ($this->hasWriteAccess($itemUri)) {
+        if ($this->hasWriteAccess($item->getUri())) {
             // Do something
         }
     }
 }
 ```
 
-Or using the method:
+Or we can use the `DataAccessControl` implementation directly:
 
 ```php
-use oat\tao\model\accessControl\data\DataAccessControl;
-
 $user = $this->getSession()->getUser();
+$item = $this->getCurrentInstance();
+$dataAccessControl = new \oat\tao\model\accessControl\data\DataAccessControl();
 
-$canWrite = (new DataAccessControl())->hasPrivileges($user, [$resourceId => 'WRITE']);
-$canRead = (new DataAccessControl())->hasPrivileges($user, [$resourceId => 'READ']);
+$canWrite = $dataAccessControl->hasPrivileges($user, [$item->getUri() => 'WRITE']);
+$canRead = $dataAccessControl->hasPrivileges($user, [$item->getUri() => 'READ']);
 ```
