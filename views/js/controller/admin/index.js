@@ -46,22 +46,22 @@ define([
      * The warning message shown when all managers have been removed
      * @type {String}
      */
-    var errorMsgManagePermission = __('You must have one role or user that have the manage permission on this element.');
+    const errorMsgManagePermission = __('You must have one role or user that have the manage permission on this element.');
 
     /**
      * tooltip instance that serves all methods with same tooltip data and its state
      * @type {Tooltip}
      */
-    var errorTooltip;
+    let errorTooltip;
     /**
      * Checks the managers, we need at least one activated manager.
      * @param {jQuery|Element|String} container
      * @returns {Boolean} Returns `true` if there is at least one manager in the list
      * @private
      */
-    var _checkManagers = function (container) {
-        var $managers = $(container).find('.privilege-GRANT:checked');
-        var checkOk = true;
+    const _checkManagers = function (container) {
+        const $managers = $(container).find('.privilege-GRANT:checked');
+        let checkOk = true;
 
         if (!$managers.length) {
             checkOk = false;
@@ -101,16 +101,16 @@ define([
      * @param {jQuery|Element|String} container
      * @private
      */
-    var _disableAccessOnGrant = function (container) {
-        var $container = $(container);
+    const _disableAccessOnGrant = function (container) {
+        const $container = $(container);
 
-        var $managersChecked = $container.find('.privilege-GRANT:checked').closest('tr');
-        var $cantChangeWrite = $managersChecked.find('.privilege-WRITE');
-        var $cantChangeRead = $managersChecked.find('.privilege-READ');
+        const $managersChecked = $container.find('.privilege-GRANT:checked').closest('tr');
+        const $cantChangeWrite = $managersChecked.find('.privilege-WRITE');
+        const $cantChangeRead = $managersChecked.find('.privilege-READ');
 
-        var $managers = $container.find('.privilege-GRANT').not(':checked').closest('tr');
-        var $canChangeWrite = $managers.find('.privilege-WRITE');
-        var $canChangeRead = $managers.find('.privilege-READ');
+        const $managers = $container.find('.privilege-GRANT').not(':checked').closest('tr');
+        const $canChangeWrite = $managers.find('.privilege-WRITE');
+        const $canChangeRead = $managers.find('.privilege-READ');
 
         $canChangeWrite.removeClass('disabled');
         $canChangeRead.removeClass('disabled');
@@ -127,14 +127,14 @@ define([
      * @param {jQuery|Element|String} container
      * @private
      */
-    var _disableAccessOnWrite = function (container) {
-        var $container = $(container);
+    const _disableAccessOnWrite = function (container) {
+        const $container = $(container);
 
-        var $writersChecked = $container.find('.privilege-WRITE:checked').closest('tr');
-        var $cantChangeRead = $writersChecked.find('.privilege-READ');
+        const $writersChecked = $container.find('.privilege-WRITE:checked').closest('tr');
+        const $cantChangeRead = $writersChecked.find('.privilege-READ');
 
-        var $writers = $container.find('.privilege-WRITE').not(':checked').closest('tr');
-        var $canChangeRead = $writers.find('.privilege-READ');
+        const $writers = $container.find('.privilege-WRITE').not(':checked').closest('tr');
+        const $canChangeRead = $writers.find('.privilege-READ');
 
         $canChangeRead.removeClass('disabled');
 
@@ -146,13 +146,13 @@ define([
      * @param  {DOM Element} element DOM element that triggered the function
      * @private
      */
-    var _deletePermission = function (element) {
+    const _deletePermission = function (element) {
         // 1. Get the user / role
-        var $this = $(element);
-        var $container = $this.closest('table');
-        var type = $this.data('acl-type');
-        var user = $this.data('acl-user');
-        var label = $this.data('acl-label');
+        const $this = $(element);
+        const $container = $this.closest('table');
+        const type = $this.data('acl-type');
+        const user = $this.data('acl-user');
+        const label = $this.data('acl-label');
 
         // 2. Remove it from the list
         if (!_.isEmpty(type) && !_.isEmpty(user) && !_.isEmpty(label)) {
@@ -171,8 +171,8 @@ define([
      * @returns {boolean} Returns true if the permission is already in the list
      * @private
      */
-    var _checkPermission = function (container, type, id) {
-        var $btn = $(container).find('button[data-acl-user="' + id + '"]'),
+    const _checkPermission = function (container, type, id) {
+        const $btn = $(container).find('button[data-acl-user="' + id + '"]'),
             $line = $btn.closest('tr');
 
         if ($line.length) {
@@ -191,8 +191,8 @@ define([
      * @param {String} label The label of the resource.
      * @private
      */
-    var _addPermission = function (container, type, id, label) {
-        var $container = $(container),
+    const _addPermission = function (container, type, id, label) {
+        const $container = $(container),
             $body = $container.find('tbody').first();
 
         // only add the permission if it's not already present in the list
@@ -212,8 +212,8 @@ define([
      * @param {jQuery|Element|String} container The container on which apply the listeners
      * @private
      */
-    var _installListeners = function(container) {
-        var $container = $(container);
+    const _installListeners = function(container) {
+        const $container = $(container);
         $container.on('click', '.privilege-GRANT:not(.disabled) ', function () {
             _disableAccessOnGrant($container);
         }).on('click', '.privilege-WRITE:not(.disabled) ', function () {
@@ -232,8 +232,8 @@ define([
      * @param {Function} onSelectItem - The selection callback
      * @returns {Autocompleter} Returns the instance of the autocompleter component
      */
-    var _searchFactory = function (element, appendTo, onSelectItem) {
-        var autocompleteOptions = {
+    const _searchFactory = function (element, appendTo, onSelectItem) {
+        const autocompleteOptions = {
             isProvider: true,
             preventSubmit: true,
             appendTo: appendTo,
@@ -252,12 +252,12 @@ define([
         return autocomplete(element, autocompleteOptions);
     };
 
-    var mainCtrl = {
+    const mainCtrl = {
         start: function start () {
 
-            var $container = $('.permission-container');
-            var $form = $('form', $container);
-            var $oldSubmitter = $(':submit', $form);
+            const $container = $('.permission-container');
+            const $form = $('form', $container);
+            const $oldSubmitter = $(':submit', $form);
 
             _disableAccessOnGrant('#permissions-table-users');
             _disableAccessOnGrant('#permissions-table-roles');
@@ -279,7 +279,7 @@ define([
             _installListeners('#permissions-table-roles');
 
             //find the old submitter and replace it with the new component
-            var taskCreationButton = taskCreationButtonFactory({
+            const taskCreationButton = taskCreationButtonFactory({
                 type : 'info',
                 icon : 'save',
                 title : __('Save'),
