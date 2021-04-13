@@ -74,9 +74,9 @@ define([
      * @param {jQuery|Element|String} container
      * @private
      */
-    var _preventManagerRemoval = function(container){
-        var $form = $(container).closest('form');
-        var $submitter = $(':submit', $form);
+    const _preventManagerRemoval = function (container) {
+        const $form = $(container).closest('form');
+        let $submitter = $(':submit', $form);
         if (!$submitter[0]) {
             $submitter = $('button[title=Save]', $form);
         }
