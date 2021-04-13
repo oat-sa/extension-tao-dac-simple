@@ -83,7 +83,7 @@ define([
 
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled');
-            errorTooltip = tooltip.warning($form, errorMsgManagePermission, {
+            errorTooltip = tooltip.warning($submitter, errorMsgManagePermission, {
                 placement : 'bottom',
                 trigger: "hover",
             });
