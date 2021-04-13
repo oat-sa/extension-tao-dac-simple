@@ -78,7 +78,7 @@ define([
         const $form = $(container).closest('form');
         let $submitter = $(':submit', $form);
         if (!$submitter[0]) {
-            $submitter = $('button[title=Save]', $form);
+            $submitter = $('.bottom-bar button', $form);
         }
 
         if (!_checkManagers($form)) {
