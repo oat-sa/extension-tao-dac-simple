@@ -77,10 +77,13 @@ define([
     var _preventManagerRemoval = function(container){
         var $form = $(container).closest('form');
         var $submitter = $(':submit', $form);
+        if (!$submitter[0]) {
+            $submitter = $('button[title=Save]', $form);
+        }
 
         if (!_checkManagers($form)) {
             $submitter.addClass('disabled');
-            errorTooltip = tooltip.warning($submitter, errorMsgManagePermission, {
+            errorTooltip = tooltip.warning($form, errorMsgManagePermission, {
                 placement : 'bottom',
                 trigger: "hover",
             });
