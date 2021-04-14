@@ -60,9 +60,7 @@ class PermissionsService
         core_kernel_classes_Class $class,
         array $privilegesToSet
     ): void {
-        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($class->getUri());
-
-        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
+        $addRemove = $this->strategy->normalizeRequest($this->getResourcePermissions($class), $privilegesToSet);
 
         if (empty($addRemove)) {
             return;
@@ -75,6 +73,11 @@ class PermissionsService
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
         $this->triggerEvents($addRemove, $class->getUri(), $isRecursive);
+    }
+
+    public function getResourcePermissions(core_kernel_classes_Class $class): array
+    {
+        return $this->dataBaseAccess->getResourcePermissions($class->getUri());
     }
 
     private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array

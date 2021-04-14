@@ -1,5 +1,7 @@
 <?php
 
+use oat\tao\model\TaoOntology;
+use oat\taoItems\model\user\TaoItemsRoles;
 use oat\taoDacSimple\scripts\update\Updater;
 
 /**
@@ -22,6 +24,7 @@ use oat\taoDacSimple\scripts\update\Updater;
 
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
 use oat\taoDacSimple\scripts\install\RegisterAction;
+use oat\taoDacSimple\scripts\tools\AssignPermissions;
 use oat\taoDacSimple\controller\AdminAccessController;
 use oat\taoDacSimple\scripts\uninstall\RemoveDataAccess;
 
@@ -40,7 +43,18 @@ return [
     'install' => [
         'php' => [
             SetupDataAccess::class,
-            RegisterAction::class
+            RegisterAction::class,
+            [
+                AssignPermissions::class,
+                [
+                    '--' . AssignPermissions::OPTION_CLASS, TaoOntology::CLASS_URI_ITEM,
+                    '--' . AssignPermissions::OPTION_PERMISSIONS, [
+                    TaoItemsRoles::ITEM_CLASS_NAVIGATOR => ['READ'],
+                    TaoItemsRoles::ITEM_CLASS_EDITOR => ['WRITE'],
+                ],
+                    '--' . AssignPermissions::OPTION_RECURSIVE,
+                ]
+            ]
         ],
         'rdf' => [
             __DIR__ . '/model/ontology/dac.rdf',
