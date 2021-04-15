@@ -14,7 +14,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020 (original work) Open Assessment Technologies SA;
+ * Copyright (c) 2020-2021 (original work) Open Assessment Technologies SA;
  *
  */
 
@@ -25,18 +25,25 @@ namespace oat\taoDacSimple\test\unit\model;
 use oat\generis\test\TestCase;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\PermissionProvider;
+use oat\taoDacSimple\model\RolePrivilegeRetriever;
 
 class PermissionProviderTest extends TestCase
 {
     /** @var PermissionProvider */
     private $sut;
 
+    /** @var RolePrivilegeRetriever */
+    private $userPrivilegeRetriever;
+
     public function setUp(): void
     {
-        $databaseAccess = $this->createDatabaseAccessMock();
-        $serviceLocator = $this->getServiceLocatorMock([
-            DataBaseAccess::SERVICE_ID => $databaseAccess
-        ]);
+        $this->userPrivilegeRetriever = $this->createMock(RolePrivilegeRetriever::class);
+        $serviceLocator = $this->getServiceLocatorMock(
+            [
+                DataBaseAccess::SERVICE_ID => $this->createMock(DataBaseAccess::class),
+                RolePrivilegeRetriever::class => $this->userPrivilegeRetriever,
+            ]
+        );
 
         $this->sut = new PermissionProvider();
         $this->sut->setServiceLocator($serviceLocator);
@@ -44,40 +51,11 @@ class PermissionProviderTest extends TestCase
 
     public function testGetResourceAccessData(): void
     {
-        $result = $this->sut->getResourceAccessData('id');
-        $expected = [
-            'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => ['READ', 'WRITE', 'GRANT']
-        ];
-
-        self::assertSame($expected, $result);
-    }
-
-    private function createDatabaseAccessMock(): DataBaseAccess
-    {
-        $databaseAccess = $this->createMock(DataBaseAccess::class);
-
-        $databaseAccess
-            ->expects($this->once())
-            ->method('getUsersWithPermissions')
+        $this->userPrivilegeRetriever
+            ->method('retrieveByResourceIds')
             ->with(['id'])
-            ->willReturn([
-                [
-                    'resource_id' => 'id',
-                    'user_id' => 'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole',
-                    'privilege' => 'READ'
-                ],
-                [
-                    'resource_id' => 'id',
-                    'user_id' => 'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole',
-                    'privilege' => 'WRITE'
-                ],
-                [
-                    'resource_id' => 'id',
-                    'user_id' => 'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole',
-                    'privilege' => 'GRANT'
-                ]
-            ]);
+            ->willReturn([]);
 
-        return $databaseAccess;
+        self::assertSame([], $this->sut->getResourceAccessData('id'));
     }
 }
