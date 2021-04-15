@@ -41,7 +41,7 @@ Change the `actions/structures.xml` file by adding the attribute `allowClassActi
 </structures>
 ```
 
-### Enabling ACL in an endpoint
+### Enable ACL in an endpoint
 
 Add the annotation `requiresRight` with proper `field` and `grant level` to check permissions:
 
@@ -58,7 +58,7 @@ class MyController extends tao_actions_SaSModule
 }
 ```
 
-### Check ACL internally (without annotations) in the endpoint
+### Checking ACL internally (without annotations) in the endpoint
 
 If extending `tao_actions_RdfController` we can use the method `hasWriteAccess`:
 
@@ -87,9 +87,9 @@ $canWrite = $dataAccessControl->hasPrivileges($user, [$item->getUri() => 'WRITE'
 $canRead = $dataAccessControl->hasPrivileges($user, [$item->getUri() => 'READ']);
 ```
 
-### Permissions save strategies
+## Permissions save strategies
 
-There are current the following ways of save/propagating strategies:
+There are currently the following saving/propagating permissions strategies:
 
 - [SyncPermissionsStrategy](./model/SyncPermissionsStrategy.php) (Default): Overwrites what 
   permissions existed with new ones provided.
