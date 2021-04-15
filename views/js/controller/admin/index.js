@@ -77,7 +77,7 @@ define([
     const _preventManagerRemoval = function (container) {
         const $form = $(container).closest('form');
         let $submitter = $(':submit', $form);
-        if (!$submitter[0]) {
+        if ($submitter.length === 0) {
             $submitter = $('.bottom-bar button', $form);
         }
 
