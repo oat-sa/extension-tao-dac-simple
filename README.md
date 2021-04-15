@@ -89,12 +89,12 @@ $canRead = $dataAccessControl->hasPrivileges($user, [$item->getUri() => 'READ'])
 
 ## Permissions save strategies
 
-There are currently the following saving/propagating permissions strategies:
+Currently, we have the following saving/propagating permissions strategies:
 
-- [SyncPermissionsStrategy](./model/SyncPermissionsStrategy.php) (Default): Overwrites what 
-  permissions existed with new ones provided.
-- [SavePermissionsStrategy](./model/SavePermissionsStrategy.php): Merges existing permission 
-  with new ones changes provided.
+- [SyncPermissionsStrategy](./model/SyncPermissionsStrategy.php) (Default): Overwrites existent permissions with the 
+  new ones provided by the user.
+- [SavePermissionsStrategy](./model/SavePermissionsStrategy.php): Merges existing permissions with the new ones 
+  provided by the user.
   
 **IMPORTANT**: Saving with _recursive_ option is very dangerous, cause will 
 override permissions for all subclasses and resources. 
