@@ -33,6 +33,7 @@ use oat\oatbox\service\ConfigurableService;
 use oat\oatbox\service\exception\InvalidServiceManagerException;
 use oat\oatbox\user\User;
 use oat\tao\model\TaoOntology;
+use oat\taoDacSimple\model\user\UserPrivilegeRetriever;
 
 /**
  * Simple permissible Permission model
@@ -138,19 +139,16 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
         ];
     }
 
+    /**
+     * @deprecated Use UserPrivilegeRetriever::retrieveByResourceIds()
+     */
     public function getResourceAccessData(string $resourceId): array
     {
-        /** @var DataBaseAccess $db */
-        $db = $this->getServiceLocator()->get(DataBaseAccess::SERVICE_ID);
-        $results = $db->getUsersWithPermissions([$resourceId]);
+        $this->getUserPrivilegeRetriever()->retrieveByResourceIds([$resourceId]);
+    }
 
-        $permissions = [];
-        foreach ($results as $result) {
-            $user = $result['user_id'];
-
-            $permissions[$user][] = $result['privilege'];
-        }
-
-        return $permissions;
+    private function getUserPrivilegeRetriever(): UserPrivilegeRetriever
+    {
+        return $this->getServiceLocator()->get(UserPrivilegeRetriever::class);
     }
 }
