@@ -21,12 +21,12 @@ declare(strict_types=1);
  *
  */
 
-namespace oat\taoDacSimple\model\user;
+namespace oat\taoDacSimple\model;
 
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\DataBaseAccess;
 
-class UserPrivilegeRetriever extends ConfigurableService
+class RolePrivilegeRetriever extends ConfigurableService
 {
     /**
      * Sample data to be returned:

@@ -21,15 +21,15 @@
 
 declare(strict_types=1);
 
-namespace oat\taoDacSimple\test\unit\model\user;
+namespace oat\taoDacSimple\test\unit\model;
 
 use oat\generis\test\TestCase;
 use oat\taoDacSimple\model\DataBaseAccess;
-use oat\taoDacSimple\model\user\UserPrivilegeRetriever;
+use oat\taoDacSimple\model\RolePrivilegeRetriever;
 
-class UserPrivilegeRetrieverTest extends TestCase
+class RolePrivilegeRetrieverTest extends TestCase
 {
-    /** @var UserPrivilegeRetriever */
+    /** @var RolePrivilegeRetriever */
     private $sut;
 
     /** @var DataBaseAccess */
@@ -39,22 +39,19 @@ class UserPrivilegeRetrieverTest extends TestCase
     {
         $this->databaseAccess = $this->createMock(DataBaseAccess::class);
 
-        $serviceLocator = $this->getServiceLocatorMock(
-            [
-                DataBaseAccess::SERVICE_ID => $this->databaseAccess
-            ]
+        $this->sut = new RolePrivilegeRetriever();
+        $this->sut->setServiceLocator(
+            $this->getServiceLocatorMock(
+                [
+                    DataBaseAccess::SERVICE_ID => $this->databaseAccess
+                ]
+            )
         );
-
-        $this->sut = new UserPrivilegeRetriever();
-        $this->sut->setServiceLocator($serviceLocator);
     }
 
-    public function testGetResourceAccessData(): void
+    public function testRetrieveByResourceIds(): void
     {
-        $result = $this->sut->getResourceAccessData('id');
-
         $this->databaseAccess
-            ->expects($this->once())
             ->method('getUsersWithPermissions')
             ->with(['id'])
             ->willReturn(
@@ -77,14 +74,15 @@ class UserPrivilegeRetrieverTest extends TestCase
                 ]
             );
 
-        $expected = [
-            'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => [
-                'READ',
-                'WRITE',
-                'GRANT'
-            ]
-        ];
-
-        $this->assertSame($expected, $result);
+        $this->assertSame(
+            [
+                'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => [
+                    'READ',
+                    'WRITE',
+                    'GRANT'
+                ]
+            ],
+            $this->sut->retrieveByResourceIds(['id'])
+        );
     }
 }
