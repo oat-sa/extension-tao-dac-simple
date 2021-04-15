@@ -22,7 +22,6 @@
 
 namespace oat\taoDacSimple\model;
 
-use oat\generis\model\data\permission\PermissionInterface;
 use oat\oatbox\service\ServiceManager;
 
 /**
@@ -65,10 +64,7 @@ class AdminService
      */
     public static function getUsersPermissions($resourceId)
     {
-        /** @var PermissionProvider $permissionProvider */
-        $permissionProvider = self::getServiceManager()->get(PermissionInterface::SERVICE_ID);
-
-        return $permissionProvider->getResourceAccessData($resourceId);
+        return self::getRolePrivilegeRetriever()->retrieveByResourceIds([$resourceId]);
     }
 
     /**
@@ -94,5 +90,10 @@ class AdminService
     public static function getServiceManager()
     {
         return ServiceManager::getServiceManager();
+    }
+
+    private static function getRolePrivilegeRetriever(): RolePrivilegeRetriever
+    {
+        return self::getServiceManager()->get(RolePrivilegeRetriever::class);
     }
 }

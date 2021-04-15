@@ -138,19 +138,16 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
         ];
     }
 
+    /**
+     * @deprecated Use RolePrivilegeRetriever::retrieveByResourceIds()
+     */
     public function getResourceAccessData(string $resourceId): array
     {
-        /** @var DataBaseAccess $db */
-        $db = $this->getServiceLocator()->get(DataBaseAccess::SERVICE_ID);
-        $results = $db->getUsersWithPermissions([$resourceId]);
+        return $this->getRolePrivilegeRetriever()->retrieveByResourceIds([$resourceId]);
+    }
 
-        $permissions = [];
-        foreach ($results as $result) {
-            $user = $result['user_id'];
-
-            $permissions[$user][] = $result['privilege'];
-        }
-
-        return $permissions;
+    private function getRolePrivilegeRetriever(): RolePrivilegeRetriever
+    {
+        return $this->getServiceLocator()->get(RolePrivilegeRetriever::class);
     }
 }
