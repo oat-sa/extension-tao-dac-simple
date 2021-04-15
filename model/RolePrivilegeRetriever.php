@@ -24,7 +24,6 @@ declare(strict_types=1);
 namespace oat\taoDacSimple\model;
 
 use oat\oatbox\service\ConfigurableService;
-use oat\taoDacSimple\model\DataBaseAccess;
 
 class RolePrivilegeRetriever extends ConfigurableService
 {
