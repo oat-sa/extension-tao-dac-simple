@@ -86,3 +86,27 @@ $dataAccessControl = new \oat\tao\model\accessControl\data\DataAccessControl();
 $canWrite = $dataAccessControl->hasPrivileges($user, [$item->getUri() => 'WRITE']);
 $canRead = $dataAccessControl->hasPrivileges($user, [$item->getUri() => 'READ']);
 ```
+
+### Permissions save strategies
+
+There are current the following ways of save/propagating strategies:
+
+- [SyncPermissionsStrategy](./model/SyncPermissionsStrategy.php) (Default): Overwrites what 
+  permissions existed with new ones provided.
+- [SavePermissionsStrategy](./model/SavePermissionsStrategy.php): Merges existing permission 
+  with new ones changes provided.
+  
+**IMPORTANT**: Saving with _recursive_ option is very dangerous, cause will 
+override permissions for all subclasses and resources. 
+
+The permission strategy is configured here `config/taoDacSimple/PermissionsService.conf.php`. Example:
+
+```php
+<?php
+return new oat\taoDacSimple\model\PermissionsServiceFactory(
+    [
+        'save_strategy' => 'oat\\taoDacSimple\\model\\SyncPermissionsStrategy',
+        'recursive_by_default' => false
+    ]
+);
+```
