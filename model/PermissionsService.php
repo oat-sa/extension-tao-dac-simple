@@ -62,8 +62,10 @@ class PermissionsService
         $this->saveResourcePermissions($resource, $privilegesToSet, true);
     }
 
-    private function saveResourcePermissions(core_kernel_classes_Resource $resource, array $privilegesToSet, bool $isRecursive)
-    {
+    private function saveResourcePermissions(
+        core_kernel_classes_Resource $resource,
+        array $privilegesToSet, bool $isRecursive
+    ): void {
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
         $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
 
