@@ -55,11 +55,15 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
-    public function saveResourcePermissions(
-        bool $isRecursive,
+    public function saveResourcePermissionsRecursive(
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
     ):void {
+        $this->saveResourcePermissions($resource, $privilegesToSet, true);
+    }
+
+    private function saveResourcePermissions(core_kernel_classes_Resource $resource, array $privilegesToSet, bool $isRecursive)
+    {
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
         $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
 
@@ -84,7 +88,7 @@ class PermissionsService
         core_kernel_classes_Class $class,
         array $privilegesToSet
     ): void {
-        $this->saveResourcePermissions($isRecursive, $class, $privilegesToSet);
+        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
     }
 
     private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array

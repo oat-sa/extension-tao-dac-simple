@@ -42,8 +42,7 @@ class ResourceUpdateHandler extends ConfigurableService
             $movedResource->getUri()
         ]);
 
-        $this->getPermissionService()->saveResourcePermissions(
-            true,
+        $this->getPermissionService()->saveResourcePermissionsRecursive(
             $movedResource,
             $rolePrivilegeList
         );
