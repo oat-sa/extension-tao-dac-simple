@@ -55,26 +55,42 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
-    public function savePermissions(
-        bool $isRecursive,
-        core_kernel_classes_Class $class,
+    public function saveResourcePermissionsRecursive(
+        core_kernel_classes_Resource $resource,
         array $privilegesToSet
-    ): void {
-        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($class->getUri());
+    ):void {
+        $this->saveResourcePermissions($resource, $privilegesToSet, true);
+    }
 
+    private function saveResourcePermissions(
+        core_kernel_classes_Resource $resource,
+        array $privilegesToSet, bool $isRecursive
+    ): void {
+        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
         $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
 
         if (empty($addRemove)) {
             return;
         }
 
-        $resourcesToUpdate = $this->getResourcesToUpdate($class, $isRecursive);
+        $resourcesToUpdate = $this->getResourcesToUpdate($resource, $isRecursive);
         $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
         $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
 
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $class->getUri(), $isRecursive);
+        $this->triggerEvents($addRemove, $resource->getUri(), $isRecursive);
+    }
+
+    /**
+     * @deprecated use saveResourcePermissions
+     */
+    public function savePermissions(
+        bool $isRecursive,
+        core_kernel_classes_Class $class,
+        array $privilegesToSet
+    ): void {
+        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
     }
 
     private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
@@ -151,7 +167,7 @@ class PermissionsService
     {
         $resources = [$resource];
 
-        if ($isRecursive) {
+        if ($isRecursive && $resource->isClass()) {
             return array_merge($resources, $resource->getSubClasses(true), $resource->getInstances(true));
         }
 

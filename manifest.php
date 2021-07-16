@@ -1,5 +1,6 @@
 <?php
 
+use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
 
 /**
@@ -40,7 +41,8 @@ return [
     'install' => [
         'php' => [
             SetupDataAccess::class,
-            RegisterAction::class
+            RegisterAction::class,
+            AttachEventHandler::class
         ],
         'rdf' => [
             __DIR__ . '/model/ontology/dac.rdf',
