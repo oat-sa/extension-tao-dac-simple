@@ -178,7 +178,7 @@ define([
             $line = $btn.closest('tr');
 
         if ($line.length) {
-            feedback().warning('This user is already in the list of assigned users');
+            feedback().info('This user is already in the list of assigned users');
             return true;
         }
 
