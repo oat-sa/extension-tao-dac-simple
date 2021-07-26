@@ -173,12 +173,19 @@ define([
      * @returns {boolean} Returns true if the permission is already in the list
      * @private
      */
-    const _checkPermission = function (container, type, id) {
-        const $btn = $(container).find('button[data-acl-user="' + id + '"]'),
-            $line = $btn.closest('tr');
+    const _checkPermission = function (container, type, id, label) {
+        const $btn = $(container).find('button[data-acl-user="' + id + '"]');
+        const $line = $btn.closest('tr');
+        let message;
+
+        if (container.selector === '#permissions-table-users') {
+            message = `${ label } is already in the list of users with access permissions.`;
+        } else {
+            message = `${ label } is already in the list of roles with access permissions.`;
+        }
 
         if ($line.length) {
-            $line.effect('highlight', {}, 1500);
+            feedback().info(message);
             return true;
         }
 
@@ -198,7 +205,7 @@ define([
             $body = $container.find('tbody').first();
 
         // only add the permission if it's not already present in the list
-        if (!_checkPermission($container, type, id)) {
+        if (!_checkPermission($container, type, id, label)) {
             $body.append(lineTpl({
                 type: type,
                 user: id,
