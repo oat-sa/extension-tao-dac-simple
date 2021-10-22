@@ -1,0 +1,92 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TAO 2021.10\n"
+"PO-Revision-Date: 2021-10-22T13:09:48\n"
+"Last-Translator: TAO Translation Team <translation@tao.lu>\n"
+"MIME-Version: 1.0\n"
+"Language: nb-NO\n"
+"sourceLanguage: en-US\n"
+"targetLanguage: nb-NO\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../../\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-SearchPath-0: .\n"
+
+msgid "%s classes and instances have been updated"
+msgstr "%s mapper og forekomster er oppdatert"
+
+msgid "Access control"
+msgstr "Tilgangskontroll"
+
+msgid "Access Permissions for"
+msgstr "Tilgangstillatelser for"
+
+msgid "Actions"
+msgstr "Handlinger"
+
+msgid "Add role(s)"
+msgstr "Legg til rolle(r)"
+
+msgid "Add user(s)"
+msgstr "Legg til bruker(e)"
+
+msgid "Error"
+msgstr "Feil"
+
+msgid "grant"
+msgstr "tilgangsrettighetsrolle"
+
+msgid "Name"
+msgstr "Navn"
+
+msgid "Permissions saved"
+msgstr "Tillatelser lagret"
+
+msgid "read"
+msgstr "lese"
+
+msgid "Recursive"
+msgstr "Tilbakevendende"
+
+msgid "Remove"
+msgstr "Fjern"
+
+msgid "role"
+msgstr "rolle"
+
+msgid "Roles"
+msgstr "Roller"
+
+msgid "Save"
+msgstr "Lagre"
+
+msgid "something went wrong during taoDacSimple uninstallation\n"
+""
+msgstr "noe gikk galt under taoDacSimple avinstallasjon\n"
+""
+
+msgid "taoDacSimple extension correctly uninstalled"
+msgstr "taoDacSimple -utvidelsen ble riktig avinstallert"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Unable to process your request"
+msgstr "Kan ikke behandle forespørselen din"
+
+msgid "unknown user"
+msgstr "ukjent bruker"
+
+msgid "user"
+msgstr "bruker"
+
+msgid "Users"
+msgstr "Brukere"
+
+msgid "write"
+msgstr "skrive"
+
+msgid "You must have one role or user that have the manage permission on this element."
+msgstr "Du må ha én rolle eller bruker som har administreringstillatelse for dette elementet."
+
