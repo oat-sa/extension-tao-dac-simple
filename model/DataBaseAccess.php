@@ -48,6 +48,7 @@ class DataBaseAccess extends ConfigurableService
     const COLUMN_PRIVILEGE = 'privilege';
     const TABLE_PRIVILEGES_NAME = 'data_privileges';
     const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
+    const INSERT_CHUNK_SIZE = 20000;
 
     private $persistence;
 
@@ -177,7 +178,28 @@ class DataBaseAccess extends ConfigurableService
                 }
             }
         }
-        $this->getPersistence()->insertMultiple(self::TABLE_PRIVILEGES_NAME, $insert);
+
+        $this->getLogger()->debug(
+            "Processing {count} permission inserts in {chunks} chunks",
+            [
+                'count' => count($insert),
+                'chunks' => ceil(count($insert)/self::INSERT_CHUNK_SIZE)
+            ]
+        );
+
+        foreach(array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
+            $this->getLogger()->debug(
+                "Processing chunk {index}/{total} with {items} ACL entries",
+                [
+                    'index' => $index + 1,
+                    'total' => ceil(count($insert)/self::INSERT_CHUNK_SIZE),
+                    'items' => count($batch)
+                ]
+            );
+
+            $this->getPersistence()->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
+        }
+
         foreach ($insert as $inserted) {
             $this->getEventManager()->trigger(new DacAddedEvent(
                 $inserted[self::COLUMN_USER_ID],
