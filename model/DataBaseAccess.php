@@ -23,6 +23,7 @@
 namespace oat\taoDacSimple\model;
 
 use common_persistence_SqlPersistence;
+use Doctrine\DBAL\Driver\Connection;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
@@ -408,6 +409,10 @@ class DataBaseAccess extends ConfigurableService
                 'chunks' => ceil($insertCount / self::INSERT_CHUNK_SIZE)
             ]
         );
+
+        if(empty($insert)) {
+            return;
+        }
 
         $persistence->transactional(function () use ($insert, $logger, $insertCount, $persistence) {
             foreach (array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
