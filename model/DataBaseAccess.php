@@ -165,6 +165,7 @@ class DataBaseAccess extends ConfigurableService
      */
     public function addMultiplePermissions(array $permissionData)
     {
+        $logger = $this->getLogger();
         $insert = [];
         foreach ($permissionData as $permissionItem) {
             foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
@@ -181,7 +182,7 @@ class DataBaseAccess extends ConfigurableService
         }
 
         $insertCount = count($insert);
-        $this->getLogger()->debug(
+        $logger->debug(
             'Processing {count} permission inserts in {chunks} chunks',
             [
                 'count' => count($insert),
@@ -190,7 +191,7 @@ class DataBaseAccess extends ConfigurableService
         );
 
         foreach (array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
-            $this->getLogger()->debug(
+            $logger->debug(
                 'Processing chunk {index}/{total} with {items} ACL entries',
                 [
                     'index' => $index + 1,
