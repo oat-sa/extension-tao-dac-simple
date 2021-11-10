@@ -180,20 +180,21 @@ class DataBaseAccess extends ConfigurableService
             }
         }
 
+        $insertCount = count($insert);
         $this->getLogger()->debug(
             'Processing {count} permission inserts in {chunks} chunks',
             [
                 'count' => count($insert),
-                'chunks' => ceil(count($insert)/self::INSERT_CHUNK_SIZE)
+                'chunks' => ceil($insertCount / self::INSERT_CHUNK_SIZE)
             ]
         );
 
-        foreach(array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
+        foreach (array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
             $this->getLogger()->debug(
                 'Processing chunk {index}/{total} with {items} ACL entries',
                 [
                     'index' => $index + 1,
-                    'total' => ceil(count($insert)/self::INSERT_CHUNK_SIZE),
+                    'total' => ceil($insertCount / self::INSERT_CHUNK_SIZE),
                     'items' => count($batch)
                 ]
             );
