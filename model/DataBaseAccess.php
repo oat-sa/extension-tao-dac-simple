@@ -48,7 +48,8 @@ class DataBaseAccess extends ConfigurableService
     const COLUMN_PRIVILEGE = 'privilege';
     const TABLE_PRIVILEGES_NAME = 'data_privileges';
     const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
-    const INSERT_CHUNK_SIZE = 20000;
+
+    private const INSERT_CHUNK_SIZE = 20000;
 
     private $persistence;
 
