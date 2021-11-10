@@ -29,6 +29,7 @@ use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 use oat\generis\persistence\PersistenceManager;
 use PDO;
+use Throwable;
 
 /**
  * Class to handle the storage and retrieval of permissions
@@ -157,15 +158,15 @@ class DataBaseAccess extends ConfigurableService
     }
 
     /**
-     * add batch permissions
+     * Add batch permissions
      *
      * @access public
      * @param array $permissionData
      * @return void
+     * @throws Throwable
      */
     public function addMultiplePermissions(array $permissionData)
     {
-        $logger = $this->getLogger();
         $insert = [];
         foreach ($permissionData as $permissionItem) {
             foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
@@ -181,27 +182,7 @@ class DataBaseAccess extends ConfigurableService
             }
         }
 
-        $insertCount = count($insert);
-        $logger->debug(
-            'Processing {count} permission inserts in {chunks} chunks',
-            [
-                'count' => count($insert),
-                'chunks' => ceil($insertCount / self::INSERT_CHUNK_SIZE)
-            ]
-        );
-
-        foreach (array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
-            $logger->debug(
-                'Processing chunk {index}/{total} with {items} ACL entries',
-                [
-                    'index' => $index + 1,
-                    'total' => ceil($insertCount / self::INSERT_CHUNK_SIZE),
-                    'items' => count($batch)
-                ]
-            );
-
-            $this->getPersistence()->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
-        }
+        $this->insertPermissions($insert);
 
         foreach ($insert as $inserted) {
             $this->getEventManager()->trigger(new DacAddedEvent(
@@ -409,5 +390,38 @@ class DataBaseAccess extends ConfigurableService
         foreach ($queries as $query) {
             $persistence->exec($query);
         }
+    }
+
+    /**
+     * @throws Throwable
+     */
+    private function insertPermissions(array $insert): void
+    {
+        $logger = $this->getLogger();
+        $insertCount = count($insert);
+        $persistence = $this->getPersistence();
+
+        $logger->debug(
+            'Processing {count} permission inserts in {chunks} chunks',
+            [
+                'count' => count($insert),
+                'chunks' => ceil($insertCount / self::INSERT_CHUNK_SIZE)
+            ]
+        );
+
+        $persistence->transactional(function () use ($insert, $logger, $insertCount, $persistence) {
+            foreach (array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
+                $logger->debug(
+                    'Processing chunk {index}/{total} with {items} ACL entries',
+                    [
+                        'index' => $index + 1,
+                        'total' => ceil($insertCount / self::INSERT_CHUNK_SIZE),
+                        'items' => count($batch)
+                    ]
+                );
+
+                $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
+            }
+        });
     }
 }
