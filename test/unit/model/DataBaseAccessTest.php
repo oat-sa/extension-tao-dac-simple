@@ -250,8 +250,6 @@ class DataBaseAccessTest extends TestCase
      */
     public function testAddMultiplePermissions($numEvents, $numInserts, array $permissionData)
     {
-        echo "Expecting $numInserts inserts for $numEvents events\n";
-
         $persistenceMock = $this->getPersistenceMockForSetOps($numInserts);
         $this->setPersistence($this->sut, $persistenceMock);
         $this->setEventManager($this->sut, $numEvents);
