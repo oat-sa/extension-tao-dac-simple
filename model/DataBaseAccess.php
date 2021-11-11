@@ -16,14 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2014 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
- *
- *
  */
 
 namespace oat\taoDacSimple\model;
 
 use common_persistence_SqlPersistence;
-use Doctrine\DBAL\Driver\Connection;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
@@ -410,7 +407,7 @@ class DataBaseAccess extends ConfigurableService
             ]
         );
 
-        if(empty($insert)) {
+        if (empty($insert)) {
             return;
         }
 
