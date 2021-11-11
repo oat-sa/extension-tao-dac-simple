@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014-2017 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2014-2021 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
 
 declare(strict_types=1);
@@ -23,140 +23,60 @@ declare(strict_types=1);
 namespace oat\taoDacSimple\test\unit\model;
 
 use common_persistence_SqlPersistence;
-use common_persistence_Driver;
 use core_kernel_classes_Resource;
 use oat\generis\test\TestCase;
 use oat\oatbox\event\EventManager;
 use oat\taoDacSimple\model\DataBaseAccess;
-use oat\generis\test\MockObject;
 use oat\taoDacSimple\model\event\DacAddedEvent;
-use Generator;
 use PDO;
 use PDOStatement;
+use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
+use ReflectionProperty;
 
 /**
  * Test database access
  *
  * @author Antoine Robin, <antoine.robin@vesperiagroup.com>
  * @package taodacSimple
- *
  */
 class DataBaseAccessTest extends TestCase
 {
-    //private const INSERT_CHUNK_SIZE = 20000;
-    private const INSERT_CHUNK_SIZE = 500;
+    private const INSERT_CHUNK_SIZE = 1;
 
-    /**
-     * @var DataBaseAccess
-     */
+    /** @var DataBaseAccess */
     private $sut;
 
-    private $randomPermissionSets = [];
+    /** @var common_persistence_SqlPersistence|MockObject */
+    private $persistenceMock;
 
-    private static $knownPermissionTypes = ['GRANT', 'READ', 'WRITE'];
-
-    public static function setUpBeforeClass(): void
-    {
-        self::$knownPermissionTypes = array_flip(self::$knownPermissionTypes);
-    }
+    /** @var EventManager|MockObject */
+    private $eventManager;
 
     public function setUp(): void
     {
+        $this->persistenceMock = $this->createMock(common_persistence_SqlPersistence::class);
+        $this->eventManager = $this->createMock(EventManager::class);
+
         $this->sut = new DataBaseAccess();
         $this->sut->setLogger(new NullLogger());
         $this->sut->setInsertChunkSize(self::INSERT_CHUNK_SIZE);
+        $this->sut->setServiceLocator(
+            $this->getServiceLocatorMock(
+                [
+                    EventManager::SERVICE_ID => $this->eventManager
+                ]
+            )
+        );
 
-        $this->randomPermissionSets = [
-            [array_rand(self::$knownPermissionTypes, 1)],
-            array_rand(self::$knownPermissionTypes, 2),
-            array_rand(self::$knownPermissionTypes, 3)
-        ];
+        $reflector = new ReflectionProperty(DataBaseAccess::class, 'persistence');
+        $reflector->setAccessible(true);
+        $reflector->setValue($this->sut, $this->persistenceMock);
     }
 
     public function tearDown(): void
     {
         $this->sut = null;
-        $this->randomPermissionSets = [];
-    }
-
-    /**
-     * Return a persistence Mock object supporting query()
-     * @return MockObject
-     */
-    public function getPersistenceMockForGetOps($queryParams, $queryFixture, $resultFixture)
-    {
-        $statementMock = $this->createMock(PDOStatement::class);
-        $statementMock->expects($this->once())
-            ->method('fetchAll')
-            ->with(PDO::FETCH_ASSOC)
-            ->willReturn($resultFixture);
-
-        $driverMock = $this->getMockForAbstractClass(
-            common_persistence_Driver::class,
-            [],
-            'common_persistence_Driver_Mock',
-            false,
-            false,
-            true,
-            ['query'],
-            false
-        );
-
-
-        $persistenceMock = $this->createMock(common_persistence_SqlPersistence::class);
-        $persistenceMock
-            ->method('getDriver')
-            ->with([], $driverMock)
-            ->willReturn($driverMock);
-
-        $persistenceMock
-            ->method('query')
-            ->with($queryFixture, $queryParams)
-            ->willReturn($statementMock);
-
-        return $persistenceMock;
-    }
-
-    /**
-     * Return a persistence Mock object supporting transactional() & insertMultiple()
-     * @return MockObject
-     */
-    public function getPersistenceMockForSetOps(int $numInsertMultipleCalls)
-    {
-        $driverMock = $this->getMockForAbstractClass(
-            common_persistence_Driver::class,
-            [],
-            'common_persistence_Driver_Mock',
-            false,
-            false,
-            true,
-            ['insertMultiple'],
-            false
-        );
-
-        $persistenceMock = $this->createMock(common_persistence_SqlPersistence::class);
-        $persistenceMock
-            ->method('getDriver')
-            ->with([], $driverMock)
-            ->willReturn($driverMock);
-
-        $persistenceMock
-            ->expects($this->exactly($numInsertMultipleCalls))
-            ->method('insertMultiple')
-            ->with(DataBaseAccess::TABLE_PRIVILEGES_NAME, self::anything())
-            ->willReturnCallback(function ($tableName, array $data, array $types = []) {
-                return count($data);
-            });
-
-        $persistenceMock
-            ->expects($this->exactly($numInsertMultipleCalls > 0 ? 1 : 0))
-            ->method('transactional')
-            ->willReturnCallback(function (callable $closure) {
-                $closure();
-            });
-
-        return $persistenceMock;
     }
 
     /**
@@ -174,30 +94,37 @@ class DataBaseAccessTest extends TestCase
     /**
      * @dataProvider resourceIdsProvider
      * @preserveGlobalState disable
-     * @param $resourceIds
      */
     public function testGetUsersWithPermissions($resourceIds)
     {
-        $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
-        $queryFixture = 'SELECT ' . DataBaseAccess::COLUMN_RESOURCE_ID . ', ' . DataBaseAccess::COLUMN_USER_ID . ', '
-            . DataBaseAccess::COLUMN_PRIVILEGE . ' FROM ' . DataBaseAccess::TABLE_PRIVILEGES_NAME
-            . " WHERE resource_id IN ($inQuery)";
+        $queryFixture = sprintf(
+            'SELECT %s, %s, %s FROM %s WHERE resource_id IN (%s)',
+            DataBaseAccess::COLUMN_RESOURCE_ID,
+            DataBaseAccess::COLUMN_USER_ID,
+            DataBaseAccess::COLUMN_PRIVILEGE,
+            DataBaseAccess::TABLE_PRIVILEGES_NAME,
+            implode(',', array_fill(0, count($resourceIds), '?'))
+        );
 
         $resultFixture = [
             ['fixture']
         ];
 
-        $persistenceMock = $this->getPersistenceMockForGetOps($resourceIds, $queryFixture, $resultFixture);
+        $statementMock = $this->createMock(PDOStatement::class);
+        $statementMock->expects($this->once())
+            ->method('fetchAll')
+            ->with(PDO::FETCH_ASSOC)
+            ->willReturn($resultFixture);
 
-        $this->setPersistence($this->sut, $persistenceMock);
+        $this->persistenceMock
+            ->method('query')
+            ->with($queryFixture, $resourceIds)
+            ->willReturn($statementMock);
 
         $this->assertSame($resultFixture, $this->sut->getUsersWithPermissions($resourceIds));
     }
 
-    /**
-     * @return array
-     */
-    public function getPermissionProvider()
+    public function getPermissionProvider(): array
     {
         return [
             [[1, 2, 3], [1, 2, 3]],
@@ -206,23 +133,17 @@ class DataBaseAccessTest extends TestCase
     }
 
     /**
-     * Get the permissions a user has on a list of resources
      * @dataProvider getPermissionProvider
-     *
-     * @access public
-     * @param array $userIds
-     * @param array $resourceIds
      */
     public function testGetPermissions(array $userIds, array $resourceIds)
     {
-        // Get privileges for a user/roles and a resource
-        //
-        $params = array_merge($resourceIds, $userIds);
-        $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
-        $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
-        $cols = implode(', ', [DataBaseAccess::COLUMN_RESOURCE_ID, DataBaseAccess::COLUMN_PRIVILEGE]);
-        $query = "SELECT {$cols} FROM " . DataBaseAccess::TABLE_PRIVILEGES_NAME
-            . " WHERE resource_id IN ({$inQueryResource}) AND user_id IN ({$inQueryUser})";
+        $query = sprintf(
+            'SELECT %s FROM %s WHERE resource_id IN (%s) AND user_id IN (%s)',
+            implode(', ', [DataBaseAccess::COLUMN_RESOURCE_ID, DataBaseAccess::COLUMN_PRIVILEGE]),
+            DataBaseAccess::TABLE_PRIVILEGES_NAME,
+            implode(',', array_fill(0, count($resourceIds), '?')),
+            implode(',', array_fill(0, count($userIds), '?'))
+        );
 
         $fetchResultFixture = [
             ['resource_id' => 1, 'privilege' => 'open'],
@@ -237,27 +158,50 @@ class DataBaseAccessTest extends TestCase
             3 => ['create', 'delete']
         ];
 
-        $persistenceMock = $this->getPersistenceMockForGetOps($params, $query, $fetchResultFixture);
-        $this->setPersistence($this->sut, $persistenceMock);
+        $statementMock = $this->createMock(PDOStatement::class);
+        $statementMock->expects($this->once())
+            ->method('fetchAll')
+            ->with(PDO::FETCH_ASSOC)
+            ->willReturn($fetchResultFixture);
+
+        $this->persistenceMock
+            ->method('query')
+            ->with($query, array_merge($resourceIds, $userIds))
+            ->willReturn($statementMock);
 
         $this->assertEquals($resultFixture, $this->sut->getPermissions($userIds, $resourceIds));
         $this->assertEquals([], $this->sut->getPermissions($userIds, []));
     }
 
     /**
-     * @dataProvider addMultiplePermissionsBasicScenariosDataProvider
-     * @dataProvider addMultiplePermissionsBoundaryValues
+     * @dataProvider addMultiplePermissionsDataProvider
      */
-    public function testAddMultiplePermissions($numEvents, $numInserts, array $permissionData)
+    public function testAddMultiplePermissions(int $numEvents, int $numInserts, array $permissionData): void
     {
-        $persistenceMock = $this->getPersistenceMockForSetOps($numInserts);
-        $this->setPersistence($this->sut, $persistenceMock);
-        $this->setEventManager($this->sut, $numEvents);
+        $this->persistenceMock
+            ->expects($this->exactly($numInserts))
+            ->method('insertMultiple')
+            ->with(DataBaseAccess::TABLE_PRIVILEGES_NAME, self::anything())
+            ->willReturnCallback(function ($tableName, array $data, array $types = []) {
+                return count($data);
+            });
+
+        $this->persistenceMock
+            ->expects($this->exactly($numInserts > 0 ? 1 : 0))
+            ->method('transactional')
+            ->willReturnCallback(function (callable $closure) {
+                $closure();
+            });
+
+        $this->eventManager
+            ->expects($this->exactly($numEvents))
+            ->method('trigger')
+            ->with($this->isInstanceOf(DacAddedEvent::class));
 
         $this->sut->addMultiplePermissions($permissionData);
     }
 
-    public function addMultiplePermissionsBasicScenariosDataProvider(): array
+    public function addMultiplePermissionsDataProvider(): array
     {
         return [
             'Empty arrays don\'t result in events nor queries' => [
@@ -277,7 +221,7 @@ class DataBaseAccessTest extends TestCase
             ],
             '3 permissions: One resource, single user' => [
                 'numEvents' => 3,
-                'numInserts' => 1,
+                'numInserts' => 3,
                 'permissionData' => [
                     [
                         'resource' => $this->getResourceMock('123'),
@@ -289,89 +233,18 @@ class DataBaseAccessTest extends TestCase
             ],
             '6 permissions: One resource, two users' => [
                 'numEvents' => 6,
-                'numInserts' => 1,
+                'numInserts' => 6,
                 'permissionData' => [
                     [
-                        'resource' => $this->getResourceMock('123'),
+                        'resource' => $this->getResourceMock('456'),
                         'permissions' => [
                             123 => ['GRANT', 'READ', 'WRITE'],
-                            456 => ['GRANT', 'READ', 'WRITE']
+                            456 => ['GRANT', 'WRITE', 'READ']
                         ]
                     ]
                 ]
             ]
         ];
-    }
-
-    public function addMultiplePermissionsBoundaryValues(): Generator
-    {
-        // Should produce 1, 1 & 2 queries
-        $sizes = range(self::INSERT_CHUNK_SIZE - 1, self::INSERT_CHUNK_SIZE + 1);
-
-        $resourceId = 100;
-        foreach ($sizes as $numPermissions) {
-            yield $this->getMultiplePermissionsScenario($resourceId, $numPermissions);
-            $resourceId++;
-        }
-
-        // Should produce 2, 2 & 3 queries
-        $sizes = range((self::INSERT_CHUNK_SIZE * 2) - 1, (self::INSERT_CHUNK_SIZE * 2) + 1);
-
-        $resourceId = 200;
-        foreach ($sizes as $numPermissions) {
-            yield $this->getMultiplePermissionsScenario($resourceId, $numPermissions);
-            $resourceId++;
-        }
-    }
-
-    private function getMultiplePermissionsScenario(int $resourceId, int $numPermissions): array
-    {
-        // A single event and row is generated per user, resource and permission
-
-        return [
-            'numEvents' => $numPermissions,
-            'numInserts' => (int) ceil($numPermissions / self::INSERT_CHUNK_SIZE),
-            'permissionData' => [
-                [
-                    'resource' => $this->getResourceMock((string)($resourceId)),
-                    'permissions' => $this->getPermissionsArrayGenerator($numPermissions)
-                ]
-            ],
-        ];
-    }
-
-    private function getPermissionsArrayGenerator(int $numPermissions): Generator
-    {
-        $uid = 1;
-
-        for ($i = 0; $i < $numPermissions; $i++) {
-            // Using a reference to an existing array avoids the memory overhead for
-            // creating an array copy per permission
-            yield [$uid => &$this->randomPermissionSets[$i % 3]];
-            $uid++;
-        }
-    }
-
-    private function setPersistence(DataBaseAccess $instance, $persistenceMock)
-    {
-        $reflector = new \ReflectionProperty(get_class($instance), 'persistence');
-        $reflector->setAccessible(true);
-        $reflector->setValue($instance, $persistenceMock);
-    }
-
-    private function setEventManager(DataBaseAccess $instance, int $numTriggeredEvents)
-    {
-        $eventManager = $this->createMock(EventManager::class);
-        $eventManager
-            ->expects($this->exactly($numTriggeredEvents))
-            ->method('trigger')
-            ->with($this->isInstanceOf(DacAddedEvent::class));
-
-        $locator = $this->getServiceLocatorMock([
-            EventManager::SERVICE_ID => $eventManager
-        ]);
-
-        $instance->setServiceManager($locator);
     }
 
     private function getResourceMock(string $id): core_kernel_classes_Resource

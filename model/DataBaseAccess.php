@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2014-2021 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
 
 namespace oat\taoDacSimple\model;
@@ -37,7 +37,6 @@ use Throwable;
  */
 class DataBaseAccess extends ConfigurableService
 {
-
     const SERVICE_ID = 'taoDacSimple/DataBaseAccess';
 
     const OPTION_PERSISTENCE = 'persistence';
