@@ -48,10 +48,14 @@ class DataBaseAccess extends ConfigurableService
     const TABLE_PRIVILEGES_NAME = 'data_privileges';
     const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
 
-    private const INSERT_CHUNK_SIZE = 20000;
+    private $insertChunkSize = 20000;
 
     private $persistence;
 
+    public function setInsertChunkSize(int $size): void
+    {
+        $this->insertChunkSize = $size;
+    }
 
     /**
      * @return EventManager
@@ -403,7 +407,7 @@ class DataBaseAccess extends ConfigurableService
             'Processing {count} permission inserts in {chunks} chunks',
             [
                 'count' => count($insert),
-                'chunks' => ceil($insertCount / self::INSERT_CHUNK_SIZE)
+                'chunks' => ceil($insertCount / $this->insertChunkSize)
             ]
         );
 
@@ -412,12 +416,12 @@ class DataBaseAccess extends ConfigurableService
         }
 
         $persistence->transactional(function () use ($insert, $logger, $insertCount, $persistence) {
-            foreach (array_chunk($insert, self::INSERT_CHUNK_SIZE) as $index => $batch) {
+            foreach (array_chunk($insert, $this->insertChunkSize) as $index => $batch) {
                 $logger->debug(
                     'Processing chunk {index}/{total} with {items} ACL entries',
                     [
                         'index' => $index + 1,
-                        'total' => ceil($insertCount / self::INSERT_CHUNK_SIZE),
+                        'total' => ceil($insertCount / $this->insertChunkSize),
                         'items' => count($batch)
                     ]
                 );

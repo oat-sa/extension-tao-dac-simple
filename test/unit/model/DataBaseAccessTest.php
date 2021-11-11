@@ -44,7 +44,8 @@ use Psr\Log\NullLogger;
  */
 class DataBaseAccessTest extends TestCase
 {
-    private const INSERT_CHUNK_SIZE = 20000;
+    //private const INSERT_CHUNK_SIZE = 20000;
+    private const INSERT_CHUNK_SIZE = 500;
 
     /**
      * @var DataBaseAccess
@@ -64,6 +65,7 @@ class DataBaseAccessTest extends TestCase
     {
         $this->sut = new DataBaseAccess();
         $this->sut->setLogger(new NullLogger());
+        $this->sut->setInsertChunkSize(self::INSERT_CHUNK_SIZE);
 
         $this->randomPermissionSets = [
             [array_rand(self::$knownPermissionTypes, 1)],
@@ -243,10 +245,8 @@ class DataBaseAccessTest extends TestCase
     }
 
     /**
-     * @dataProvider addMultiplePermissionsEmptyScenariosDataProvider
      * @dataProvider addMultiplePermissionsBasicScenariosDataProvider
-     * @dataProvider addMultiplePermissionsBoundaryValues1
-     * @dataProvider addMultiplePermissionsBoundaryValues2
+     * @dataProvider addMultiplePermissionsBoundaryValues
      */
     public function testAddMultiplePermissions($numEvents, $numInserts, array $permissionData)
     {
@@ -257,7 +257,7 @@ class DataBaseAccessTest extends TestCase
         $this->sut->addMultiplePermissions($permissionData);
     }
 
-    public function addMultiplePermissionsEmptyScenariosDataProvider(): array
+    public function addMultiplePermissionsBasicScenariosDataProvider(): array
     {
         return [
             'Empty arrays don\'t result in events nor queries' => [
@@ -274,13 +274,7 @@ class DataBaseAccessTest extends TestCase
                         'permissions' => []
                     ]
                 ]
-            ]
-        ];
-    }
-
-    public function addMultiplePermissionsBasicScenariosDataProvider(): array
-    {
-        return [
+            ],
             '3 permissions: One resource, single user' => [
                 'numEvents' => 3,
                 'numInserts' => 1,
@@ -309,8 +303,9 @@ class DataBaseAccessTest extends TestCase
         ];
     }
 
-    public function addMultiplePermissionsBoundaryValues1(): \Generator
+    public function addMultiplePermissionsBoundaryValues(): Generator
     {
+        // Should produce 1, 1 & 2 queries
         $sizes = range(self::INSERT_CHUNK_SIZE - 1, self::INSERT_CHUNK_SIZE + 1);
 
         $resourceId = 100;
@@ -318,10 +313,8 @@ class DataBaseAccessTest extends TestCase
             yield $this->getMultiplePermissionsScenario($resourceId, $numPermissions);
             $resourceId++;
         }
-    }
 
-    public function addMultiplePermissionsBoundaryValues2(): \Generator
-    {
+        // Should produce 2, 2 & 3 queries
         $sizes = range((self::INSERT_CHUNK_SIZE * 2) - 1, (self::INSERT_CHUNK_SIZE * 2) + 1);
 
         $resourceId = 200;
@@ -353,7 +346,7 @@ class DataBaseAccessTest extends TestCase
 
         for ($i = 0; $i < $numPermissions; $i++) {
             // Using a reference to an existing array avoids the memory overhead for
-            // creating an array copy per permission (saves up to 30MB)
+            // creating an array copy per permission
             yield [$uid => &$this->randomPermissionSets[$i % 3]];
             $uid++;
         }
