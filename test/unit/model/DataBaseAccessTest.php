@@ -138,8 +138,9 @@ class DataBaseAccessTest extends TestCase
     public function testGetPermissions(array $userIds, array $resourceIds)
     {
         $query = sprintf(
-            'SELECT %s FROM %s WHERE resource_id IN (%s) AND user_id IN (%s)',
-            implode(', ', [DataBaseAccess::COLUMN_RESOURCE_ID, DataBaseAccess::COLUMN_PRIVILEGE]),
+            'SELECT %s, %s FROM %s WHERE resource_id IN (%s) AND user_id IN (%s)',
+            DataBaseAccess::COLUMN_RESOURCE_ID,
+            DataBaseAccess::COLUMN_PRIVILEGE,
             DataBaseAccess::TABLE_PRIVILEGES_NAME,
             implode(',', array_fill(0, count($resourceIds), '?')),
             implode(',', array_fill(0, count($userIds), '?'))
