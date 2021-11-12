@@ -74,11 +74,6 @@ class DataBaseAccessTest extends TestCase
         $reflector->setValue($this->sut, $this->persistenceMock);
     }
 
-    public function tearDown(): void
-    {
-        $this->sut = null;
-    }
-
     /**
      * @return array
      */
