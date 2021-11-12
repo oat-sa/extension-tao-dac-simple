@@ -37,15 +37,15 @@ use Throwable;
  */
 class DataBaseAccess extends ConfigurableService
 {
-    const SERVICE_ID = 'taoDacSimple/DataBaseAccess';
+    public const SERVICE_ID = 'taoDacSimple/DataBaseAccess';
 
-    const OPTION_PERSISTENCE = 'persistence';
+    public const OPTION_PERSISTENCE = 'persistence';
 
-    const COLUMN_USER_ID = 'user_id';
-    const COLUMN_RESOURCE_ID = 'resource_id';
-    const COLUMN_PRIVILEGE = 'privilege';
-    const TABLE_PRIVILEGES_NAME = 'data_privileges';
-    const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
+    public const COLUMN_USER_ID = 'user_id';
+    public const COLUMN_RESOURCE_ID = 'resource_id';
+    public const COLUMN_PRIVILEGE = 'privilege';
+    public const TABLE_PRIVILEGES_NAME = 'data_privileges';
+    public const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
 
     private $insertChunkSize = 20000;
 
