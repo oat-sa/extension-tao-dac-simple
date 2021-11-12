@@ -398,21 +398,13 @@ class DataBaseAccess extends ConfigurableService
      */
     private function insertPermissions(array $insert): void
     {
-        $logger = $this->getLogger();
-        $insertCount = count($insert);
-        $persistence = $this->getPersistence();
-
-        $logger->debug(
-            'Processing {count} permission inserts in {chunks} chunks',
-            [
-                'count' => count($insert),
-                'chunks' => ceil($insertCount / $this->insertChunkSize)
-            ]
-        );
-
         if (empty($insert)) {
             return;
         }
+        
+        $logger = $this->getLogger();
+        $insertCount = count($insert);
+        $persistence = $this->getPersistence();
 
         $persistence->transactional(function () use ($insert, $logger, $insertCount, $persistence) {
             foreach (array_chunk($insert, $this->insertChunkSize) as $index => $batch) {
