@@ -65,9 +65,10 @@ class DataBaseAccess extends ConfigurableService
     }
 
     /**
-     * We can know which users have a privilege on a resource
-     * @param array $resourceIds
-     * @return array list of users
+     * Retrieve info on users having privileges on a set of resources
+     *
+     * @param array $resourceIds IDs of resources to fetch privileges for
+     * @return array A list of rows containing resource ID, user ID and privilege name
      */
     public function getUsersWithPermissions($resourceIds)
     {
@@ -81,6 +82,7 @@ class DataBaseAccess extends ConfigurableService
             self::COLUMN_RESOURCE_ID,
             $inQuery
         );
+
         return $this->fetchQuery($query, $resourceIds);
     }
 
@@ -92,13 +94,13 @@ class DataBaseAccess extends ConfigurableService
      * @param array $resourceIds
      * @return array
      */
-    public function getPermissions($userIds, array $resourceIds)
+    public function getPermissions(array $userIds, array $resourceIds): array
     {
-        // permission request for empty resources must return an empty array
+        // Permissions for an empty set of resources must be an empty array
         if (!count($resourceIds)) {
             return [];
         }
-        // get privileges for a user/roles and a resource
+
         $inQueryResource = implode(',', array_fill(0, count($resourceIds), '?'));
         $inQueryUser = implode(',', array_fill(0, count($userIds), '?'));
         $query = sprintf(
@@ -126,17 +128,19 @@ class DataBaseAccess extends ConfigurableService
 
     public function getResourcesPermissions(array $resourceIds)
     {
-        //If resource doesn't have permission don't return null
-        $returnValue = array_fill_keys($resourceIds, []);
-        $results = $this->getUsersWithPermissions($resourceIds);
-        foreach ($results as $result) {
-            $returnValue[$result[self::COLUMN_RESOURCE_ID]][$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
+        // Return an empty array for resources not having permissions data
+        $grants = array_fill_keys($resourceIds, []);
+
+        foreach ($this->getUsersWithPermissions($resourceIds) as $entry) {
+            $grants[$entry[self::COLUMN_RESOURCE_ID]][$entry[self::COLUMN_USER_ID]][]
+                = $entry[self::COLUMN_PRIVILEGE];
         }
-        return $returnValue;
+
+        return $grants;
     }
 
     /**
-     * add permissions of a user to a resource
+     * Add permissions of a user to a resource
      *
      * @access public
      * @param string $user
@@ -147,14 +151,24 @@ class DataBaseAccess extends ConfigurableService
      */
     public function addPermissions($user, $resourceId, $rights)
     {
+        // Add an ACL item for each user URI, resource ID and privilege combination
         foreach ($rights as $privilege) {
-            // add a line with user URI, resource Id and privilege
             $this->getPersistence()->insert(
                 self::TABLE_PRIVILEGES_NAME,
-                [self::COLUMN_USER_ID => $user, self::COLUMN_RESOURCE_ID => $resourceId, self::COLUMN_PRIVILEGE => $privilege]
+                [
+                    self::COLUMN_USER_ID => $user,
+                    self::COLUMN_RESOURCE_ID => $resourceId,
+                    self::COLUMN_PRIVILEGE => $privilege
+                ]
             );
         }
-        $this->getEventManager()->trigger(new DacAddedEvent($user, $resourceId, (array)$rights));
+
+        $this->getEventManager()->trigger(new DacAddedEvent(
+            $user,
+            $resourceId,
+            (array)$rights
+        ));
+
         return true;
     }
 
@@ -203,7 +217,7 @@ class DataBaseAccess extends ConfigurableService
      */
     public function getResourcePermissions($resourceId)
     {
-        // get privileges for a user/roles and a resource
+        $grants = [];
         $query = sprintf(
             'SELECT %s, %s FROM %s WHERE %s = ?',
             self::COLUMN_USER_ID,
@@ -212,11 +226,11 @@ class DataBaseAccess extends ConfigurableService
             self::COLUMN_RESOURCE_ID
         );
 
-        $results = $this->fetchQuery($query, [$resourceId]);
-        foreach ($results as $result) {
-            $returnValue[$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
+        foreach ($this->fetchQuery($query, [$resourceId]) as $entry) {
+            $grants[$entry[self::COLUMN_USER_ID]][] = $entry[self::COLUMN_PRIVILEGE];
         }
-        return $returnValue ?? [];
+
+        return $grants;
     }
 
     /**
@@ -240,15 +254,21 @@ class DataBaseAccess extends ConfigurableService
             $inQueryPrivilege,
             self::COLUMN_USER_ID
         );
+
         $params = array_merge([$resourceId], array_values($rights), [$user]);
         $this->getPersistence()->exec($query, $params);
-        $this->getEventManager()->trigger(new DacRemovedEvent($user, $resourceId, $rights));
+
+        $this->getEventManager()->trigger(new DacRemovedEvent(
+            $user,
+            $resourceId,
+            $rights
+        ));
 
         return true;
     }
 
     /**
-     * remove batch permissions
+     * Remove batch permissions
      *
      * @access public
      * @param array $data
@@ -261,9 +281,17 @@ class DataBaseAccess extends ConfigurableService
         foreach ($data as $permissionItem) {
             foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
                 if (!empty($privilegeIds)) {
-                    $groupedRemove[$userId][implode($privilegeIds)]['resources'][] = $permissionItem['resource']->getUri();
-                    $groupedRemove[$userId][implode($privilegeIds)]['privileges'] = $privilegeIds;
-                    $eventsData[] = ['userId' => $userId, 'resourceId' => $permissionItem['resource']->getUri(), 'privileges' => $privilegeIds];
+                    $idString = implode($privilegeIds);
+                    $resource = &$permissionItem['resource'];
+
+                    $groupedRemove[$userId][$idString]['resources'][] = $resource->getUri();
+                    $groupedRemove[$userId][$idString]['privileges'] = $privilegeIds;
+
+                    $eventsData[] = [
+                        'userId' => $userId,
+                        'resourceId' => $resource->getUri(),
+                        'privileges' => $privilegeIds
+                    ];
                 }
             }
         }
@@ -280,12 +308,23 @@ class DataBaseAccess extends ConfigurableService
                     $inQueryPrivilege,
                     self::COLUMN_USER_ID
                 );
-                $params = array_merge(array_values($permissions['resources']), array_values($permissions['privileges']), [$userId]);
+
+                $params = array_merge(
+                    array_values($permissions['resources']),
+                    array_values($permissions['privileges']),
+                    [$userId]
+                );
+
                 $this->getPersistence()->exec($query, $params);
             }
         }
+
         foreach ($eventsData as $eventData) {
-            $this->getEventManager()->trigger(new DacRemovedEvent($eventData['userId'], $eventData['resourceId'], $eventData['privileges']));
+            $this->getEventManager()->trigger(new DacRemovedEvent(
+                $eventData['userId'],
+                $eventData['resourceId'],
+                $eventData['privileges']
+            ));
         }
     }
 
@@ -401,7 +440,7 @@ class DataBaseAccess extends ConfigurableService
         if (empty($insert)) {
             return;
         }
-        
+
         $logger = $this->getLogger();
         $insertCount = count($insert);
         $persistence = $this->getPersistence();
