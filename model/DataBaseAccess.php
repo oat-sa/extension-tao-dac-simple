@@ -279,10 +279,10 @@ class DataBaseAccess extends ConfigurableService
         $groupedRemove = [];
         $eventsData = [];
         foreach ($data as $permissionItem) {
+            $resource = &$permissionItem['resource'];
             foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
                 if (!empty($privilegeIds)) {
                     $idString = implode($privilegeIds);
-                    $resource = &$permissionItem['resource'];
 
                     $groupedRemove[$userId][$idString]['resources'][] = $resource->getUri();
                     $groupedRemove[$userId][$idString]['privileges'] = $privilegeIds;
