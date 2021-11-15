@@ -118,10 +118,9 @@ class ResourceUpdateHandlerTest extends TestCase
 
         $this->permissionsServiceMock
             ->expects($this->once())
-            ->method('saveResourcePermissions')
+            ->method('saveResourcePermissionsRecursive')
             ->with(
-                true,
-                $this->resourceMock,
+                $this->eventMock->getMovedResource(),
                 [
                     'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => [
                         'GRANT',
@@ -132,6 +131,5 @@ class ResourceUpdateHandlerTest extends TestCase
             );
 
         $this->subject->catchResourceUpdated($this->eventMock);
-
     }
 }
