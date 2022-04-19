@@ -110,3 +110,4 @@ return new oat\taoDacSimple\model\PermissionsServiceFactory(
     ]
 );
 ```
+
