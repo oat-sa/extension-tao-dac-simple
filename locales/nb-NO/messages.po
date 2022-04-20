@@ -17,10 +17,10 @@ msgid "%s classes and instances have been updated"
 msgstr "%s mapper og forekomster er oppdatert"
 
 msgid "Access control"
-msgstr "Tilgangskontroll"
+msgstr "Tilgangsstyring"
 
 msgid "Access Permissions for"
-msgstr "Tilgangstillatelser for"
+msgstr "Tilganger for"
 
 msgid "Actions"
 msgstr "Handlinger"
@@ -35,7 +35,7 @@ msgid "Error"
 msgstr "Feil"
 
 msgid "grant"
-msgstr "tilgangsrettighetsrolle"
+msgstr "gi tilganger"
 
 msgid "Name"
 msgstr "Navn"
