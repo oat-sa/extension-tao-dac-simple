@@ -1,5 +1,6 @@
 <?php
 
+use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
 
@@ -18,7 +19,7 @@ use oat\taoDacSimple\scripts\update\Updater;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014-2020 (original work) Open Assessment Technologies SA;
+ * Copyright (c) 2014-2022 (original work) Open Assessment Technologies SA;
  */
 
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
@@ -63,5 +64,8 @@ return [
 
         #BASE URL (usually the domain root)
         'BASE_URL' => ROOT_URL . 'taoDacSimple/',
+    ],
+    'containerServiceProviders' => [
+        CopyServiceProvider::class
     ]
 ];
