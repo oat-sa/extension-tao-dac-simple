@@ -24,12 +24,20 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\test\unit\model\Copy\Service;
 
+use core_kernel_classes_Resource;
 use oat\taoDacSimple\model\Copy\Service\DacSimplePermissionCopier;
 use oat\taoDacSimple\model\DataBaseAccess;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class DacSimplePermissionCopierTest extends TestCase
 {
+    /** @var DacSimplePermissionCopier */
+    private $sut;
+
+    /** @var DataBaseAccess|MockObject */
+    private $dataBaseAccess;
+
     public function setUp(): void
     {
         $this->dataBaseAccess = $this->createMock(DataBaseAccess::class);
@@ -38,7 +46,60 @@ class DacSimplePermissionCopierTest extends TestCase
 
     public function testCopy(): void
     {
-        //@TODO Finish tests
-        $this->markTestIncomplete();
+        $from = $this->createMock(core_kernel_classes_Resource::class);
+        $from->method('getUri')
+            ->willReturn('fromUri');
+
+        $to = $this->createMock(core_kernel_classes_Resource::class);
+        $to->method('getUri')
+            ->willReturn('toUri');
+
+        $this->dataBaseAccess
+            ->expects($this->once())
+            ->method('removeAllPermissions')
+            ->with(
+                [
+                    'toUri'
+                ]
+            );
+
+        $this->dataBaseAccess
+            ->expects($this->once())
+            ->method('getResourcePermissions')
+            ->with('fromUri')
+            ->willReturn(
+                [
+                    'user1' => [
+                        'WRITE'
+                    ],
+                    'user2' => [
+                        'READ'
+                    ]
+                ]
+            );
+
+        $this->dataBaseAccess
+            ->expects($this->at(2))
+            ->method('addPermissions')
+            ->with(
+                'user1',
+                'toUri',
+                [
+                    'WRITE'
+                ]
+            );
+
+        $this->dataBaseAccess
+            ->expects($this->at(3))
+            ->method('addPermissions')
+            ->with(
+                'user2',
+                'toUri',
+                [
+                    'READ'
+                ]
+            );
+
+        $this->sut->copy($from, $to);
     }
 }
