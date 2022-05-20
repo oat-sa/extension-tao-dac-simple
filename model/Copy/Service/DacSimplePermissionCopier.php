@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,14 +20,16 @@ declare(strict_types=1);
  * @author Gabriel Felipe Soares <gabriel.felipe.soares@taotesting.com>
  */
 
+declare(strict_types=1);
+
 namespace oat\taoDacSimple\model\Copy\Service;
 
+use Psr\Log\LoggerInterface;
 use core_kernel_classes_Resource;
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\tao\model\resources\Contract\PermissionCopierInterface;
 
-// [] @TODO Create proper interface on tao-core
-// [] @TODO By composition inject this service on tao-core default copier
-class DacSimplePermissionCopier
+class DacSimplePermissionCopier implements PermissionCopierInterface
 {
     /** @var DataBaseAccess */
     private $dataBaseAccess;
@@ -42,11 +42,12 @@ class DacSimplePermissionCopier
     public function copy(
         core_kernel_classes_Resource $from,
         core_kernel_classes_Resource $to
-    ): core_kernel_classes_Resource {
+    ): void {
         $permissions = $this->dataBaseAccess->getResourcePermissions($from->getUri());
+        $this->dataBaseAccess->removeAllPermissions([$to->getUri()]);
 
         foreach ($permissions as $userId => $rights) {
-            $this->dataBaseAccess->addPermissions($userId, $to->getUri(), [$rights]);
+            $this->dataBaseAccess->addPermissions($userId, $to->getUri(), $rights);
         }
     }
 }

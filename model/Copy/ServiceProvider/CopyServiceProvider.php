@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,8 +20,12 @@ declare(strict_types=1);
  * @author Gabriel Felipe Soares <gabriel.felipe.soares@taotesting.com>
  */
 
+declare(strict_types=1);
+
 namespace oat\taoDacSimple\model\Copy\ServiceProvider;
 
+use oat\tao\model\resources\Service\ClassCopier;
+use oat\tao\model\resources\Service\InstanceCopier;
 use oat\generis\model\DependencyInjection\ContainerServiceProviderInterface;
 use oat\taoDacSimple\model\Copy\Service\DacSimplePermissionCopier;
 use oat\taoDacSimple\model\DataBaseAccess;
@@ -37,10 +39,29 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
     {
         $services = $configurator->services();
 
-        $services->set(DacSimplePermissionCopier::class, DacSimplePermissionCopier::class)
+        $services
+            ->set(DacSimplePermissionCopier::class, DacSimplePermissionCopier::class)
             ->args(
                 [
                     service(DataBaseAccess::SERVICE_ID),
+                ]
+            );
+
+        $services
+            ->get(ClassCopier::class . '::ITEMS')
+            ->call(
+                'withPermissionCopier',
+                [
+                    service(DacSimplePermissionCopier::class),
+                ]
+            );
+
+        $services
+            ->get(InstanceCopier::class . '::ITEMS')
+            ->call(
+                'withPermissionCopier',
+                [
+                    service(DacSimplePermissionCopier::class),
                 ]
             );
     }

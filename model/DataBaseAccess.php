@@ -348,7 +348,7 @@ class DataBaseAccess extends ConfigurableService
 
         $this->getPersistence()->exec($query, $resourceIds);
         foreach ($resourceIds as $resourceId) {
-            $this->getEventManager()->trigger(new DacRemovedEvent('-', $resourceId, '-'));
+            $this->getEventManager()->trigger(new DacRemovedEvent('-', $resourceId, ['-']));
         }
         return true;
     }
