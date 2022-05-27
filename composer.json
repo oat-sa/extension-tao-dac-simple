@@ -23,7 +23,7 @@
         "php": ">=7.1",
         "oat-sa/oatbox-extension-installer": "~1.1||dev-master",
         "oat-sa/generis": ">=14.0.0",
-        "oat-sa/tao-core": "dev-feature/adf-1031/copy-dac-simple-permissions as 50.13.0",
+        "oat-sa/tao-core": ">=50.15.0",
         "oat-sa/extension-tao-backoffice": ">=6.0.0",
         "oat-sa/extension-tao-item": ">=11.29.0"
     },
