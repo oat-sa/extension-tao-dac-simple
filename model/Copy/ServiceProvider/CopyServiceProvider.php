@@ -66,9 +66,7 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
                 ]
             );
 
-        // Is a recent version of MediaManager installed?
-        //
-        if (interface_exists(TaoMediaOntology::class)) {
+        if ($this->isMediaManagerInstalled()) {
             $services
                 ->get(ClassCopier::class . '::ASSETS')
                 ->call(
@@ -87,5 +85,10 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
                     ]
                 );
         }
+    }
+
+    private function isMediaManagerInstalled(): bool
+    {
+        return interface_exists(TaoMediaOntology::class);
     }
 }
