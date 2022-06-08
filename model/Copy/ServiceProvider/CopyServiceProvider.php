@@ -29,6 +29,7 @@ use oat\tao\model\resources\Service\InstanceCopier;
 use oat\generis\model\DependencyInjection\ContainerServiceProviderInterface;
 use oat\taoDacSimple\model\Copy\Service\DacSimplePermissionCopier;
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\taoMediaManager\model\TaoMediaOntology;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -64,5 +65,30 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
                     service(DacSimplePermissionCopier::class),
                 ]
             );
+
+        if ($this->isMediaManagerInstalled()) {
+            $services
+                ->get(ClassCopier::class . '::ASSETS')
+                ->call(
+                    'withPermissionCopier',
+                    [
+                        service(DacSimplePermissionCopier::class),
+                    ]
+                );
+
+            $services
+                ->get(InstanceCopier::class . '::ASSETS')
+                ->call(
+                    'withPermissionCopier',
+                    [
+                        service(DacSimplePermissionCopier::class),
+                    ]
+                );
+        }
+    }
+
+    private function isMediaManagerInstalled(): bool
+    {
+        return interface_exists(TaoMediaOntology::class);
     }
 }
