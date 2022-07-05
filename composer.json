@@ -20,7 +20,6 @@
     },
     "minimum-stability": "dev",
     "require": {
-        "php": ">=7.1",
         "oat-sa/oatbox-extension-installer": "~1.1||dev-master",
         "oat-sa/generis": ">=14.0.0",
         "oat-sa/tao-core": ">=50.15.0",
