@@ -141,7 +141,7 @@ class PermissionsService
 
     private function removeDuplicatedActions(array $addActions): array
     {
-        foreach($addActions as &$action) {
+        foreach ($addActions as &$action) {
             foreach ($action['permissions'] as $userId => &$grants) {
                 $grants = array_unique($grants);
             }
