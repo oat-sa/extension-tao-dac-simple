@@ -132,9 +132,22 @@ class PermissionsService
         if(!empty($actions['remove'])){
             $this->dataBaseAccess->removeMultiplePermissions($actions['remove']);
         }
-        if(!empty($actions['add'])){
-            $this->dataBaseAccess->addMultiplePermissions($actions['add']);
+        if(!empty($actions['add'])) {
+            $this->dataBaseAccess->addMultiplePermissions(
+                $this->removeDuplicatedActions($actions['add'])
+            );
         }
+    }
+
+    private function removeDuplicatedActions(array $addActions): array
+    {
+        foreach($addActions as &$action) {
+            foreach ($action['permissions'] as $userId => &$grants) {
+                $grants = array_unique($grants);
+            }
+        }
+
+        return $addActions;
     }
 
     private function dryRemove(array $remove, core_kernel_classes_Resource $resource, array &$resultPermissions): void
