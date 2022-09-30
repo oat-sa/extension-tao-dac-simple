@@ -57,7 +57,7 @@ class PermissionsService
     public function saveResourcePermissionsRecursive(
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
-    ):void {
+    ): void {
         $this->saveResourcePermissions($resource, $privilegesToSet, true);
     }
 
@@ -160,10 +160,10 @@ class PermissionsService
 
     private function wetRun(array $actions): void
     {
-        if(!empty($actions['remove'])){
+        if (!empty($actions['remove'])) {
             $this->dataBaseAccess->removeMultiplePermissions($actions['remove']);
         }
-        if(!empty($actions['add'])){
+        if (!empty($actions['add'])) {
             $this->dataBaseAccess->addMultiplePermissions($actions['add']);
         }
     }
@@ -277,21 +277,27 @@ class PermissionsService
 
     private function debug(string $format, ...$va_args): void
     {
-        $this->getLogger()->debug(self::class .': '. vsprintf($format, $va_args));
+        $this->getLogger()->debug(
+            self::class . ': ' . vsprintf($format, $va_args)
+        );
     }
 
     private function logActions(string $what, $actions): void
     {
         $this->debug(
             "{$what}=%s",
-            implode(',', array_map(
-                function($r) {
-                    return var_export([
-                        'resource'  => $r['resource']->getUri(),
-                        'permissions' => $r['permissions'],
-                    ], true);
-                },
-                $actions[$what]))
+            implode(
+                ',',
+                array_map(
+                    function ($r) {
+                        return var_export([
+                            'resource'  => $r['resource']->getUri(),
+                            'permissions' => $r['permissions'],
+                        ], true);
+                    },
+                    $actions[$what]
+                )
+            )
         );
     }
 
@@ -302,7 +308,9 @@ class PermissionsService
             implode(
                 ', ',
                 array_map(
-                    function($r) { return $r->getUri(); },
+                    function ($r) {
+                        return $r->getUri();
+                    },
                     $resourcesToUpdate
                 )
             )
