@@ -71,22 +71,19 @@ class PermissionsService
         bool $isRecursive
     ): void {
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
-        $deltaPermissions = $this->strategy->normalizeRequest(
-            $currentPrivileges,
-            $privilegesToSet
-        );
+        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
 
-        if (empty($deltaPermissions)) {
+        if (empty($addRemove)) {
             return;
         }
 
         $resourcesToUpdate = $this->getResourcesToUpdate($resource, $isRecursive);
         $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
-        $actions = $this->getActions($resourcesToUpdate, $permissionsList, $deltaPermissions);
+        $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
 
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($deltaPermissions, $resource->getUri(), $isRecursive);
+        $this->triggerEvents($addRemove, $resource->getUri(), $isRecursive);
     }
 
     public function savePermissions(
