@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,9 +15,11 @@ declare(strict_types=1);
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020 (original work) Open Assessment Technologies SA;
+ * Copyright (c) 2020-2022 (original work) Open Assessment Technologies SA;
  *
  */
+
+declare(strict_types=1);
 
 namespace oat\taoDacSimple\test\unit\model;
 
@@ -34,6 +34,7 @@ use oat\taoDacSimple\model\event\DacRootAddedEvent;
 use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsStrategyInterface;
+use Psr\Log\LoggerInterface;
 
 class PermissionsServiceTest extends TestCase
 {
@@ -68,6 +69,8 @@ class PermissionsServiceTest extends TestCase
             $this->strategy,
             $this->eventManager
         );
+
+        $this->service->setLogger($this->createMock(LoggerInterface::class));
     }
 
     public function testSaveAddPermissions(): void
@@ -249,6 +252,56 @@ class PermissionsServiceTest extends TestCase
         $resource = $this->createMock(core_kernel_classes_Class::class);
 
         $this->service->savePermissions(false, $resource, []);
+    }
+
+    public function testDuplicatedAddPermissionsAreNotPersistedTwice(): void
+    {
+        $resource = $this->createMock(core_kernel_classes_Class::class);
+        $resource->method('getUri')->willReturn('res1');
+
+        // Mock a strategy returning a duplicated permission
+        //
+        $this->strategy
+             ->method('normalizeRequest')
+             ->willReturn([
+                'add' => [
+                    'uid1' => ['GRANT', 'READ', 'WRITE', 'GRANT']
+                ]
+            ]);
+
+        $this->strategy->method('getPermissionsToAdd')->willReturn([
+            'uid1' => ['GRANT', 'READ', 'WRITE', 'GRANT']
+        ]);
+
+        // No duplicate reaches the DB call
+        //
+        $this->databaseAccess
+             ->expects($this->once())
+             ->method('addMultiplePermissions')
+             ->with([
+                 [
+                     'resource' => $resource,
+                     'permissions' => [
+                         'uid1' => ['GRANT', 'READ', 'WRITE']
+                     ]
+                 ]
+             ]);
+
+        $this->databaseAccess
+             ->expects($this->never())
+             ->method('removeMultiplePermissions');
+
+        $this->databaseAccess
+             ->method('getResourcesPermissions')
+             ->willReturn(['res1' => []]);
+
+        $this->service->savePermissions(
+            false,
+            $resource,
+            [
+                'uid1' => ['GRANT', 'READ', 'WRITE']
+            ]
+        );
     }
 
     private function mockTriggeredEvents(string $resourceId, string $userId, bool $isRecursive): void
