@@ -141,11 +141,8 @@ class PermissionsService
         }
     }
 
-    private function dryRemove(
-        array $remove,
-        core_kernel_classes_Resource $resource,
-        array &$resultPermissions
-    ): void {
+    private function dryRemove(array $remove, core_kernel_classes_Resource $resource, array &$resultPermissions): void
+    {
         foreach ($remove as $userToRemove => $permissionToRemove) {
             if (!empty($resultPermissions[$resource->getUri()][$userToRemove])) {
                 $resultPermissions[$resource->getUri()][$userToRemove] = array_diff(
@@ -156,11 +153,8 @@ class PermissionsService
         }
     }
 
-    private function dryAdd(
-        array $add,
-        core_kernel_classes_Resource $resource,
-        array &$resultPermissions
-    ): void {
+    private function dryAdd(array $add, core_kernel_classes_Resource $resource, array &$resultPermissions): void
+    {
         foreach ($add as $userToAdd => $permissionToAdd) {
             if (empty($resultPermissions[$resource->getUri()][$userToAdd])) {
                 $resultPermissions[$resource->getUri()][$userToAdd] = $permissionToAdd;
