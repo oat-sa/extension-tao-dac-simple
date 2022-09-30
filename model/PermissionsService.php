@@ -78,46 +78,23 @@ class PermissionsService
         array $privilegesToSet,
         bool $isRecursive
     ): void {
-        $resourceURI = $resource->getUri();
-
-        $this->debug(
-            'saveResourcePermissions resource=%s recursive=%s: privileges=%s',
-            $resourceURI,
-            $isRecursive ? 'true' : 'false',
-            var_export($privilegesToSet, true)
-        );
-
-        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resourceURI);
+        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
         $deltaPermissions = $this->strategy->normalizeRequest(
             $currentPrivileges,
             $privilegesToSet
         );
 
         if (empty($deltaPermissions)) {
-            $this->debug('No changes needed in ACLs for %s', $resourceURI);
             return;
         }
-
-        $this->debug(
-            'Permissions to add or remove: %s',
-            var_export($deltaPermissions, true)
-        );
 
         $resourcesToUpdate = $this->getResourcesToUpdate($resource, $isRecursive);
         $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
         $actions = $this->getActions($resourcesToUpdate, $permissionsList, $deltaPermissions);
 
-        $this->logResourcesToUpdate($resourcesToUpdate);
-        $this->debug(
-            'Current resources\' permissions: %s',
-            var_export($permissionsList, true)
-        );
-        $this->logActions('remove', $actions);
-        $this->logActions('add', $actions);
-
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($deltaPermissions, $resourceURI, $isRecursive);
+        $this->triggerEvents($deltaPermissions, $resource->getUri(), $isRecursive);
     }
 
     private function getActions(
@@ -317,48 +294,6 @@ class PermissionsService
                 $resourceId,
                 $addRemove,
                 $isRecursive
-            )
-        );
-    }
-
-    private function debug(string $format, ...$va_args): void
-    {
-        $this->getLogger()->debug(
-            self::class . ': ' . vsprintf($format, $va_args)
-        );
-    }
-
-    private function logActions(string $what, $actions): void
-    {
-        $this->debug(
-            "{$what}=%s",
-            implode(
-                ',',
-                array_map(
-                    function ($r) {
-                        return var_export([
-                            'resource'  => $r['resource']->getUri(),
-                            'permissions' => $r['permissions'],
-                        ], true);
-                    },
-                    $actions[$what]
-                )
-            )
-        );
-    }
-
-    private function logResourcesToUpdate(array $resourcesToUpdate): void
-    {
-        $this->debug(
-            'Resources to be updated: %s',
-            implode(
-                ', ',
-                array_map(
-                    function ($r) {
-                        return $r->getUri();
-                    },
-                    $resourcesToUpdate
-                )
             )
         );
     }
