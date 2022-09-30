@@ -90,15 +90,9 @@ class PermissionsService
         $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
     }
 
-    private function getActions(
-        array $resourcesToUpdate,
-        array $permissionsList,
-        array $addRemove
-    ): array {
-        $actions = [
-            'remove' => [],
-            'add' => []
-        ];
+    private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
+    {
+        $actions = ['remove' => [], 'add' => []];
 
         foreach ($resourcesToUpdate as $resource) {
             $currentPrivileges = $permissionsList[$resource->getUri()];
