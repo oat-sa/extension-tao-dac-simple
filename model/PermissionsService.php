@@ -54,6 +54,17 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
+    /**
+     * @deprecated use saveResourcePermissionsRecursive
+     */
+    public function savePermissions(
+        bool $isRecursive,
+        core_kernel_classes_Class $class,
+        array $privilegesToSet
+    ): void {
+        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
+    }
+
     public function saveResourcePermissionsRecursive(
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
@@ -106,17 +117,6 @@ class PermissionsService
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
         $this->triggerEvents($deltaPermissions, $resourceURI, $isRecursive);
-    }
-
-    /**
-     * @deprecated use saveResourcePermissions
-     */
-    public function savePermissions(
-        bool $isRecursive,
-        core_kernel_classes_Class $class,
-        array $privilegesToSet
-    ): void {
-        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
     }
 
     private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
