@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,9 +15,10 @@ declare(strict_types=1);
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020 (original work) Open Assessment Technologies SA;
- *
+ * Copyright (c) 2020-2022 (original work) Open Assessment Technologies SA.
  */
+
+declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
@@ -64,12 +63,28 @@ class PermissionsService
 
     private function saveResourcePermissions(
         core_kernel_classes_Resource $resource,
-        array $privilegesToSet, bool $isRecursive
+        array $privilegesToSet,
+        bool $isRecursive
     ): void {
-        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
-        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
+        $resourceURI = $resource->getUri();
+
+        $this->debug(
+            'saveResourcePermissions resource=%s recursive=%s: privileges=%s',
+            $resourceURI,
+            $isRecursive ? 'true' : 'false',
+            var_export($privilegesToSet, true)
+        );
+
+        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resourceURI);
+        $addRemove = $this->strategy->normalizeRequest(
+            $currentPrivileges,
+            $privilegesToSet
+        );
+
+        $this->debug('addRemove: %s', var_export($addRemove, true));
 
         if (empty($addRemove)) {
+            $this->debug('Nothing to do');
             return;
         }
 
@@ -77,9 +92,14 @@ class PermissionsService
         $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
         $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
 
+        $this->logResourcesToUpdate($resourcesToUpdate);
+        $this->debug('permissionsList=%s', var_export($permissionsList, true));
+        $this->logActions('remove', $actions);
+        $this->logActions('add', $actions);
+
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $resource->getUri(), $isRecursive);
+        $this->triggerEvents($addRemove, $resourceURI, $isRecursive);
     }
 
     /**
@@ -109,6 +129,17 @@ class PermissionsService
             if ($add) {
                 $actions['add'][] = ['permissions' => $add, 'resource' => $resource];
             }
+        }
+
+        // It is likely the strategy has not checked for duplicate permissions,
+        // so we need to remove them here.
+        //
+        foreach ($actions['add'] as &$entry) {
+            $entry['permissions'] = array_unique($entry['permissions']);
+        }
+
+        foreach ($actions['remove'] as &$entry) {
+            $entry['permissions'] = array_unique($entry['permissions']);
         }
 
         return $actions;
@@ -216,7 +247,6 @@ class PermissionsService
      * @param string $resourceId
      * @param bool $isRecursive
      */
-
     private function triggerEvents(array $addRemove, string $resourceId, bool $isRecursive): void
     {
         if (!empty($addRemove['add'])) {
@@ -241,6 +271,40 @@ class PermissionsService
                 $resourceId,
                 $addRemove,
                 $isRecursive
+            )
+        );
+    }
+
+    private function debug(string $format, ...$va_args): void
+    {
+        $this->getLogger()->debug(self::class .': '. vsprintf($format, $va_args));
+    }
+
+    private function logActions(string $what, $actions): void
+    {
+        $this->debug(
+            "{$what}=%s",
+            implode(',', array_map(
+                function($r) {
+                    return var_export([
+                        'resource'  => $r['resource']->getUri(),
+                        'permissions' => $r['permissions'],
+                    ], true);
+                },
+                $actions[$what]))
+        );
+    }
+
+    private function logResourcesToUpdate(array $resourcesToUpdate): void
+    {
+        $this->debug(
+            'resourcesToUpdate: %s',
+            implode(
+                ', ',
+                array_map(
+                    function($r) { return $r->getUri(); },
+                    $resourcesToUpdate
+                )
             )
         );
     }
