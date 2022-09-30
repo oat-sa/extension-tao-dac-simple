@@ -42,20 +42,19 @@ class RolePrivilegeRetriever extends ConfigurableService
      */
     public function retrieveByResourceIds(array $resourceIds): array
     {
-        $rows = $this->getDataBaseAccess()->getUsersWithPermissions(
-            $resourceIds
-        );
+        $results = $this->getDataBaseAccess()
+            ->getUsersWithPermissions($resourceIds);
 
         $permissions = [];
 
-        foreach ($rows as $row) {
-            $user = $row['user_id'];
+        foreach ($results as $result) {
+            $user = $result['user_id'];
 
             if (!isset($permissions[$user])) {
                 $permissions[$user] = [];
             }
 
-            $permissions[$user][] = $row['privilege'];
+            $permissions[$user][] = $result['privilege'];
         }
 
         return $this->removeDuplicatedEntries($permissions);
