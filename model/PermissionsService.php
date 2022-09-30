@@ -247,20 +247,17 @@ class PermissionsService
      * @param string $resourceId
      * @param bool $isRecursive
      */
+
     private function triggerEvents(array $addRemove, string $resourceId, bool $isRecursive): void
     {
         if (!empty($addRemove['add'])) {
             foreach ($addRemove['add'] as $userId => $rights) {
-                $this->eventManager->trigger(
-                    new DacRootAddedEvent($userId, $resourceId, (array)$rights)
-                );
+                $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, (array)$rights));
             }
         }
         if (!empty($addRemove['remove'])) {
             foreach ($addRemove['remove'] as $userId => $rights) {
-                $this->eventManager->trigger(
-                    new DacRootRemovedEvent($userId, $resourceId, (array)$rights)
-                );
+                $this->eventManager->trigger(new DacRootRemovedEvent($userId, $resourceId, (array)$rights));
             }
         }
         $this->eventManager->trigger(
