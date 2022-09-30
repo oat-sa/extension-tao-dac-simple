@@ -99,18 +99,12 @@ class PermissionsService
 
             $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
             if (!empty($remove)) {
-                $actions['remove'][] = [
-                    'permissions' => $remove,
-                    'resource' => $resource
-                ];
+                $actions['remove'][] = ['permissions' => $remove, 'resource' => $resource];
             }
 
             $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
             if (!empty($add)) {
-                $actions['add'][] = [
-                    'permissions' => $add,
-                    'resource' => $resource
-                ];
+                $actions['add'][] = ['permissions' => $add, 'resource' => $resource];
             }
         }
 
