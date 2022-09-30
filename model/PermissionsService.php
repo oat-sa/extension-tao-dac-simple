@@ -35,10 +35,6 @@ class PermissionsService
 {
     use LoggerAwareTrait;
 
-    private const ACTIONS_ADD = 'add';
-
-    private const ACTIONS_REMOVE = 'remove';
-
     /** @var DataBaseAccess */
     private $dataBaseAccess;
 
