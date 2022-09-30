@@ -58,14 +58,6 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
-    public function savePermissions(
-        bool $isRecursive,
-        core_kernel_classes_Class $class,
-        array $privilegesToSet
-    ): void {
-        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
-    }
-
     public function saveResourcePermissionsRecursive(
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
@@ -97,14 +89,22 @@ class PermissionsService
         $this->triggerEvents($deltaPermissions, $resource->getUri(), $isRecursive);
     }
 
+    public function savePermissions(
+        bool $isRecursive,
+        core_kernel_classes_Class $class,
+        array $privilegesToSet
+    ): void {
+        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
+    }
+
     private function getActions(
         array $resourcesToUpdate,
         array $permissionsList,
         array $addRemove
     ): array {
         $actions = [
-            self::ACTIONS_REMOVE => [],
-            self::ACTIONS_ADD => []
+            'remove' => [],
+            'add' => []
         ];
 
         foreach ($resourcesToUpdate as $resource) {
@@ -112,7 +112,7 @@ class PermissionsService
 
             $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
             if (!empty($remove)) {
-                $actions[self::ACTIONS_REMOVE][] = [
+                $actions['remove'][] = [
                     'permissions' => $remove,
                     'resource' => $resource
                 ];
@@ -120,7 +120,7 @@ class PermissionsService
 
             $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
             if (!empty($add)) {
-                $actions[self::ACTIONS_ADD][] = [
+                $actions['add'][] = [
                     'permissions' => $add,
                     'resource' => $resource
                 ];
@@ -134,10 +134,10 @@ class PermissionsService
     {
         $resultPermissions = $permissionsList;
 
-        foreach ($actions[self::ACTIONS_REMOVE] as $item) {
+        foreach ($actions['remove'] as $item) {
             $this->dryRemove($item['permissions'], $item['resource'], $resultPermissions);
         }
-        foreach ($actions[self::ACTIONS_ADD] as $item) {
+        foreach ($actions['add'] as $item) {
             $this->dryAdd($item['permissions'], $item['resource'], $resultPermissions);
         }
 
@@ -146,10 +146,10 @@ class PermissionsService
 
     private function wetRun(array $actions): void
     {
-        if (!empty($actions[self::ACTIONS_REMOVE])) {
+        if (!empty($actions['remove'])) {
             $this->dataBaseAccess->removeMultiplePermissions($actions['remove']);
         }
-        if (!empty($actions[self::ACTIONS_ADD])) {
+        if (!empty($actions['add'])) {
             $this->dataBaseAccess->addMultiplePermissions($actions['add']);
         }
     }
@@ -196,13 +196,13 @@ class PermissionsService
      */
     private function deduplicateActions(array $actions): array
     {
-        foreach ($actions[self::ACTIONS_ADD] as &$entry) {
+        foreach ($actions['add'] as &$entry) {
             foreach ($entry['permissions'] as $_uid => &$grants) {
                 $grants = array_unique($grants);
             }
         }
 
-        foreach ($actions[self::ACTIONS_REMOVE] as &$entry) {
+        foreach ($actions['remove'] as &$entry) {
             foreach ($entry['permissions'] as $_uid => &$grants) {
                 $grants = array_unique($grants);
             }
@@ -268,15 +268,15 @@ class PermissionsService
      */
     private function triggerEvents(array $addRemove, string $resourceId, bool $isRecursive): void
     {
-        if (!empty($addRemove[self::ACTIONS_ADD])) {
-            foreach ($addRemove[self::ACTIONS_ADD] as $userId => $rights) {
+        if (!empty($addRemove['add'])) {
+            foreach ($addRemove['add'] as $userId => $rights) {
                 $this->eventManager->trigger(
                     new DacRootAddedEvent($userId, $resourceId, (array)$rights)
                 );
             }
         }
-        if (!empty($addRemove[self::ACTIONS_REMOVE])) {
-            foreach ($addRemove[self::ACTIONS_REMOVE] as $userId => $rights) {
+        if (!empty($addRemove['remove'])) {
+            foreach ($addRemove['remove'] as $userId => $rights) {
                 $this->eventManager->trigger(
                     new DacRootRemovedEvent($userId, $resourceId, (array)$rights)
                 );
@@ -284,8 +284,8 @@ class PermissionsService
         }
         $this->eventManager->trigger(
             new DacAffectedUsersEvent(
-                array_keys($addRemove[self::ACTIONS_ADD] ?? []),
-                array_keys($addRemove[self::ACTIONS_REMOVE] ?? [])
+                array_keys($addRemove['add'] ?? []),
+                array_keys($addRemove['remove'] ?? [])
             )
         );
 
