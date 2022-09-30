@@ -76,30 +76,36 @@ class PermissionsService
         );
 
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resourceURI);
-        $addRemove = $this->strategy->normalizeRequest(
+        $deltaPermissions = $this->strategy->normalizeRequest(
             $currentPrivileges,
             $privilegesToSet
         );
 
-        $this->debug('addRemove: %s', var_export($addRemove, true));
-
-        if (empty($addRemove)) {
-            $this->debug('Nothing to do');
+        if (empty($deltaPermissions)) {
+            $this->debug('No changes needed in ACLs for %s', $resourceURI);
             return;
         }
 
+        $this->debug(
+            'Permissions to add or remove: %s',
+            var_export($deltaPermissions, true)
+        );
+
         $resourcesToUpdate = $this->getResourcesToUpdate($resource, $isRecursive);
         $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
-        $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
+        $actions = $this->getActions($resourcesToUpdate, $permissionsList, $deltaPermissions);
 
         $this->logResourcesToUpdate($resourcesToUpdate);
-        $this->debug('permissionsList=%s', var_export($permissionsList, true));
+        $this->debug(
+            'Current resources\' permissions: %s',
+            var_export($permissionsList, true)
+        );
         $this->logActions('remove', $actions);
         $this->logActions('add', $actions);
 
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $resourceURI, $isRecursive);
+        $this->triggerEvents($deltaPermissions, $resourceURI, $isRecursive);
     }
 
     /**
@@ -304,7 +310,7 @@ class PermissionsService
     private function logResourcesToUpdate(array $resourcesToUpdate): void
     {
         $this->debug(
-            'resourcesToUpdate: %s',
+            'Resources to be updated: %s',
             implode(
                 ', ',
                 array_map(

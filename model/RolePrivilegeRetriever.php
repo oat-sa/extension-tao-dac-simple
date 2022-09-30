@@ -66,15 +66,6 @@ class RolePrivilegeRetriever extends ConfigurableService
             $entries = array_unique($entries);
         }
 
-        \common_Logger::singleton()->logError(
-            sprintf(
-                '%s -- Retrieved permissions for %s: %s',
-                __FUNCTION__,
-                implode(',', $resourceIds),
-                var_export($permissions, true)
-            )
-        );
-
         return $permissions;
     }
 
