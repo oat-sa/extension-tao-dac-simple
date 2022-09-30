@@ -54,9 +54,6 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
-    /**
-     * @deprecated use saveResourcePermissionsRecursive
-     */
     public function savePermissions(
         bool $isRecursive,
         core_kernel_classes_Class $class,
