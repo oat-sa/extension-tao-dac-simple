@@ -42,26 +42,33 @@ class RolePrivilegeRetriever extends ConfigurableService
      */
     public function retrieveByResourceIds(array $resourceIds): array
     {
-        $results = $this->getDataBaseAccess()
-            ->getUsersWithPermissions($resourceIds);
+        $rows = $this->getDataBaseAccess()->getUsersWithPermissions(
+            $resourceIds
+        );
 
         $permissions = [];
 
-        foreach ($results as $result) {
-            $user = $result['user_id'];
+        foreach ($rows as $row) {
+            $user = $row['user_id'];
 
             if (!isset($permissions[$user])) {
                 $permissions[$user] = [];
             }
 
-            $permissions[$user][] = $result['privilege'];
+            $permissions[$user][] = $row['privilege'];
         }
 
-        // Remove possible duplicates caused by merging ACLs from different
-        // resources: We picked the ACLs and merged them together by user (i.e.
-        // discarding the resource ID), but we've not checked for duplicates, so
-        // we need to filter them here.
-        //
+        return $this->removeDuplicatedEntries($permissions);
+    }
+
+    /**
+     * Remove possible duplicates that may come from merging ACLs from different
+     * resources after they've been merged together by user.
+     *
+     * @param string[][] $permissions
+     */
+    private function removeDuplicatedEntries(array $permissions)
+    {
         foreach ($permissions as $_roleURI => &$entries) {
             $entries = array_unique($entries);
         }
