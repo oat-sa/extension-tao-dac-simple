@@ -161,24 +161,16 @@ class PermissionsService
         }
     }
 
-    /**
-     * It is likely the strategy has not checked for duplicate permissions;
-     * therefore, we need an additional step to remove them.
-     *
-     * A duplicate ACL may surface in cases the same grant exists for a user
-     * both at the class and item level, and is needed here in case the strategy
-     * used doesn't handle them on its own.
-     */
     private function deduplicateActions(array $actions): array
     {
         foreach ($actions['add'] as &$entry) {
-            foreach ($entry['permissions'] as $_uid => &$grants) {
+            foreach ($entry['permissions'] as &$grants) {
                 $grants = array_unique($grants);
             }
         }
 
         foreach ($actions['remove'] as &$entry) {
-            foreach ($entry['permissions'] as $_uid => &$grants) {
+            foreach ($entry['permissions'] as &$grants) {
                 $grants = array_unique($grants);
             }
         }
