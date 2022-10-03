@@ -60,15 +60,9 @@ class RolePrivilegeRetriever extends ConfigurableService
         return $this->removeDuplicatedEntries($permissions);
     }
 
-    /**
-     * Remove possible duplicates that may come from merging ACLs from different
-     * resources after they've been merged together by user.
-     *
-     * @param string[][] $permissions
-     */
     private function removeDuplicatedEntries(array $permissions)
     {
-        foreach ($permissions as $_roleURI => &$entries) {
+        foreach ($permissions as $roleUri => &$entries) {
             $entries = array_unique($entries);
         }
 
