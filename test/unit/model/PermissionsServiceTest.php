@@ -259,8 +259,6 @@ class PermissionsServiceTest extends TestCase
         $resource = $this->createMock(core_kernel_classes_Class::class);
         $resource->method('getUri')->willReturn('res1');
 
-        // Mock a strategy returning a duplicated permission
-        //
         $this->strategy
              ->method('normalizeRequest')
              ->willReturn([
@@ -273,8 +271,6 @@ class PermissionsServiceTest extends TestCase
             'uid1' => ['GRANT', 'READ', 'WRITE', 'GRANT']
         ]);
 
-        // No duplicate reaches the DB call
-        //
         $this->databaseAccess
              ->expects($this->once())
              ->method('addMultiplePermissions')
