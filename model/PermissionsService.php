@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,9 +15,10 @@ declare(strict_types=1);
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020 (original work) Open Assessment Technologies SA;
- *
+ * Copyright (c) 2020-2022 (original work) Open Assessment Technologies SA.
  */
+
+declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
@@ -58,13 +57,14 @@ class PermissionsService
     public function saveResourcePermissionsRecursive(
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
-    ):void {
+    ): void {
         $this->saveResourcePermissions($resource, $privilegesToSet, true);
     }
 
     private function saveResourcePermissions(
         core_kernel_classes_Resource $resource,
-        array $privilegesToSet, bool $isRecursive
+        array $privilegesToSet,
+        bool $isRecursive
     ): void {
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
         $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
@@ -82,9 +82,6 @@ class PermissionsService
         $this->triggerEvents($addRemove, $resource->getUri(), $isRecursive);
     }
 
-    /**
-     * @deprecated use saveResourcePermissions
-     */
     public function savePermissions(
         bool $isRecursive,
         core_kernel_classes_Class $class,
@@ -111,8 +108,9 @@ class PermissionsService
             }
         }
 
-        return $actions;
+        return $this->deduplicateActions($actions);
     }
+
     private function dryRun(array $actions, array $permissionsList): void
     {
         $resultPermissions = $permissionsList;
@@ -129,10 +127,10 @@ class PermissionsService
 
     private function wetRun(array $actions): void
     {
-        if(!empty($actions['remove'])){
+        if (!empty($actions['remove'])) {
             $this->dataBaseAccess->removeMultiplePermissions($actions['remove']);
         }
-        if(!empty($actions['add'])){
+        if (!empty($actions['add'])) {
             $this->dataBaseAccess->addMultiplePermissions($actions['add']);
         }
     }
@@ -163,8 +161,27 @@ class PermissionsService
         }
     }
 
-    private function getResourcesToUpdate(core_kernel_classes_Resource $resource, bool $isRecursive): array
+    private function deduplicateActions(array $actions): array
     {
+        foreach ($actions['add'] as &$entry) {
+            foreach ($entry['permissions'] as &$grants) {
+                $grants = array_unique($grants);
+            }
+        }
+
+        foreach ($actions['remove'] as &$entry) {
+            foreach ($entry['permissions'] as &$grants) {
+                $grants = array_unique($grants);
+            }
+        }
+
+        return $actions;
+    }
+
+    private function getResourcesToUpdate(
+        core_kernel_classes_Resource $resource,
+        bool $isRecursive
+    ): array {
         $resources = [$resource];
 
         if ($isRecursive && $resource->isClass()) {
