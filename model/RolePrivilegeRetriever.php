@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,9 +15,10 @@ declare(strict_types=1);
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2021 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
- *
+ * Copyright (c) 2021-2022 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
+
+declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
@@ -56,6 +55,15 @@ class RolePrivilegeRetriever extends ConfigurableService
             }
 
             $permissions[$user][] = $result['privilege'];
+        }
+
+        return $this->removeDuplicatedEntries($permissions);
+    }
+
+    private function removeDuplicatedEntries(array $permissions)
+    {
+        foreach ($permissions as $roleUri => &$entries) {
+            $entries = array_unique($entries);
         }
 
         return $permissions;
