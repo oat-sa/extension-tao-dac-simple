@@ -105,7 +105,10 @@ class DataBaseAccessTest extends TestCase
             ['fixture']
         ];
 
-        $statementMock = $this->createMock(PDOStatement::class);
+        $statementMock = $this->getMockBuilder(PDOStatementForTest::class)
+            ->onlyMethods(['fetchAll'])
+            ->getMock();
+
         $statementMock->expects($this->once())
             ->method('fetchAll')
             ->with(PDO::FETCH_ASSOC)
@@ -154,7 +157,10 @@ class DataBaseAccessTest extends TestCase
             3 => ['create', 'delete']
         ];
 
-        $statementMock = $this->createMock(PDOStatement::class);
+        $statementMock = $this->getMockBuilder(PDOStatementForTest::class)
+            ->onlyMethods(['fetchAll'])
+            ->getMock();
+
         $statementMock->expects($this->once())
             ->method('fetchAll')
             ->with(PDO::FETCH_ASSOC)
@@ -253,3 +259,17 @@ class DataBaseAccessTest extends TestCase
         return $resourceMock;
     }
 }
+
+/**
+ * Class needed to override methods form ZipArchive needed for this test.
+ * Method open() in ZipArchive has UnionType return bool|int and therefore cant be mocked by PHPUnit in version lower
+ * than 9 (currently 8.5 is installed)
+ */
+// @codingStandardsIgnoreStart
+class PDOStatementForTest extends PDOStatement
+{
+    public function fetchAll($mode = PDO::FETCH_BOTH, $fetch_argument = null, ...$args)
+    {
+    }
+}
+// @codingStandardsIgnoreEnd
