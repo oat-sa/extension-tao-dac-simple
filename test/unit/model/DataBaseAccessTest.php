@@ -24,8 +24,7 @@ namespace oat\taoDacSimple\test\unit\model;
 
 use common_persistence_SqlPersistence;
 use core_kernel_classes_Resource;
-use oat\generis\test\ServiceManagerMockTrait;
-use PHPUnit\Framework\TestCase;
+use oat\generis\test\TestCase;
 use oat\oatbox\event\EventManager;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\event\DacAddedEvent;
@@ -43,8 +42,6 @@ use ReflectionProperty;
  */
 class DataBaseAccessTest extends TestCase
 {
-    use ServiceManagerMockTrait;
-
     private const INSERT_CHUNK_SIZE = 1;
 
     /** @var DataBaseAccess */
@@ -65,7 +62,7 @@ class DataBaseAccessTest extends TestCase
         $this->sut->setLogger(new NullLogger());
         $this->sut->setInsertChunkSize(self::INSERT_CHUNK_SIZE);
         $this->sut->setServiceLocator(
-            $this->getServiceManagerMock(
+            $this->getServiceLocatorMock(
                 [
                     EventManager::SERVICE_ID => $this->eventManager
                 ]
