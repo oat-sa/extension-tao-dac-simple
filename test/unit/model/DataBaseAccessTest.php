@@ -262,7 +262,7 @@ class DataBaseAccessTest extends TestCase
 
 /**
  * Class needed to override methods form PDOStatement needed for this test.
- * Method open() in ZipArchive has UnionType return bool|int and therefore cant be mocked by PHPUnit in version lower
+ * Method open() in PDOStatement has UnionType return and therefore cant be mocked by PHPUnit in version lower
  * than 9 (currently 8.5 is installed)
  */
 // @codingStandardsIgnoreStart
