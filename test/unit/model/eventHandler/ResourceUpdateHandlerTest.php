@@ -25,7 +25,8 @@ namespace oat\taoDacSimple\test\unit\model\eventHandler;
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use oat\generis\test\MockObject;
-use oat\generis\test\TestCase;
+use oat\generis\test\ServiceManagerMockTrait;
+use PHPUnit\Framework\TestCase;
 use oat\tao\model\event\ResourceMovedEvent;
 use oat\taoDacSimple\model\eventHandler\ResourceUpdateHandler;
 use oat\taoDacSimple\model\PermissionsService;
@@ -34,6 +35,8 @@ use oat\taoDacSimple\model\RolePrivilegeRetriever;
 
 class ResourceUpdateHandlerTest extends TestCase
 {
+    use ServiceManagerMockTrait;
+
     /** @var RolePrivilegeRetriever|MockObject */
     private $rolePrivilegeRetriever;
 
@@ -70,7 +73,7 @@ class ResourceUpdateHandlerTest extends TestCase
 
         $this->subject = new ResourceUpdateHandler();
         $this->subject->setServiceLocator(
-            $this->getServiceLocatorMock(
+            $this->getServiceManagerMock(
                 [
                     RolePrivilegeRetriever::class => $this->rolePrivilegeRetriever,
                     PermissionsServiceFactory::class => $this->permissionsServiceFactory

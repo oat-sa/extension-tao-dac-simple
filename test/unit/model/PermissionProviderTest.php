@@ -22,13 +22,16 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\test\unit\model;
 
-use oat\generis\test\TestCase;
+use oat\generis\test\ServiceManagerMockTrait;
+use PHPUnit\Framework\TestCase;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\RolePrivilegeRetriever;
 
 class PermissionProviderTest extends TestCase
 {
+    use ServiceManagerMockTrait;
+
     /** @var PermissionProvider */
     private $sut;
 
@@ -38,7 +41,7 @@ class PermissionProviderTest extends TestCase
     public function setUp(): void
     {
         $this->userPrivilegeRetriever = $this->createMock(RolePrivilegeRetriever::class);
-        $serviceLocator = $this->getServiceLocatorMock(
+        $serviceLocator = $this->getServiceManagerMock(
             [
                 DataBaseAccess::SERVICE_ID => $this->createMock(DataBaseAccess::class),
                 RolePrivilegeRetriever::class => $this->userPrivilegeRetriever,
