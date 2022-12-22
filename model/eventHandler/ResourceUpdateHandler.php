@@ -60,7 +60,8 @@ class ResourceUpdateHandler extends ConfigurableService
             foreach ($itemPrivilegesMap as $uri => $itemPrivilege) {
                 $this->getPermissionService()
                     ->saveResourcePermissionsRecursive(
-                        $this->getResource($uri), $itemPrivilege
+                        $this->getResource($uri),
+                        $itemPrivilege
                     );
             }
         }
