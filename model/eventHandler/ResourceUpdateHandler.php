@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace oat\taoDacSimple\model\eventHandler;
 
 use Laminas\ServiceManager\ServiceLocatorAwareTrait;
+use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\service\ConfigurableService;
 use oat\tao\model\event\ResourceMovedEvent;
 use oat\taoDacSimple\model\PermissionsService;
@@ -32,6 +33,7 @@ use oat\taoDacSimple\model\RolePrivilegeRetriever;
 class ResourceUpdateHandler extends ConfigurableService
 {
     use ServiceLocatorAwareTrait;
+    use OntologyAwareTrait;
 
     public function catchResourceUpdated(ResourceMovedEvent $event): void
     {
@@ -42,12 +44,27 @@ class ResourceUpdateHandler extends ConfigurableService
             $movedResource->getUri()
         ]);
 
+        if ($movedResource->isClass()) {
+            foreach ($movedResource->getInstances(true) as $item) {
+                $itemUri = $item->getUri();
+                $itemPrivilegesMap[$itemUri] =  $this->getRolePrivilegeRetriever()->retrieveByResourceIds([$itemUri]);
+            }
+        }
+
         $this->getPermissionService()->saveResourcePermissionsRecursive(
             $movedResource,
             $rolePrivilegeList
         );
-    }
 
+        if (isset($itemPrivilegesMap)) {
+            foreach ($itemPrivilegesMap as $uri => $itemPrivilege) {
+                $this->getPermissionService()
+                    ->saveResourcePermissionsRecursive(
+                        $this->getResource($uri), $itemPrivilege
+                    );
+            }
+        }
+    }
 
     private function getRolePrivilegeRetriever(): RolePrivilegeRetriever
     {
