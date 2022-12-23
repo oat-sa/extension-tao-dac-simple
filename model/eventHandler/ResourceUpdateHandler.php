@@ -37,9 +37,11 @@ class ResourceUpdateHandler extends ConfigurableService
 
     public function catchResourceUpdated(ResourceMovedEvent $event): void
     {
+        $permissionService = $this->getPermissionService();
+        $rolePrivilegeRetriever = $this->getRolePrivilegeRetriever();
         $movedResource = $event->getMovedResource();
 
-        $rolePrivilegeList = $this->getRolePrivilegeRetriever()->retrieveByResourceIds([
+        $rolePrivilegeList = $rolePrivilegeRetriever->retrieveByResourceIds([
             $event->getDestinationClass()->getUri(),
             $movedResource->getUri()
         ]);
@@ -47,18 +49,18 @@ class ResourceUpdateHandler extends ConfigurableService
         if ($movedResource->isClass()) {
             foreach ($movedResource->getInstances(true) as $item) {
                 $itemUri = $item->getUri();
-                $itemPrivilegesMap[$itemUri] =  $this->getRolePrivilegeRetriever()->retrieveByResourceIds([$itemUri]);
+                $itemPrivilegesMap[$itemUri] =  $rolePrivilegeRetriever->retrieveByResourceIds([$itemUri]);
             }
         }
 
-        $this->getPermissionService()->saveResourcePermissionsRecursive(
+        $permissionService->saveResourcePermissionsRecursive(
             $movedResource,
             $rolePrivilegeList
         );
 
         if (isset($itemPrivilegesMap)) {
             foreach ($itemPrivilegesMap as $uri => $itemPrivilege) {
-                $this->getPermissionService()
+                $permissionService
                     ->saveResourcePermissionsRecursive(
                         $this->getResource($uri),
                         $itemPrivilege
