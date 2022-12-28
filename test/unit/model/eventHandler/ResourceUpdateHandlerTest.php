@@ -24,6 +24,7 @@ namespace oat\taoDacSimple\test\unit\model\eventHandler;
 
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
+use oat\generis\model\data\Ontology;
 use oat\generis\test\MockObject;
 use oat\generis\test\ServiceManagerMockTrait;
 use PHPUnit\Framework\TestCase;
@@ -66,12 +67,23 @@ class ResourceUpdateHandlerTest extends TestCase
         $this->eventMock = $this->createMock(ResourceMovedEvent::class);
         $this->resourceMock = $this->createMock(core_kernel_classes_Resource::class);
         $this->classMock = $this->createMock(core_kernel_classes_Class::class);
+        $this->ontoloigyModelMock = $this->createMock(Ontology::class);
+
+        $this->eventMock
+            ->method('getDestinationClass')
+            ->willReturn($this->classMock);
+
+        $this->classMock
+            ->method('getUri')
+            ->willReturn('destinationClassUri');
 
         $this->permissionsServiceFactory
             ->method('create')
             ->willReturn($this->permissionsServiceMock);
 
         $this->subject = new ResourceUpdateHandler();
+
+        $this->subject->setModel($this->ontoloigyModelMock);
         $this->subject->setServiceLocator(
             $this->getServiceManagerMock(
                 [
@@ -84,29 +96,23 @@ class ResourceUpdateHandlerTest extends TestCase
 
     public function testCatchResourceUpdated()
     {
+        $resourceMock = $this->createMock(core_kernel_classes_Resource::class);
+
         $this->eventMock
             ->method('getMovedResource')
-            ->willReturn($this->resourceMock);
+            ->willReturn($resourceMock);
 
-        $this->resourceMock
+        $resourceMock
             ->method('getUri')
-            ->willReturn('resourceUri');
-
-        $this->eventMock
-            ->method('getDestinationClass')
-            ->willReturn($this->classMock);
-
-        $this->classMock
-            ->method('getUri')
-            ->willReturn('classUri');
+            ->willReturn('movedClassResourceUri');
 
         $this->rolePrivilegeRetriever
             ->expects($this->once())
             ->method('retrieveByResourceIds')
             ->with(
                 [
-                    'classUri',
-                    'resourceUri'
+                    'destinationClassUri',
+                    'movedClassResourceUri'
                 ]
             )
             ->willReturn(
@@ -131,6 +137,93 @@ class ResourceUpdateHandlerTest extends TestCase
                         'WRITE'
                     ],
                 ]
+            );
+
+        $this->subject->catchResourceUpdated($this->eventMock);
+    }
+
+    public function testCatchClassResourceUpdated()
+    {
+        $classMock = $this->createMock(core_kernel_classes_Class::class);
+        $classResourceMock = $this->createMock(core_kernel_classes_Resource::class);
+
+        $this->ontoloigyModelMock
+            ->expects(self::exactly(2))
+            ->method('getResource')
+            ->willReturn($this->resourceMock);
+
+        $classResourceMock
+            ->expects(self::exactly(2))
+            ->method('getUri')
+            ->willReturnOnConsecutiveCalls(
+                'ClassResourceUri_1',
+                'ClassResourceUri_2',
+            );
+
+        $classMock
+            ->expects(self::once())
+            ->method('getUri')
+            ->willReturn('movedClassUri');
+
+        $classMock->expects(self::once())
+            ->method('getInstances')
+            ->willReturn([
+                $classResourceMock,
+                $classResourceMock
+            ]);
+
+        $classMock
+            ->expects(self::once())
+            ->method('isClass')
+            ->willReturn(true);
+
+        $this->eventMock
+            ->method('getMovedResource')
+            ->willReturn($classMock);
+
+        $this->rolePrivilegeRetriever
+            ->expects($this->exactly(3))
+            ->method('retrieveByResourceIds')
+            ->withConsecutive(
+                [
+                    [
+                        'destinationClassUri',
+                        'movedClassUri'
+                    ]
+                ],
+                [
+                    [
+                        'ClassResourceUri_1'
+                    ]
+                ],
+                [
+                    [
+                        'ClassResourceUri_2'
+                    ]
+                ]
+            )
+            ->willReturnOnConsecutiveCalls(
+                [
+                    'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => [
+                        'GRANT',
+                        'READ',
+                        'WRITE'
+                    ],
+                ],
+                [
+                    'http://www.tao.lu/Ontologies/TAO.rdf#Resource_1_Role' => [
+                        'GRANT',
+                        'READ',
+                        'WRITE'
+                    ],
+                ],
+                [
+                    'http://www.tao.lu/Ontologies/TAO.rdf#Resource_2_Role' => [
+                        'GRANT',
+                        'READ',
+                        'WRITE'
+                    ],
+                ],
             );
 
         $this->subject->catchResourceUpdated($this->eventMock);
