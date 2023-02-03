@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: TAO 2021.10\n"
-"PO-Revision-Date: 2021-10-22T13:09:48\n"
+"Project-Id-Version: TAO 2023.02 LTS\n"
+"PO-Revision-Date: 2023-02-03T13:34:08\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: nb-NO\n"
@@ -47,7 +47,7 @@ msgid "read"
 msgstr "lese"
 
 msgid "Recursive"
-msgstr "Tilbakevendende"
+msgstr "Lagre endringen også på undermapper"
 
 msgid "Remove"
 msgstr "Fjern"
