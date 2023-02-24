@@ -199,13 +199,34 @@ class DataBaseAccess extends ConfigurableService
 
         $this->insertPermissions($insert);
 
+        $this->getLogger()->debug(
+            sprintf("Triggering %d events", count($insert))
+        );
+
+        $i = 0;
         foreach ($insert as $inserted) {
+            if (0 === (++$i % 1000)) {
+                $this->getLogger()->debug(
+                    sprintf(
+                        "Triggered %d / %d events (memUsage=%u/%u kB)",
+                        $i,
+                        count($insert),
+                        round(memory_get_usage(true) / 1024),
+                        round(memory_get_peak_usage(true) / 1024)
+                    )
+                );
+            }
+
             $this->getEventManager()->trigger(new DacAddedEvent(
                 $inserted[self::COLUMN_USER_ID],
                 $inserted[self::COLUMN_RESOURCE_ID],
                 (array)$inserted[self::COLUMN_PRIVILEGE]
             ));
         }
+
+        $this->getLogger()->debug(
+            sprintf("Triggered all events (%d)", count($inserted))
+        );
     }
 
     /**
@@ -459,5 +480,10 @@ class DataBaseAccess extends ConfigurableService
                 $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
             }
         });
+
+        $logger->debug(
+            'Processed {count} inserts',
+            ['count' => count($insert)]
+        );
     }
 }
