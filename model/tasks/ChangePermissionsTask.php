@@ -26,6 +26,7 @@ namespace oat\taoDacSimple\model\tasks;
 use common_exception_MissingParameter;
 use common_report_Report as Report;
 use core_kernel_classes_Class;
+use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\extension\AbstractAction;
 use oat\oatbox\service\ServiceManagerAwareTrait;
@@ -57,6 +58,8 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
 
     /** @internal */
     private const PARAM_IS_CHILD = 'is-child';
+
+    private const SPLIT_IN_SUBTASKS_THRESHOLD = 500;
 
     private const MANDATORY_PARAMS = [
         self::PARAM_RECURSIVE,
@@ -91,15 +94,12 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         array $privileges,
         bool $isChild
     ) {
+        // @todo "Subtask" logic is being moved into a separate class, remove
+        //       the params to check if a ChangePErmissionTask invocation itself
+        //       is a subtask
         $service = $this->getPermissionService();
         $dispatcher = $this->getQueueDispatcher();
-
-        // @todo Maybe: Move the method isHugeClass itself to this class
-        // @todo Move the threshold value to the method itself
-
-        // @todo Make threshold configurable
-        $threshold = 1; // @fixme
-        $useSubtasks = !$isChild && $service->isHugeClass($class, $threshold);
+        $useSubtasks = !$isChild && $this->isHugeClass($class);
 
         if ($useSubtasks && $isRecursive && null !== $dispatcher) {
             $this->splitRequestIntoSubtasks($dispatcher, $service, $class, $privileges);
@@ -130,7 +130,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         foreach($permissionsService->getNestedResources($class) as $resource) {
             $buffer[] = $resource;
 
-            if(count($buffer) >= 500) {
+            if(count($buffer) >= self::SPLIT_IN_SUBTASKS_THRESHOLD) {
                 $this->spawnSubtask($dispatcher, $class, $buffer, $privileges);
 
                 $buffer = [];
@@ -151,29 +151,34 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             return;
         }
 
+        $this->logDebug(
+            sprintf(
+                "Spawning subtask, class=%s resource count=%d privileges count=%s",
+                $class->getUri(),
+                count($resources),
+                count($privileges)
+            )
+        );
+
+        $resourceURIs = [];
+        foreach ($resources as $resource) {
+            assert($resource instanceof core_kernel_classes_Resource);
+            $resourceURIs[] = $resource->getUri();
+        }
+
         $taskParameters = [
-            ChangePermissionsTask::PARAM_RECURSIVE  => false,
-            ChangePermissionsTask::PARAM_RESOURCE   => $class->getUri(),
-            ChangePermissionsTask::PARAM_PRIVILEGES => $privileges
+            ChangePermissionsSubtask::PARAM_ROOT  => $class->getUri(),
+            ChangePermissionsSubtask::PARAM_RESOURCES  => $resourceURIs,
+            ChangePermissionsSubtask::PARAM_PRIVILEGES => $privileges,
         ];
 
         // @todo Create a task of a new kind that is never recursive and
         //       receives the list of resource URIs to updater directly
-        /*$dispatcher->createTask(
-            new self(),
+        $dispatcher->createTask(
+            new ChangePermissionsSubtask(),
             $taskParameters,
-            'Processing permissions'
-        );*/
-    }
-
-    private function getQueueDispatcher(): ?QueueDispatcher
-    {
-        return $this->serviceLocator->get(QueueDispatcher::SERVICE_ID);
-    }
-
-    private function getPermissionService(): PermissionsService
-    {
-        return $this->serviceLocator->get(PermissionsServiceFactory::SERVICE_ID)->create();
+            'Processing permissions subtask'
+        );
     }
 
     private function validateParams(array $params): void
@@ -189,6 +194,29 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 );
             }
         }
+    }
+
+    private function isHugeClass(core_kernel_classes_Resource $resource): bool
+    {
+        if ($resource->isClass()) {
+            // Ensure we have a core_kernel_classes_Class instance
+            $class = $resource->getClass($resource->getUri());
+            $resourceCount = $class->countInstances([], ['recursive' => true]);
+
+            return ($resourceCount >= self::SPLIT_IN_SUBTASKS_THRESHOLD);
+        }
+
+        return false;
+    }
+
+    private function getQueueDispatcher(): ?QueueDispatcher
+    {
+        return $this->serviceLocator->get(QueueDispatcher::SERVICE_ID);
+    }
+
+    private function getPermissionService(): PermissionsService
+    {
+        return $this->serviceLocator->get(PermissionsServiceFactory::SERVICE_ID)->create();
     }
 
     public function jsonSerialize(): string

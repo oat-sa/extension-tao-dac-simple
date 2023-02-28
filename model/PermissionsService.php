@@ -24,14 +24,15 @@ namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
-use Generator;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\log\LoggerAwareTrait;
 use oat\tao\model\event\DataAccessControlChangedEvent;
 use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
 use oat\taoDacSimple\model\event\DacRootAddedEvent;
 use oat\taoDacSimple\model\event\DacRootRemovedEvent;
+use Generator;
 use SplQueue;
+use SplStack;
 
 class PermissionsService
 {
@@ -76,28 +77,15 @@ class PermissionsService
         array $privilegesToSet,
         bool $isRecursive
     ): void {
-        $isHugeClass = ($isRecursive && $this->isHugeClass($resource, 500));
-        $this->debug(
-            "Saving permissions for %s, isHugeClass=%s",
-            $resource->getUri(),
-            $isHugeClass ? 'true' : 'false'
-        );
-
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
         $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
 
         if (empty($addRemove)) {
-            $this->debug(
-                "Saving permissions for %s: Nothing to do",
-                $resource->getUri()
-            );
+            $this->debug("Saving permissions for %s: Nothing to do", $resource->getUri());
 
             return;
         }
 
-        // Note here we are already on the (single) task used to update the permissions,
-        // maybe we want to spawn additional tasks instead
-        //
         $this->debug(
             "About to update ACLs for %s (recursive=%s, memUsage=%u/%u kB)",
             $resource->getUri(),
@@ -114,14 +102,7 @@ class PermissionsService
             round(memory_get_peak_usage(true) / 1024)
         );
 
-        /* @fixme The memory issue seems caused at first because of requesting the full array of resources to be updated
-         *          Once a worker goes up in its memory usage, it seems it never gives the memory back to the OS
-         *          (next runs start with a memory usage close to the previous peak)
-         *
-         * 19:09:30 About to update ACLs for http://www.tao.lu/Ontologies/TAOItem.rdf#Item (recursive=true, memUsage=6.144/6.144 kB)
-         * 19:09:30 addRemove.add size = 47 addRemove.remove size =0 (memUsage=6.144 / 6.144 kB)
-         * 19:09:30 resourcesToUpdate contains 5781 resources (memUsage=10.240 / 10.240 kB)
-         */
+        // Will have just a single one if $isRecursive == false
         $resourcesToUpdate = $this->getResourcesToUpdate($resource, $isRecursive);
 
         $this->debug(
@@ -131,59 +112,53 @@ class PermissionsService
             round(memory_get_peak_usage(true) / 1024)
         );
 
-        /* @fixme
-         * 19:09:31 permissionsList contains 5781 resources (recursive=578.100, memUsage=421.888/438.276 kB)
-         *          ----> Memory has raised from 6M to 440 M
-         *
-         *                  *********THIS IS ALREADY PROBLEMATIC********
-         *                  We may spawn subtasks in case we have 1K resources (at that point we are just using 1M)
-         *                  @fixme Keep in mind this is a service and not a task, better not to spawn subtasks from here
-         *                         Maybe we can have a helper here that instructs the task to spawn subtasks
-         *
-         * 19:09:31 ::getActions(): Handling 5781 resources
-         * 19:09:31 ::getActions(): Handling resource 1/5781
-         * ...
-         * 19:09:31 ::deduplicateActions(): Handling 5781 + 0 actions
-         * 19:09:31 actions contains 2 actions (memUsage=555.008/555.008 kB)
-         *          ----> Memory has raised from 440 M to 555 M
-         *
-         * 19:09:32 dryRun completed (memUsage=555008/555008 kB)
-         * 19:09:32 Processing chunk 1/27 with 20000 ACL entries
-         * ...
-         * 19:11:58 Processed 537633 inserts {"count":537633}
-         * 19:11:58 Triggering 537633 events
-         * 19:11:59 Triggered 1000 / 537.633 events (memUsage=712.708 / 761.624 kB)
-         *          ------> Memory has raised from 550 M to 760 M
-         *
-         * 19:12:00 Triggered 2000 / 537.633 events (memUsage=712.708 / 761.624 kB)
-         * 19:12:00 Triggered 3000 / 537.633 events (memUsage=712.708 / 761.624 kB)
-         * ... Memory usage (actual and peak) remains constant while events are triggered ....
-         *
-         * 19:19:58 Triggered all events (3)
-         * 19:19:58 oat\taoDacSimple\model\PermissionsService: wetRun completed (memUsage=679.936/761.624 kB)
-         *
-         * 19:19:58 oat\taoDacSimple\model\PermissionsService: Will trigger events now
-         * 19:20:02 triggering index update on DataAccessControlChanged event
-         * 19:20:02 oat\taoDacSimple\model\PermissionsService: events triggered (memUsage=1.019.904/1.078.156 kB)
-         *          -------> Memory has raised from 760 M to 1.08 GB after the events are triggered
-         *
-         * 19:20:02 Task https://adf-1320-dac-simple-batches.docker.localhost/ontologies/tao.rdf#i63e536d538a168121b8d50bbd8f314 has been processed.
-         *      {"PID":9745,"Iteration":13,"QueueName":"queue"} {"uid":"45e8130e66b8b584ad94f4ea"}
-         * ---
-         * --------------------------
-         *  17:51:45 addRemove.add size = 32 addRemove.remove size =0 (memUsage=6144/6144 kB)
-         *
-         *  17:51:45 resourcesToUpdate contains 5781 resources (memUsage=10240/10240 kB)
-         *        10M / 10M
-         *  17:51:46 permissionsList contains 5781 resources (recursive=398889, memUsage=296960/305156 kB)
-         *        296MM / 305M
-         *  18:17:35 actions contains 2 actions (memUsage=854016/924732 kB)
-         *        854M / 924M
-         *
-         * Note once the worker requests memory to the OS, it seems it never releases it.
-         */
-        $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
+        $this->setPermissionsForMultipleResources(
+            $resource,
+            $resourcesToUpdate,
+            $privilegesToSet
+        );
+    }
 
+    public function setPermissionsForMultipleResources(
+        core_kernel_classes_Resource $root,
+        array $resourcesToUpdate,
+        array $privilegesToSet,
+        bool $isRecursive
+    ): void {
+        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($root->getUri());
+        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
+
+        // @fixme !!!!! $addRemove will be non-empty only in the first subtask: That one will
+        //        find the root with the old permissions, but next ones will find the root with
+        //        the permissions already set
+        //        The value for $addRemove is likely to be computed by the root task and then
+        //        just reused from subtasks
+
+        // We don't want to just check it there are permissions to be changed in the "root"
+        // resource, as this will be used for multiple resources: The root may have been already
+        // changed by a previous call (from another "subtask") associated with the same user request.
+
+        /*if (empty($addRemove)) {
+            $this->debug("Saving permissions for %s: Nothing to do", $root->getUri());
+
+            return;
+        }*/
+
+        $this->doSaveResourcePermissions(
+            $root,
+            $resourcesToUpdate,
+            $addRemove,
+            $isRecursive,
+        );
+    }
+
+    private function doSaveResourcePermissions(
+        core_kernel_classes_Resource $root,
+        array $resourcesToUpdate,
+        array $addRemove,
+        bool $isRecursive
+    ): void {
+        $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
         $this->debug(
             "permissionsList contains %d resources (recursive=%d, memUsage=%u/%u kB)",
             count($permissionsList),
@@ -193,7 +168,6 @@ class PermissionsService
         );
 
         $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
-
         $this->debug(
             "actions contains %d actions (memUsage=%u/%u kB)",
             count($actions),
@@ -202,7 +176,6 @@ class PermissionsService
         );
 
         $this->dryRun($actions, $permissionsList);
-
         $this->debug(
             "dryRun completed (memUsage=%u/%u kB)",
             round(memory_get_usage(true) / 1024),
@@ -210,7 +183,6 @@ class PermissionsService
         );
 
         $this->wetRun($actions);
-
         $this->debug(
             "wetRun completed (memUsage=%u/%u kB)",
             round(memory_get_usage(true) / 1024),
@@ -218,12 +190,11 @@ class PermissionsService
         );
 
         $this->debug("Will trigger events now");
-        $this->triggerEvents($addRemove, $resource->getUri(), $isRecursive);
-
+        $this->triggerEvents($addRemove, $root->getUri(), $isRecursive);
         $this->debug('events triggered (memUsage=%u/%u kB)',
-                self::class,
-                round(memory_get_usage(true) / 1024),
-                round(memory_get_peak_usage(true) / 1024)
+            self::class,
+            round(memory_get_usage(true) / 1024),
+            round(memory_get_peak_usage(true) / 1024)
         );
     }
 
@@ -346,22 +317,6 @@ class PermissionsService
         return $actions;
     }
 
-    /**
-     * @fixme Maybe should not be public, and/or we should move this responsibility to the task
-     *        and/or we should make the threshold configurable
-     */
-    public function isHugeClass(core_kernel_classes_Resource $resource, int $threshold): bool
-    {
-        if ($resource->isClass()) {
-            // Ensure we have a core_kernel_classes_Class instance
-            $class = $resource->getClass($resource->getUri());
-
-            return ($class->countInstances([], ['recursive' => true]) >= $threshold);
-        }
-
-        return false;
-    }
-
     private function debug(string $format, ...$va_args): void
     {
         static $logger = null;
@@ -374,18 +329,18 @@ class PermissionsService
 
     public function getNestedResources(core_kernel_classes_Resource $resource): Generator
     {
-        $queue = new SplQueue();
-        $queue->push($resource);
+        $stack = new SplStack();
+        $stack->push($resource);
 
-        while (!$queue->isEmpty()) {
+        while (!$stack->isEmpty()) {
             /** @var $current core_kernel_classes_Resource */
-            $current = $queue->pop();
+            $current = $stack->pop();
             yield $current;
 
             if ($current->isClass()) {
                 /** @var $current core_kernel_classes_Class */
                 foreach ($current->getSubClasses() as $class) {
-                    $queue->push($class);
+                    $stack->push($class);
                 }
 
                 foreach ($current->getInstances() as $instance) {
