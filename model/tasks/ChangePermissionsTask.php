@@ -18,7 +18,6 @@ declare(strict_types=1);
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2020-2023 (original work) Open Assessment Technologies SA;
- *
  */
 
 namespace oat\taoDacSimple\model\tasks;
@@ -31,6 +30,7 @@ use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\extension\AbstractAction;
 use oat\oatbox\service\ServiceManagerAwareTrait;
 use oat\tao\model\taskQueue\QueueDispatcher;
+use oat\tao\model\taskQueue\Task\CallbackTaskInterface;
 use oat\tao\model\taskQueue\Task\TaskAwareInterface;
 use oat\tao\model\taskQueue\Task\TaskAwareTrait;
 use oat\taoDacSimple\model\PermissionsService;
@@ -56,10 +56,8 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RESOURCE = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
 
-    /** @internal */
-    private const PARAM_IS_CHILD = 'is-child';
-
-    private const SPLIT_IN_SUBTASKS_THRESHOLD = 500;
+    // @todo May be configurable
+    private const PERMISISONS_PER_TASK = 250;
 
     private const MANDATORY_PARAMS = [
         self::PARAM_RECURSIVE,
@@ -75,8 +73,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             $this->doChangePermissions(
                 $this->getClass($params[self::PARAM_RESOURCE]),
                 (bool) $params[self::PARAM_RECURSIVE],
-                $params[self::PARAM_PRIVILEGES],
-                $params[self::PARAM_IS_CHILD] ?? false
+                $params[self::PARAM_PRIVILEGES]
             );
         } catch (Exception $exception) {
             $errMessage = sprintf('Saving permissions failed: %s', $exception->getMessage());
@@ -91,37 +88,38 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     private function doChangePermissions(
         core_kernel_classes_Class $class,
         bool $isRecursive,
-        array $privileges,
-        bool $isChild
-    ) {
-        // @todo "Subtask" logic is being moved into a separate class, remove
-        //       the params to check if a ChangePErmissionTask invocation itself
-        //       is a subtask
-        $service = $this->getPermissionService();
+        array $privileges
+    ): void {
         $dispatcher = $this->getQueueDispatcher();
-        $useSubtasks = !$isChild && $this->isHugeClass($class);
 
-        if ($useSubtasks && $isRecursive && null !== $dispatcher) {
-            $this->splitRequestIntoSubtasks($dispatcher, $service, $class, $privileges);
+        if ($isRecursive && null !== $dispatcher && $this->isHugeClass($class)) {
+            $this->splitRequestIntoSubtasks($dispatcher, $class, $privileges);
         } else {
-            $service->savePermissions($isRecursive, $class, $privileges);
+            $this->getPermissionService()->savePermissions(
+                $isRecursive,
+                $class,
+                $privileges
+            );
         }
     }
 
     private function splitRequestIntoSubtasks(
         QueueDispatcher $dispatcher,
-        PermissionsService $permissionsService,
         core_kernel_classes_Class $class,
         array $privileges
     ): void {
+        $permissionsService = $this->getPermissionService();
+
         $this->getLogger()->debug(
             sprintf(
-                '%s: Splitting request to change permissions for %s into subtasks',
+                '%s: Splitting request for %s into subtasks',
                 self::class,
                 $class->getUri()
             )
         );
 
+        $request = $permissionsService->getNormalizedRequest($class, $privileges);
+        $tasksIds = [];
         $buffer = [];
 
         // getNestedResources() returns a Generator, therefore it won't load all
@@ -130,27 +128,39 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         foreach($permissionsService->getNestedResources($class) as $resource) {
             $buffer[] = $resource;
 
-            if(count($buffer) >= self::SPLIT_IN_SUBTASKS_THRESHOLD) {
-                $this->spawnSubtask($dispatcher, $class, $buffer, $privileges);
+            if(count($buffer) >= self::PERMISISONS_PER_TASK) {
+                $tasksIds[] = $this->spawnSubtask(
+                    $dispatcher,
+                    $class,
+                    $buffer,
+                    $privileges,
+                    $request
+                )->getId();
 
                 $buffer = [];
             }
         }
 
-        // Create subtasks for the remaining resources, if any
-        $this->spawnSubtask($dispatcher, $class, $buffer, $privileges);
+        if (!empty($buffer)) {
+            $tasksIds[] = $this->spawnSubtask(
+                $dispatcher,
+                $class,
+                $buffer,
+                $privileges,
+                $request
+            )->getId();
+        }
+
+        $this->spawnTriggerEventsSubtask($dispatcher, $class, $tasksIds, $request);
     }
 
     private function spawnSubtask(
         QueueDispatcher $dispatcher,
         core_kernel_classes_Class $class,
         array $resources,
-        array $privileges
-    ): void {
-        if (empty($resources)) {
-            return;
-        }
-
+        array $privileges,
+        array $normalizedRequest
+    ): CallbackTaskInterface {
         $this->logDebug(
             sprintf(
                 "Spawning subtask, class=%s resource count=%d privileges count=%s",
@@ -166,18 +176,43 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             $resourceURIs[] = $resource->getUri();
         }
 
-        $taskParameters = [
-            ChangePermissionsSubtask::PARAM_ROOT  => $class->getUri(),
-            ChangePermissionsSubtask::PARAM_RESOURCES  => $resourceURIs,
-            ChangePermissionsSubtask::PARAM_PRIVILEGES => $privileges,
-        ];
-
-        // @todo Create a task of a new kind that is never recursive and
-        //       receives the list of resource URIs to updater directly
-        $dispatcher->createTask(
+        return $dispatcher->createTask(
             new ChangePermissionsSubtask(),
-            $taskParameters,
+            [
+                ChangePermissionsSubtask::PARAM_ROOT => $class->getUri(),
+                ChangePermissionsSubtask::PARAM_RESOURCES => $resourceURIs,
+                ChangePermissionsSubtask::PARAM_PRIVILEGES => $privileges,
+                ChangePermissionsSubtask::PARAM_NORMALIZED_REQUEST => $normalizedRequest,
+            ],
             'Processing permissions subtask'
+        );
+    }
+
+    /**
+     * If at least one task has been created, this method creates an additional
+     * one to trigger DacXXXXEvents using the root resource as the parameter.
+     *
+     * @param CallbackTaskInterface[] $tasks
+     * @return void
+     */
+    private function spawnTriggerEventsSubtask(
+        QueueDispatcher $dispatcher,
+        core_kernel_classes_Class $class,
+        array $tasksIds,
+        array $normalizedRequest
+    ): void {
+        if (empty($tasks)) {
+            return;
+        }
+
+        $dispatcher->createTask(
+            new TriggerEventsOnCompletionSubtask(),
+            [
+                TriggerEventsOnCompletionSubtask::PARAM_ROOT_RESOURCE => $class->getUri(),
+                TriggerEventsOnCompletionSubtask::PARAM_NORMALIZED_REQUEST => $normalizedRequest,
+                TriggerEventsOnCompletionSubtask::PARAM_SUBTASK_IDS => $tasksIds,
+            ],
+            'Waiting for subtasks to finish to trigger change events'
         );
     }
 
@@ -203,7 +238,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             $class = $resource->getClass($resource->getUri());
             $resourceCount = $class->countInstances([], ['recursive' => true]);
 
-            return ($resourceCount >= self::SPLIT_IN_SUBTASKS_THRESHOLD);
+            return ($resourceCount >= self::PERMISISONS_PER_TASK);
         }
 
         return false;

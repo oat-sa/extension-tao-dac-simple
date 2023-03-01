@@ -24,7 +24,7 @@ namespace oat\taoDacSimple\model\tasks;
 
 use common_exception_MissingParameter;
 use common_report_Report as Report;
-use core_kernel_classes_Class;
+use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\extension\AbstractAction;
 use oat\oatbox\service\ServiceManagerAwareTrait;
@@ -37,7 +37,10 @@ use Exception;
 use JsonSerializable;
 
 /**
- * @todo Find a better name for this?
+ * Handles permission changes in the background.
+ *
+ * The task receives an array of resource IDs to change instead of a
+ * root class and a "isRecursive' flag.
  */
 class ChangePermissionsSubtask
     extends AbstractAction
@@ -50,34 +53,49 @@ class ChangePermissionsSubtask
     public const PARAM_ROOT = 'root';
     public const PARAM_RESOURCES = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
+    public const PARAM_NORMALIZED_REQUEST = 'normalized_request';
 
     private const MANDATORY_PARAMS = [
+        self::PARAM_ROOT,
+        self::PARAM_RESOURCES,
         self::PARAM_PRIVILEGES,
-        self::PARAM_RESOURCES
+        self::PARAM_NORMALIZED_REQUEST,
     ];
 
     public function __invoke($params = []): Report
     {
         $this->validateParams($params);
 
-        $isRecursive = true; // this task is always called for recursive changes
-        $service = $this->getPermissionService();
-        $dispatcher = $this->getQueueDispatcher();
+        try {
+            $this->getPermissionService()->savePermissionsForMultipleResources(
+                $this->getClass($params[self::PARAM_ROOT]),
+                $this->getResourcesFromParams($params),
+                $params[self::PARAM_PRIVILEGES]
+            );
+        } catch (Exception $exception) {
+            $errMessage = sprintf('Saving permissions failed: %s', $exception->getMessage());
+            $this->getLogger()->error($errMessage);
 
-        /*foreach ($params[self::PARAM_RESOURCES] as $resource) {
+            return Report::createFailure($errMessage);
+        }
 
-        }*/
-        // @todo Need an operation in PermissionService that receives the array of
-        //       resources to operate on directly (instead of the $isRecursive flag)
-        /*$service->savePermissions(
-            $isRecursive,
-            $this->getClass($params[self::PARAM_RESOURCE]),
-        );*/
-        $service->setPermissionsForMultipleResources(
-            $this->getClass($params[self::PARAM_ROOT]),
-            array_map([$this, 'getResource'], $params[self::PARAM_RESOURCES]),
-            $params[self::PARAM_PRIVILEGES]
+        $this->logDebug(
+            sprintf(
+                '%s finished, mem peak usage: %u kB',
+                self::class,
+                memory_get_peak_usage(true) / 1024
+            )
         );
+
+        return Report::createSuccess('Permissions saved');
+    }
+
+    /**
+     * @return core_kernel_classes_Resource[]
+     */
+    private function getResourcesFromParams(array $params): array
+    {
+        return array_map([$this, 'getResource'], $params[self::PARAM_RESOURCES]);
     }
 
     private function validateParams(array $params): void
@@ -85,11 +103,7 @@ class ChangePermissionsSubtask
         foreach (self::MANDATORY_PARAMS as $param) {
             if (!isset($params[$param])) {
                 throw new common_exception_MissingParameter(
-                    sprintf(
-                        'Missing parameter `%s` in %s',
-                        $param,
-                        self::class
-                    )
+                    sprintf('Missing parameter `%s` in %s', $param, self::class)
                 );
             }
         }
