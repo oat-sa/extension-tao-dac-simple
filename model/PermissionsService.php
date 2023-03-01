@@ -165,7 +165,12 @@ class PermissionsService
 
         $this->dryRun($actions, $permissionsList);
 
-        $this->debug('applyRequestForResources(): Applying %d actions', count($actions));
+        $this->debug(
+            'applyRequestForResources(): Applying %d operations on %d resources',
+            count($actions['add'] ?? []) + count($actions['remove'] ?? []),
+            count($resources)
+        );
+
         $this->wetRun($actions);
     }
 
