@@ -52,13 +52,11 @@ class ChangePermissionsSubtask
 
     public const PARAM_ROOT = 'root';
     public const PARAM_RESOURCES = 'resource';
-    public const PARAM_PRIVILEGES = 'privileges';
     public const PARAM_NORMALIZED_REQUEST = 'normalized_request';
 
     private const MANDATORY_PARAMS = [
         self::PARAM_ROOT,
         self::PARAM_RESOURCES,
-        self::PARAM_PRIVILEGES,
         self::PARAM_NORMALIZED_REQUEST,
     ];
 
@@ -70,7 +68,7 @@ class ChangePermissionsSubtask
             $this->getPermissionService()->savePermissionsForMultipleResources(
                 $this->getClass($params[self::PARAM_ROOT]),
                 $this->getResourcesFromParams($params),
-                $params[self::PARAM_PRIVILEGES]
+                $params[self::PARAM_NORMALIZED_REQUEST]
             );
         } catch (Exception $exception) {
             $errMessage = sprintf('Saving permissions failed: %s', $exception->getMessage());
@@ -107,11 +105,6 @@ class ChangePermissionsSubtask
                 );
             }
         }
-    }
-
-    private function getQueueDispatcher(): ?QueueDispatcher
-    {
-        return $this->serviceLocator->get(QueueDispatcher::SERVICE_ID);
     }
 
     private function getPermissionService(): PermissionsService

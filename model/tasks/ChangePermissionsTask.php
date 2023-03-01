@@ -57,7 +57,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_PRIVILEGES = 'privileges';
 
     // @todo May be configurable
-    private const PERMISISONS_PER_TASK = 250;
+    private const PERMISSIONS_PER_TASK = 250;
 
     private const MANDATORY_PARAMS = [
         self::PARAM_RECURSIVE,
@@ -128,7 +128,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         foreach($permissionsService->getNestedResources($class) as $resource) {
             $buffer[] = $resource;
 
-            if(count($buffer) >= self::PERMISISONS_PER_TASK) {
+            if(count($buffer) >= self::PERMISSIONS_PER_TASK) {
                 $tasksIds[] = $this->spawnSubtask(
                     $dispatcher,
                     $class,
@@ -181,7 +181,6 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             [
                 ChangePermissionsSubtask::PARAM_ROOT => $class->getUri(),
                 ChangePermissionsSubtask::PARAM_RESOURCES => $resourceURIs,
-                ChangePermissionsSubtask::PARAM_PRIVILEGES => $privileges,
                 ChangePermissionsSubtask::PARAM_NORMALIZED_REQUEST => $normalizedRequest,
             ],
             'Processing permissions subtask'
@@ -238,7 +237,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             $class = $resource->getClass($resource->getUri());
             $resourceCount = $class->countInstances([], ['recursive' => true]);
 
-            return ($resourceCount >= self::PERMISISONS_PER_TASK);
+            return ($resourceCount >= self::PERMISSIONS_PER_TASK);
         }
 
         return false;
