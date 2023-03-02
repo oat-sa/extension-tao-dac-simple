@@ -30,11 +30,11 @@ use JsonSerializable;
 use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\extension\AbstractAction;
 use oat\oatbox\service\ServiceManagerAwareTrait;
+use oat\tao\model\taskQueue\QueueDispatcher;
 use oat\tao\model\taskQueue\Task\TaskAwareInterface;
 use oat\tao\model\taskQueue\Task\TaskAwareTrait;
 use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
-
 
 /**
  * Class ChangePermissionsTask
@@ -50,17 +50,47 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RECURSIVE = 'recursive';
     public const PARAM_RESOURCE = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
+    public const PARAM_NESTED_RESOURCES = 'nested_resources'; //FIXME Find better name
 
     public function __invoke($params = []): Report
     {
         $this->validateParams($params);
+
         try {
-            $service = $this->getPermissionService();
-            $service->savePermissions(
-                (bool)$params[self::PARAM_RECURSIVE],
-                $this->getClass($params[self::PARAM_RESOURCE]),
-                $params[self::PARAM_PRIVILEGES]
-            );
+            $isRecursive = (bool)$params[self::PARAM_RECURSIVE];
+
+            if ($isRecursive) {
+                $queueDispatcher = $this->getServiceManager()->get(QueueDispatcher::SERVICE_ID);
+
+                $class = $this->getClass($params[self::PARAM_RESOURCE]);
+                $subClasses = $class->getSubClasses(true);
+                $allSubclasses = array_merge([$class], $subClasses);
+
+                foreach ($allSubclasses as $subCLass) {
+                    $queueDispatcher->createTask(
+                        new self(),
+                        [
+                            self::PARAM_RESOURCE => $subCLass->getUri(),
+                            self::PARAM_PRIVILEGES => $params[self::PARAM_PRIVILEGES],
+                            self::PARAM_RECURSIVE => false,
+                            self::PARAM_NESTED_RESOURCES => true,
+                        ],
+                        sprintf(
+                            'Processing permissions for class %s [%s]',
+                            $subCLass->getLabel(),
+                            $subCLass->getUri()
+                        )
+                    );
+                }
+            } else {
+                $service = $this->getPermissionService();
+                $service->savePermissions(
+                    false,
+                    $this->getClass($params[self::PARAM_RESOURCE]),
+                    $params[self::PARAM_PRIVILEGES]
+                );
+            }
+
             $result = Report::createSuccess('Permissions saved');
         } catch (Exception $exception) {
             $errMessage = sprintf('Saving permissions failed: %s', $exception->getMessage());
