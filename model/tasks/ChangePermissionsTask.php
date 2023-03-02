@@ -88,7 +88,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                     false,
                     $this->getClass($params[self::PARAM_RESOURCE]),
                     $params[self::PARAM_PRIVILEGES],
-                    $params[self::PARAM_NESTED_RESOURCES]
+                    $params[self::PARAM_NESTED_RESOURCES] ?? false
                 );
             }
 
