@@ -98,6 +98,9 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
      */
     public function getDeltaPermissions(array $currentPrivileges, array $privilegesToSet): array
     {
+        $add = [];
+        $remove = [];
+
         foreach ($privilegesToSet as $userId => $privilegeIds) {
             //if privileges are in request but not in db we add then
             if (!isset($currentPrivileges[$userId])) {
