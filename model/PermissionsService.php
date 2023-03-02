@@ -64,7 +64,8 @@ class PermissionsService
     private function saveResourcePermissions(
         core_kernel_classes_Resource $resource,
         array $privilegesToSet,
-        bool $isRecursive
+        bool $isRecursive, // @TODO Deprecate this
+        bool $applyToNestedResources = false
     ): void {
         $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
         $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
@@ -73,21 +74,22 @@ class PermissionsService
             return;
         }
 
-        $resourcesToUpdate = $this->getResourcesToUpdate($resource, $isRecursive);
+        $resourcesToUpdate = $this->getResourcesToUpdate($resource, $applyToNestedResources);
         $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
         $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
 
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $resource->getUri(), $isRecursive);
+        $this->triggerEvents($addRemove, $resource->getUri());
     }
 
     public function savePermissions(
         bool $isRecursive,
         core_kernel_classes_Class $class,
-        array $privilegesToSet
+        array $privilegesToSet,
+        bool $applyToNestedResources = false
     ): void {
-        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
+        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive, $applyToNestedResources);
     }
 
     private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
@@ -180,12 +182,13 @@ class PermissionsService
 
     private function getResourcesToUpdate(
         core_kernel_classes_Resource $resource,
-        bool $isRecursive
+        bool $isRecursive,
+        bool $applyToNestedResources = false
     ): array {
         $resources = [$resource];
 
-        if ($isRecursive && $resource->isClass()) {
-            return array_merge($resources, $resource->getSubClasses(true), $resource->getInstances(true));
+        if ($applyToNestedResources && $resource->isClass()) {
+            return array_merge($resources, $resource->getInstances(true));
         }
 
         return $resources;
@@ -234,7 +237,7 @@ class PermissionsService
      * @param bool $isRecursive
      */
 
-    private function triggerEvents(array $addRemove, string $resourceId, bool $isRecursive): void
+    private function triggerEvents(array $addRemove, string $resourceId): void
     {
         if (!empty($addRemove['add'])) {
             foreach ($addRemove['add'] as $userId => $rights) {
@@ -257,7 +260,7 @@ class PermissionsService
             new DataAccessControlChangedEvent(
                 $resourceId,
                 $addRemove,
-                $isRecursive
+                false
             )
         );
     }
