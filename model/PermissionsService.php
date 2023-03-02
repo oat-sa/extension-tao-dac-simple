@@ -80,7 +80,7 @@ class PermissionsService
 
         $this->dryRun($actions, $permissionsList);
         $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $resource->getUri());
+        $this->triggerEvents($addRemove, $resource->getUri(), $applyToNestedResources);
     }
 
     public function savePermissions(
@@ -237,7 +237,7 @@ class PermissionsService
      * @param bool $isRecursive
      */
 
-    private function triggerEvents(array $addRemove, string $resourceId): void
+    private function triggerEvents(array $addRemove, string $resourceId, bool $processNestedResources): void
     {
         if (!empty($addRemove['add'])) {
             foreach ($addRemove['add'] as $userId => $rights) {
@@ -260,7 +260,7 @@ class PermissionsService
             new DataAccessControlChangedEvent(
                 $resourceId,
                 $addRemove,
-                false
+                $processNestedResources
             )
         );
     }
