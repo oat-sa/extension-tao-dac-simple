@@ -1,5 +1,23 @@
 <?php
 
+/**
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; under version 2
+ * of the License (non-upgradable).
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * Copyright (c) 2023 (original work) Open Assessment Technologies SA.
+ */
+
 namespace oat\taoDacSimple\model\Command;
 
 use core_kernel_classes_Resource;
@@ -25,22 +43,16 @@ class ChangePermissionsCommand
 
     private bool $applyToNestedResources;
 
-    private bool $skipClasses;
-
     public function __construct(
         core_kernel_classes_Resource $root,
         array $privileges,
         bool $isRecursive,
-        bool $applyToNestedResources,
-        bool $skipClasses
+        bool $applyToNestedResources
     ) {
         $this->root = $root;
         $this->privilegesPerUser = $privileges;
         $this->isRecursive = $isRecursive;
         $this->applyToNestedResources = $applyToNestedResources;
-
-        // @todo SkipClasses is always false
-        $this->skipClasses = $skipClasses;
     }
 
     public function recursive(): self
@@ -62,11 +74,6 @@ class ChangePermissionsCommand
     public function rootIsAClass(): bool
     {
         return $this->root->isClass();
-    }
-
-    public function getSkipClasses(): bool
-    {
-        return $this->skipClasses;
     }
 
     /**
@@ -99,13 +106,5 @@ class ChangePermissionsCommand
     public function applyToNestedResources(): bool
     {
         return $this->applyToNestedResources;
-    }
-
-    /**
-     * @return bool
-     */
-    public function skipClasses(): bool
-    {
-        return $this->skipClasses;
     }
 }

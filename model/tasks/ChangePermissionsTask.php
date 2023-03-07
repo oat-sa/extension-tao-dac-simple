@@ -108,7 +108,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                         $privileges,
                         false, // isRecursive
                         true, // applyToNestedResources
-                        false // skipClasses
+                        //false // skipClasses
                     )
                 );
 
@@ -131,7 +131,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                         $privileges,
                         false, // isRecursive
                         false, // applyToNestedResources
-                        false // skipClasses
+                        //false // skipClasses
                     )
                 );
 
