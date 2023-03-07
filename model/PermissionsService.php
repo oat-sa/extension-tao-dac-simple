@@ -52,40 +52,21 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
+    // @todo Fix unit tests
+
     public function applyPermissions(ChangePermissionsCommand $command): void
     {
         $root = $command->getRoot();
 
-        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions(
-            $root->getUri()
-        );
-        $permissionsDelta = $this->strategy->normalizeRequest(
-            $currentPrivileges,
-            $command->getPrivilegesPerUser()
-        );
+        $resources = $this->getResourcesToUpdateByCommand($command);
+        $currentPermissions = $this->getResourcesPermissions($resources);
+        $permissionsDelta = $this->getDeltaForResourceTree($command, $currentPermissions);
 
         if (empty($permissionsDelta)) {
-            $this->getLogger()->info(
-                sprintf(
-                    "Empty permission delta for %s [%s]",
-                    $root->getLabel(),
-                    $root->getUri()
-                )
-            );
             return;
         }
 
-        /*
-         $this->getLogger()->info("Now applying permissions for root class");
-        $this->getPermissionService()->applyPermissions(
-            new ChangePermissionsCommand($rootClass, $privileges, false, true)
-        );
-
-        isRecursive = false
-        applyToNestedResources = true
-
-         */
-
+        // @todo
         // Backward compatibility: List resources and classes contained in the current one
         // if the request is recursive, otherwise just get instances for the current class
         //
@@ -112,11 +93,7 @@ class PermissionsService
             );
         }*/
 
-        $resources = $this->getResourcesToUpdateByCommand($command);
-
-        $this->getLogger()->info(sprintf("%d resources to update", count($resources)));
-        $permissionsList = $this->getResourcesPermissions($resources);
-        $actions = $this->getActions($resources, $permissionsList, $permissionsDelta);
+        $actions = $this->getActions($resources, $currentPermissions, $permissionsDelta);
 
         $this->getLogger()->info(
             sprintf(
@@ -125,7 +102,7 @@ class PermissionsService
                 count($actions['remove'] ?? 0)
             )
         );
-        $this->dryRun($actions, $permissionsList);
+        $this->dryRun($actions, $currentPermissions);
 
         $this->getLogger()->info(
             sprintf(
@@ -144,7 +121,73 @@ class PermissionsService
         );
     }
 
-    // @todo Move to bottom
+    /**
+     * @deprecated Use applyPermissions() instead
+     */
+    public function saveResourcePermissionsRecursive(
+        core_kernel_classes_Resource $resource,
+        array $privilegesToSet
+    ): void {
+        error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
+
+        $this->applyPermissions(
+            new ChangePermissionsCommand($resource, $privilegesToSet, true, true)
+        );
+    }
+
+    /**
+     * @deprecated Use applyPermissions() instead
+     */
+    public function savePermissions(
+        bool $isRecursive,
+        core_kernel_classes_Class $class,
+        array $privilegesToSet
+    ): void {
+        error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
+
+        $this->applyPermissions(
+            new ChangePermissionsCommand($class, $privilegesToSet, $isRecursive, true)
+        );
+    }
+
+    /**
+     * @param ChangePermissionsCommand $command
+     * @param string[][] $currentResourcePermissions
+     *
+     * @return string[][][]
+     */
+    private function getDeltaForResourceTree(
+        ChangePermissionsCommand $command,
+        array $currentResourcePermissions
+    ): array {
+        $delta = [];
+
+        foreach($currentResourcePermissions as $resourceId => $permissions) {
+            $permissionsDelta = $this->strategy->normalizeRequest(
+                $permissions,
+                $command->getPrivilegesPerUser()
+            );
+
+            if (!empty($permissionsDelta['add']) || !empty($permissionsDelta['remove'])) {
+                $delta[$resourceId] = $permissionsDelta;
+            }
+        }
+
+        return $delta;
+    }
+
+    /**
+     * Gets the list of resources to update for a given command.
+     *
+     * - For recursive requests, lists both instances and classes contained
+     *   in the root class pointed out by $command.
+     *
+     * - For non-recursive requests, returns only resource instances contained
+     *   in the provided class, but skips child classes (as well as resources
+     *   contained in child classes).
+     *
+     * @return core_kernel_classes_Resource[]
+     */
     private function getResourcesToUpdateByCommand(
         ChangePermissionsCommand $command
     ): array {
@@ -166,99 +209,40 @@ class PermissionsService
             );
         }
 
-        if ($command->skipClasses()) {
-            // Filter out classes
-            $resources = array_filter(
-                $resources,
-                function (core_kernel_classes_Resource $resource) {
-                    return !$resource->isClass();
-                }
-            );
-        }
-
         return $resources;
     }
 
-    /**
-     * @deprecated Use applyPermissions() instead
-     */
-    public function saveResourcePermissionsRecursive(
-        core_kernel_classes_Resource $resource,
-        array $privilegesToSet
-    ): void {
-        error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
-
-        // @todo Will need to call first with skipClasses=true, then =false
-
-        //$this->saveResourcePermissions($resource, $privilegesToSet, true);
-        $this->applyPermissions(
-            new ChangePermissionsCommand($resource, $privilegesToSet, true, true)
-        );
-    }
-
-    /**
-     * @deprecated Use applyPermissions() instead
-     */
-    public function savePermissions(
-        bool $isRecursive,
-        core_kernel_classes_Class $class,
-        array $privilegesToSet// ,
-        //bool $applyToNestedResources = false
-    ): void {
-        error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
-
-        // @todo Will need to call first with skipClasses=true, then =false
-
-        $this->applyPermissions(
-            new ChangePermissionsCommand($class, $privilegesToSet, $isRecursive, true)
-        );
-
-        //$this->saveResourcePermissions($class, $privilegesToSet, $applyToNestedResources);
-    }
-
-    // @todo Fix unit tests
-
-    // @todo Remove in favor of applyPermissions
-    /*private function saveResourcePermissions(
-        core_kernel_classes_Resource $resource,
-        array $privilegesToSet,
-        bool $applyToNestedResources = false
-    ): void {
-        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
-        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
-
-        if (empty($addRemove)) {
-            return;
-        }
-
-        $resourcesToUpdate = $this->getResourcesToUpdate($resource, $applyToNestedResources);
-        $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
-        $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
-
-        $this->dryRun($actions, $permissionsList);
-        $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $resource->getUri(), $applyToNestedResources);
-    }*/
-
-    private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
-    {
-        $actions = ['remove' => [], 'add' => []];
+    private function getActions(
+        array $resourcesToUpdate,
+        array $currentResourcePermissions,
+        array $permissionsDelta
+    ): array {
+        $addActions = [];
+        $removeActions = [];
 
         foreach ($resourcesToUpdate as $resource) {
-            $currentPrivileges = $permissionsList[$resource->getUri()];
+            $thisResourcePermissions = $currentResourcePermissions[$resource->getUri()];
 
-            $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
-            if ($remove) {
-                $actions['remove'][] = ['permissions' => $remove, 'resource' => $resource];
+            $remove = $this->strategy->getPermissionsToRemove(
+                $thisResourcePermissions,
+                $permissionsDelta[$resource->getUri()] ?? []
+            );
+
+            if (!empty($remove)) {
+                $removeActions[] = ['permissions' => $remove, 'resource' => $resource];
             }
 
-            $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
-            if ($add) {
-                $actions['add'][] = ['permissions' => $add, 'resource' => $resource];
+            $add = $this->strategy->getPermissionsToAdd(
+                $thisResourcePermissions,
+                $permissionsDelta[$resource->getUri()] ?? []
+            );
+
+            if (!empty($add)) {
+                $addActions[] = ['permissions' => $add, 'resource' => $resource];
             }
         }
 
-        return $this->deduplicateActions($actions);
+        return $this->deduplicateActions(['add' => $addActions, 'remove' => $removeActions]);
     }
 
     private function dryRun(array $actions, array $permissionsList): void
@@ -329,6 +313,20 @@ class PermissionsService
     }
 
     /**
+     * @param core_kernel_classes_Resource[] $resources
+     * @return core_kernel_classes_Resource[]
+     */
+    private function filterClasses(array $resources): array
+    {
+        return array_filter(
+            $resources,
+            function (core_kernel_classes_Resource $resource) {
+                return !$resource->isClass();
+            }
+        );
+    }
+
+    /**
      * Provides an array holding the provided resource and, if it is a class, all
      * resources that are instances of the provided class or any of its descendants
      * plus all descendant classes.
@@ -346,21 +344,16 @@ class PermissionsService
         return $resources;
     }
 
+    // @todo Only used by getResourcesToUpdateByCommand, move logic there
     private function getResourcesToUpdate(
         core_kernel_classes_Resource $resource,
         bool $updateClassInstances = false
     ): array {
-
-        // applyToNestedResources = true --> $updateClassInstances = true
-
-        $resources = [$resource];
-
         if ($updateClassInstances && $resource->isClass()) {
-            //return array_merge($resources, $resource->getInstances(true));
-            return array_merge($resources, $resource->getInstances()); // non-recursive
+            return array_merge([$resource], $resource->getInstances()); // non-recursive
         }
 
-        return $resources;
+        return [$resource];
     }
 
     private function getResourcesPermissions(array $resources): array
