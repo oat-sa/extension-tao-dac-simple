@@ -27,8 +27,6 @@ use core_kernel_classes_Resource;
 /**
  * Value object holding data about permission changes to be
  * done in a resource or class.
- *
- * @todo Should be immutable, add setXXX methods that return a new instance instead
  */
 class ChangePermissionsCommand
 {
@@ -55,27 +53,6 @@ class ChangePermissionsCommand
         $this->privilegesPerUser = $privileges;
         $this->isRecursive = $isRecursive;
         $this->applyToNestedResources = $applyToNestedResources;
-    }
-
-    public function recursive(): self
-    {
-        $ret = clone $this;
-        $ret->isRecursive = true;
-
-        return $ret;
-    }
-
-    public function nonRecursive(): self
-    {
-        $ret = clone $this;
-        $ret->isRecursive = false;
-
-        return $ret;
-    }
-
-    public function rootIsAClass(): bool
-    {
-        return $this->root->isClass();
     }
 
     /**
