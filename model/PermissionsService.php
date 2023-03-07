@@ -58,7 +58,7 @@ class PermissionsService
     {
         $root = $command->getRoot();
 
-        $resources = $this->getResourcesToUpdateByCommand($command);
+        $resources = $this->getResourcesToUpdate($command);
         $currentPermissions = $this->getResourcesPermissions($resources);
         $permissionsDelta = $this->getDeltaForResourceTree($command, $currentPermissions);
 
@@ -66,9 +66,10 @@ class PermissionsService
             return;
         }
 
-        // @todo
-        // Backward compatibility: List resources and classes contained in the current one
-        // if the request is recursive, otherwise just get instances for the current class
+        // @todo Backwards compatibility:
+        //       List resources and classes contained in the current one if the
+        //       request is recursive, otherwise just get instances for the
+        //       current class
         //
         /*if ($command->isRecursive()) {
             $this->getLogger()->info("isRecursive for " . $root->getUri());
@@ -180,36 +181,30 @@ class PermissionsService
      * Gets the list of resources to update for a given command.
      *
      * - For recursive requests, lists both instances and classes contained
-     *   in the root class pointed out by $command.
+     *   in the root class pointed out by $command. This is used to provide
+     *   backwards-compatible behaviour for savePermissions() and
+     *   saveResourcePermissionsRecursive().
      *
      * - For non-recursive requests, returns only resource instances contained
      *   in the provided class, but skips child classes (as well as resources
-     *   contained in child classes).
+     *   contained in child classes, etc).
      *
      * @return core_kernel_classes_Resource[]
      */
-    private function getResourcesToUpdateByCommand(
+    private function getResourcesToUpdate(
         ChangePermissionsCommand $command
     ): array {
         $root = $command->getRoot();
 
-        // Backward compatibility: List resources and classes contained in the current one
-        // if the request is recursive, otherwise just get instances for the current class
-        //
         if ($command->isRecursive()) {
-            $this->getLogger()->info("isRecursive for " . $root->getUri());
-
-            $resources = $this->getResourcesByClassRecursive($root);
-        } else {
-            $this->getLogger()->info("non-recursive for " . $root->getUri());
-
-            $resources = $this->getResourcesToUpdate(
-                $root,
-                $command->applyToNestedResources()
-            );
+            return $this->getResourcesByClassRecursive($root);
         }
 
-        return $resources;
+        if ($command->applyToNestedResources() && $root->isClass()) {
+            return array_merge([$root], $root->getInstances()); // non-recursive
+        }
+
+         return [$root];
     }
 
     private function getActions(
@@ -313,20 +308,6 @@ class PermissionsService
     }
 
     /**
-     * @param core_kernel_classes_Resource[] $resources
-     * @return core_kernel_classes_Resource[]
-     */
-    private function filterClasses(array $resources): array
-    {
-        return array_filter(
-            $resources,
-            function (core_kernel_classes_Resource $resource) {
-                return !$resource->isClass();
-            }
-        );
-    }
-
-    /**
      * Provides an array holding the provided resource and, if it is a class, all
      * resources that are instances of the provided class or any of its descendants
      * plus all descendant classes.
@@ -342,18 +323,6 @@ class PermissionsService
         }
 
         return $resources;
-    }
-
-    // @todo Only used by getResourcesToUpdateByCommand, move logic there
-    private function getResourcesToUpdate(
-        core_kernel_classes_Resource $resource,
-        bool $updateClassInstances = false
-    ): array {
-        if ($updateClassInstances && $resource->isClass()) {
-            return array_merge([$resource], $resource->getInstances()); // non-recursive
-        }
-
-        return [$resource];
     }
 
     private function getResourcesPermissions(array $resources): array

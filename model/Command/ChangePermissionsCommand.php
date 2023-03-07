@@ -18,6 +18,8 @@
  * Copyright (c) 2023 (original work) Open Assessment Technologies SA.
  */
 
+declare(strict_types=1);
+
 namespace oat\taoDacSimple\model\Command;
 
 use core_kernel_classes_Resource;
