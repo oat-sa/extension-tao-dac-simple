@@ -71,6 +71,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
 
         $isSentinel = (bool) ($params[self::PARAM_IS_SENTINEL] ?? false);
         $isRecursive = (bool) ($params[self::PARAM_RECURSIVE] ?? false);
+        $isSubclass = (bool) ($params[self::PARAM_IS_SUBCLASS] ?? false);
         $privileges = (array) $params[self::PARAM_PRIVILEGES];
 
         try {
@@ -84,15 +85,58 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 );
             }
 
-            if ($isRecursive) {
+            if ($isSubclass) {
+                // isSubclass always comes from isRecursive requests (they are created
+                // inside handleRecursiveRequest()).
+                //
+                // At this point, classes had their ACLs changed but resources contained
+                // within them still have the old permissions.
+                //
+                // However, resources within classes are not updated, likely because the
+                // permission delta is computed based on the root classes, so once we try
+                // to update the resources, the delta is empty and the resources remain
+                // unchanged.
+
+                $this->getLogger()->info(
+                    sprintf("isSubclass: %s [%s]", $rootClass->getUri(), $rootClass->getLabel())
+                );
+
+                // Apply permission changes to resources within the class
+                $this->getPermissionService()->applyPermissions(
+                    new ChangePermissionsCommand(
+                        $rootClass,
+                        $privileges,
+                        false, // isRecursive
+                        true, // applyToNestedResources
+                        false // skipClasses
+                    )
+                );
+
+                $result = Report::createSuccess(
+                    sprintf(
+                        "Permissions saved for subclass %s [%s]",
+                        $rootClass->getUri(),
+                        $rootClass->getLabel()
+                    )
+                );
+
+            } else if ($isRecursive) {
                 $this->handleRecursiveRequest($rootClass, $privileges);
+
+                $result = Report::createSuccess('Starting recursive permissions update');
             } else {
                 $this->getPermissionService()->applyPermissions(
-                    new ChangePermissionsCommand($rootClass, $privileges, false, false)
+                    new ChangePermissionsCommand(
+                        $rootClass,
+                        $privileges,
+                        false, // isRecursive
+                        false, // applyToNestedResources
+                        false // skipClasses
+                    )
                 );
-            }
 
-            $result = Report::createSuccess('Permissions saved');
+                $result = Report::createSuccess('Permissions saved');
+            }
         } catch (Exception $exception) {
             $errMessage = sprintf(
                 'Saving permissions failed: %s',
@@ -106,54 +150,33 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         return $result;
     }
 
-    /**
-     * Checks if all subtasks have finished for a recursive request: If they
-     * did, updates permissions for the root class itself, otherwise it
-     * enqueues a new task to recheck it later.
-     */
-    private function handleSentinelRequest(
-        core_kernel_classes_Class $rootClass,
-        array $privileges,
-        array $subtaskIds
-    ): Report {
-        foreach ($subtaskIds as $subtaskId) {
-            if (!$this->subtaskHasFinished($subtaskId)) {
-                $this->spawnSentinelTask($rootClass, $privileges, $subtaskIds);
-
-                return Report::createSuccess('Change permissions subtasks in progress');
-            }
-        }
-
-        $this->getPermissionService()->applyPermissions(
-            new ChangePermissionsCommand($rootClass, $privileges, false, true)
-        );
-
-        return Report::createSuccess("Permissions saved for root {$rootClass->getUri()}");
-    }
-
     private function handleRecursiveRequest(
         core_kernel_classes_Class $class,
         array $privileges
     ): void {
-        $subClasses = $class->getSubClasses(true); // NOT including the root
-        $allSubclasses = array_merge($subClasses);
+        $allClasses = array_merge(
+            [$class],
+            $class->getSubClasses(true) // recursive, NOT including the root
+        );
 
-        /** @var CallbackTask[] $taskIds */
         $taskIds = [];
 
-        foreach ($allSubclasses as $subClass) {
+        foreach ($allClasses as $oneClass) {
             $task = $this->getDispatcher()->createTask(
                 new self(),
                 [
-                    self::PARAM_RESOURCE => $subClass->getUri(),
+                    self::PARAM_RESOURCE => $oneClass->getUri(),
                     self::PARAM_PRIVILEGES => $privileges,
                     self::PARAM_RECURSIVE => false,
+
+                    // @todo "IS_SUBCLASS" is not true anymore, it can be
+                    //       the root class as well -- rename the param name
                     self::PARAM_IS_SUBCLASS => true,
                 ],
                 sprintf(
                     'Processing permissions for class %s [%s]',
-                    $subClass->getLabel(),
-                    $subClass->getUri()
+                    $oneClass->getLabel(),
+                    $oneClass->getUri()
                 )
             );
 
@@ -164,6 +187,48 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     }
 
     /**
+     * Checks if all subtasks have finished for a recursive request: If they
+     * did, updates permissions for the root class itself, otherwise it
+     * enqueues a new task to recheck it later.
+     *
+     * @fixme Maybe not needed anymore
+     */
+    private function handleSentinelRequest(
+        core_kernel_classes_Class $rootClass,
+        array $privileges,
+        array $subtaskIds
+    ): Report {
+        foreach ($subtaskIds as $subtaskId) {
+            if (!$this->subtaskHasFinished($subtaskId)) {
+                $this->getLogger()->info("There are pending subtasks");
+                $this->spawnSentinelTask($rootClass, $privileges, $subtaskIds);
+
+                return Report::createSuccess('Change permissions subtasks in progress');
+            }
+        }
+
+        // @fixme WE NOW NEED TO APPLY THE CHANGES TO ITEMS IN EACH CLASS
+        //        INSTEAD BUT WE CANNOT COMPUTE THE DIFF BASED ON THE CLASSES
+        //        ANYMORE BECAUSE WE'VE ALREADY UPDATED CLASS PERMISSIONS
+        /*$this->getLogger()->info("Now applying permissions for classes");
+        $this->getPermissionService()->applyPermissions(
+            new ChangePermissionsCommand(
+                $rootClass,
+                $privileges,
+                false, // isRecursive
+                true, // applyToNestedResources
+                false // skipClasses
+            )
+        );*/
+
+        return Report::createSuccess(
+            "Permissions saved for root {$rootClass->getUri()}"
+        );
+    }
+
+    /**
+     * @todo Update/fix this docblock
+     *
      * PermissionsService::saveResourcePermissions uses the root class to
      * compute the ACL diff, so we cannot change its permissions before all
      * child classes/resources are changed.
@@ -187,19 +252,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 self::PARAM_RESOURCE => $class->getUri(),
                 self::PARAM_PRIVILEGES => $privileges,
                 self::PARAM_IS_SENTINEL => true,
-                self::PARAM_SUBTASK_IDS => $taskIds, // array_map(
-                    //function (CallbackTask $task) {
-
-                /*
-                 * Argument 1 passed to oat\taoDacSimple\model\tasks\ChangePermissionsTask::
-                 *  oat\taoDacSimple\model\tasks\{closure}() must implement interface
-                 *  oat\tao\model\taskQueue\Task\TaskInterface, string given
-                 */
-                    /*function (TaskInterface $task) {
-                        return $task->getId();
-                    },
-                    $taskIds
-                ),*/
+                self::PARAM_SUBTASK_IDS => $taskIds,
             ],
             sprintf(
                 'Process permissions for root class %s [%s]',
