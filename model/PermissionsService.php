@@ -52,8 +52,6 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
-    // @todo Fix unit tests
-
     /**
      * Updates the permissions for a set of resources based on the ACLs, root
      * resource and recursion parameters contained in the provided command.
