@@ -71,9 +71,6 @@ class PermissionsService
      *
      * - Otherwise (i.e. non-class roots), it updates only the resource set as
      *   the root resource for the command.
-     *
-     * @param ChangePermissionsCommand $command
-     * @return void
      */
     public function applyPermissions(ChangePermissionsCommand $command): void
     {
