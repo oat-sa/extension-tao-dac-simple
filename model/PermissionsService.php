@@ -74,8 +74,6 @@ class PermissionsService
      */
     public function applyPermissions(ChangePermissionsCommand $command): void
     {
-        $root = $command->getRoot();
-
         $resources = $this->getResourcesToUpdate($command);
         $currentPermissions = $this->getResourcesPermissions($resources);
         $permissionsDelta = $this->getDeltaForResourceTree($command, $currentPermissions);
@@ -85,29 +83,12 @@ class PermissionsService
         }
 
         $actions = $this->getActions($resources, $currentPermissions, $permissionsDelta);
-
-        $this->getLogger()->info(
-            sprintf(
-                "dryRun starting for %d additions, %d removals",
-                count($actions['add'] ?? 0),
-                count($actions['remove'] ?? 0)
-            )
-        );
         $this->dryRun($actions, $currentPermissions);
-
-        $this->getLogger()->info(
-            sprintf(
-                "wetRun starting for %d additions, %d removals",
-                count($actions['add'] ?? 0),
-                count($actions['remove'] ?? 0)
-            )
-        );
         $this->wetRun($actions);
 
-        $this->getLogger()->info(sprintf("Triggering events for %s", $root->getUri()));
         $this->triggerEvents(
             $permissionsDelta,
-            $root->getUri(),
+            $command->getRoot()->getUri(),
             $command->applyToNestedResources()
         );
     }
@@ -120,8 +101,6 @@ class PermissionsService
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
     ): void {
-        error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
-
         $this->applyPermissions(
             (new ChangePermissionsCommand($resource, $privilegesToSet))
                 ->withRecursion()
@@ -138,8 +117,6 @@ class PermissionsService
         core_kernel_classes_Class $class,
         array $privilegesToSet
     ): void {
-        error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
-
         $this->applyPermissions(
             (new ChangePermissionsCommand($class, $privilegesToSet))
                 ->withRecursion($isRecursive)
@@ -363,6 +340,8 @@ class PermissionsService
 
     private function triggerEvents(array $addRemove, string $resourceId, bool $applyToNestedResources): void
     {
+        $this->getLogger()->info(sprintf("Triggering events for %s", $resourceId));
+
         if (!empty($addRemove['add'])) {
             foreach ($addRemove['add'] as $userId => $rights) {
                 $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, (array)$rights));
