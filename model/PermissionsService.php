@@ -120,7 +120,7 @@ class PermissionsService
         $this->applyPermissions(
             (new ChangePermissionsCommand($class, $privilegesToSet))
                 ->withRecursion($isRecursive)
-                ->withNestedResources()
+                ->withNestedResources($isRecursive)
         );
     }
 
