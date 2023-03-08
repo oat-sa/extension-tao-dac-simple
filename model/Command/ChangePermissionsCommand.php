@@ -59,10 +59,10 @@ class ChangePermissionsCommand
         return $ret;
     }
 
-    public function withNestedResources(): self
+    public function withNestedResources(bool $applyToNestedResources = true): self
     {
         $ret = clone $this;
-        $ret->applyToNestedResources = true;
+        $ret->applyToNestedResources = $applyToNestedResources;
 
         return $ret;
     }
