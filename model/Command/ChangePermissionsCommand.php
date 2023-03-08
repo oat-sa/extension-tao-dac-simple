@@ -39,20 +39,32 @@ class ChangePermissionsCommand
      */
     private array $privilegesPerUser;
 
-    private bool $isRecursive;
+    private bool $isRecursive = false;
 
-    private bool $applyToNestedResources;
+    private bool $applyToNestedResources = false;
 
     public function __construct(
         core_kernel_classes_Resource $root,
-        array $privileges,
-        bool $isRecursive,
-        bool $applyToNestedResources
+        array $privileges
     ) {
         $this->root = $root;
         $this->privilegesPerUser = $privileges;
-        $this->isRecursive = $isRecursive;
-        $this->applyToNestedResources = $applyToNestedResources;
+    }
+
+    public function withRecursion(bool $isRecursive = true): self
+    {
+        $ret = clone $this;
+        $ret->isRecursive = $isRecursive;
+
+        return $ret;
+    }
+
+    public function withNestedResources(): self
+    {
+        $ret = clone $this;
+        $ret->applyToNestedResources = true;
+
+        return $ret;
     }
 
     /**

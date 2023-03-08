@@ -54,6 +54,27 @@ class PermissionsService
 
     // @todo Fix unit tests
 
+    /**
+     * Updates the permissions for a set of resources based on the ACLs, root
+     * resource and recursion parameters contained in the provided command.
+     *
+     * - For recursive commands having a class as the root, updates permissions
+     *   for that class and all its descendants (i.e. updates all resources AND
+     *   classes using the provided root class as the initial node for a tree
+     *   traversal, which may be slow and resource-intensive). This is provided
+     *   for backward compatibility purposes.
+     *
+     * - For non-recursive commands having a class as the root AND including
+     *   nested resources, updates permissions for the class and all instances
+     *   of that class, but skips all nested classes and instances of them (i.e.
+     *   does not go down into nested levels of the resource tree).
+     *
+     * - Otherwise (i.e. non-class roots), it updates only the resource set as
+     *   the root resource for the command.
+     *
+     * @param ChangePermissionsCommand $command
+     * @return void
+     */
     public function applyPermissions(ChangePermissionsCommand $command): void
     {
         $root = $command->getRoot();
@@ -65,34 +86,6 @@ class PermissionsService
         if (empty($permissionsDelta)) {
             return;
         }
-
-        // @todo Backwards compatibility:
-        //       List resources and classes contained in the current one if the
-        //       request is recursive, otherwise just get instances for the
-        //       current class
-        //
-        /*if ($command->isRecursive()) {
-            $this->getLogger()->info("isRecursive for " . $root->getUri());
-
-            $resources = $this->getResourcesByClassRecursive($root);
-        } else {
-            $this->getLogger()->info("non-recursive for " . $root->getUri());
-
-            $resources = $this->getResourcesToUpdate(
-                $root,
-                $command->applyToNestedResources()
-            );
-        }
-
-        if ($command->skipClasses()) {
-            // Filter out classes
-            $resources = array_filter(
-                $resources,
-                function (core_kernel_classes_Resource $resource) {
-                    return !$resource->isClass();
-                }
-            );
-        }*/
 
         $actions = $this->getActions($resources, $currentPermissions, $permissionsDelta);
 
@@ -124,6 +117,7 @@ class PermissionsService
 
     /**
      * @deprecated Use applyPermissions() instead
+     * @see applyPermissions
      */
     public function saveResourcePermissionsRecursive(
         core_kernel_classes_Resource $resource,
@@ -132,12 +126,15 @@ class PermissionsService
         error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
 
         $this->applyPermissions(
-            new ChangePermissionsCommand($resource, $privilegesToSet, true, true)
+            (new ChangePermissionsCommand($resource, $privilegesToSet))
+                ->withRecursion()
+                ->withNestedResources()
         );
     }
 
     /**
      * @deprecated Use applyPermissions() instead
+     * @see applyPermissions
      */
     public function savePermissions(
         bool $isRecursive,
@@ -147,7 +144,9 @@ class PermissionsService
         error_log('Called deprecated method ' . __FUNCTION__, E_USER_DEPRECATED);
 
         $this->applyPermissions(
-            new ChangePermissionsCommand($class, $privilegesToSet, $isRecursive, true)
+            (new ChangePermissionsCommand($class, $privilegesToSet))
+                ->withRecursion($isRecursive)
+                ->withNestedResources()
         );
     }
 
@@ -180,8 +179,8 @@ class PermissionsService
     /**
      * Gets the list of resources to update for a given command.
      *
-     * - For recursive requests, lists both instances and classes contained
-     *   in the root class pointed out by $command. This is used to provide
+     * - For recursive requests, lists both instances and classes contained in
+     *   the root class pointed out by $command. This is used to provide
      *   backwards-compatible behaviour for savePermissions() and
      *   saveResourcePermissionsRecursive().
      *
@@ -191,9 +190,8 @@ class PermissionsService
      *
      * @return core_kernel_classes_Resource[]
      */
-    private function getResourcesToUpdate(
-        ChangePermissionsCommand $command
-    ): array {
+    private function getResourcesToUpdate(ChangePermissionsCommand $command): array
+    {
         $root = $command->getRoot();
 
         if ($command->isRecursive()) {
