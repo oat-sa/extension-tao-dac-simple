@@ -136,7 +136,7 @@ class PermissionsService
     ): array {
         $delta = [];
 
-        foreach($currentResourcePermissions as $resourceId => $permissions) {
+        foreach ($currentResourcePermissions as $resourceId => $permissions) {
             $permissionsDelta = $this->strategy->normalizeRequest(
                 $permissions,
                 $command->getPrivilegesPerUser()

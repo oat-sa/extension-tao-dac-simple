@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,6 +19,8 @@ declare(strict_types=1);
  *
  */
 
+declare(strict_types=1);
+
 namespace oat\taoDacSimple\model;
 
 use RuntimeException;
@@ -31,7 +31,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
     {
         $outputDiff = [];
 
-        if (!($this->is_assoc($array1) || $this->is_assoc($array2))) {
+        if (!($this->isAssociative($array1) || $this->isAssociative($array2))) {
             return array_values(array_diff($array1, $array2));
         }
 
@@ -39,7 +39,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
             if (array_key_exists($array1key, $array2)) {
                 if (is_array($array1value) && is_array($array2[$array1key])) {
                     $outputDiff[$array1key] = $this->arrayDiffRecursive($array1value, $array2[$array1key]);
-                } else  {
+                } else {
                     throw new RuntimeException('Inconsistent data');
                 }
             } else {
@@ -62,7 +62,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
     {
         $return = [];
 
-        if (!($this->is_assoc($array1) || $this->is_assoc($array2))) {
+        if (!($this->isAssociative($array1) || $this->isAssociative($array2))) {
             return array_intersect($array1, $array2);
         }
 
@@ -75,7 +75,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
                 if ($intersection) {
                     $return[$key] = $intersection;
                 }
-            } else if ($array1[$key] === $array2[$key]) {
+            } elseif ($array1[$key] === $array2[$key]) {
                 $return[$key] = $array1[$key];
             }
         }
@@ -83,7 +83,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
         return $return;
     }
 
-    private function is_assoc(array $array): bool
+    private function isAssociative(array $array): bool
     {
         return count(array_filter(array_keys($array), 'is_string')) > 0;
     }
@@ -107,8 +107,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
                 if ($privilegeIds) {
                     $add[$userId] = $privilegeIds;
                 }
-            } // compare privileges in db and request
-            else {
+            } else { // compare privileges in db and request
                 $tmp = array_values(array_diff($privilegeIds, $currentPrivileges[$userId]));
                 if ($tmp) {
                     $add[$userId] = $tmp;
