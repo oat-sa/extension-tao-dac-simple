@@ -81,6 +81,7 @@ class ChangePermissionsCommandTest extends TestCase
         $sut = $source->withRecursion($isRecursive);
 
         $this->assertNotSame($source, $sut);
+        $this->assertFalse($sut->applyToNestedResources());
         $this->assertEquals($isRecursive, $sut->isRecursive());
     }
 
@@ -92,6 +93,32 @@ class ChangePermissionsCommandTest extends TestCase
             ],
             'isRecursive=false' => [
                 'isRecursive' => false,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider withNestedResourcesGeneratesNewInstanceDataProvider
+     */
+    public function testWithNestedResourcesGeneratesNewInstance(
+        bool $applyToNestedResources
+    ): void {
+        $source = new ChangePermissionsCommand($this->root, []);
+        $sut = $source->withNestedResources($applyToNestedResources);
+
+        $this->assertNotSame($source, $sut);
+        $this->assertFalse($source->applyToNestedResources());
+        $this->assertEquals($applyToNestedResources, $sut->applyToNestedResources());
+    }
+
+    public function withNestedResourcesGeneratesNewInstanceDataProvider(): array
+    {
+        return [
+            'applyToNestedResources=true' => [
+                'applyToNestedResources' => true,
+            ],
+            'applyToNestedResources=false' => [
+                'applyToNestedResources' => false,
             ],
         ];
     }
