@@ -31,7 +31,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
     {
         $outputDiff = [];
 
-        if (!($this->isAssoc($array1) || $this->isAssoc($array2))) {
+        if (!($this->isAssociative($array1) || $this->isAssociative($array2))) {
             return array_values(array_diff($array1, $array2));
         }
 
@@ -62,7 +62,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
     {
         $return = [];
 
-        if (!($this->isAssoc($array1) || $this->isAssoc($array2))) {
+        if (!($this->isAssociative($array1) || $this->isAssociative($array2))) {
             return array_intersect($array1, $array2);
         }
 
@@ -83,7 +83,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
         return $return;
     }
 
-    private function isAssoc(array $array): bool
+    private function isAssociative(array $array): bool
     {
         return count(array_filter(array_keys($array), 'is_string')) > 0;
     }
