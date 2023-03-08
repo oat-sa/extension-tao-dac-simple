@@ -245,7 +245,7 @@ class PermissionsServiceTest extends TestCase
         $this->databaseAccess->expects($this->never())->method('addPermissions');
         $this->databaseAccess->expects($this->never())->method('removePermissions');
 
-        $this->databaseAccess->method('getResourcePermissions')->willReturn([]);
+        $this->databaseAccess->method('getResourcesPermissions')->willReturn([]);
 
         $this->strategy->method('normalizeRequest')->willReturn([]);
 
@@ -304,7 +304,13 @@ class PermissionsServiceTest extends TestCase
     {
         $this->eventManager->expects($this->at(0))
             ->method('trigger')
-            ->with(new DacRootAddedEvent($userId, $resourceId, ['GRANT', 'READ', 'WRITE']));
+            ->with(
+                new DacRootAddedEvent(
+                    $userId,
+                    $resourceId,
+                    ['GRANT', 'READ', 'WRITE']
+                )
+            );
 
         $this->eventManager->expects($this->at(1))
             ->method('trigger')

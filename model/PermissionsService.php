@@ -87,7 +87,7 @@ class PermissionsService
         $this->wetRun($actions);
 
         $this->triggerEvents(
-            $permissionsDelta,
+            $permissionsDelta[$command->getRoot()->getUri()],
             $command->getRoot()->getUri(),
             $command->applyToNestedResources()
         );
