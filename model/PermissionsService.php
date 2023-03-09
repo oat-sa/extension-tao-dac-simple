@@ -52,24 +52,6 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
-    /**
-     * Updates the permissions for a set of resources based on the ACLs, root
-     * resource and recursion parameters contained in the provided command.
-     *
-     * - For recursive commands having a class as the root, updates permissions
-     *   for that class and all its descendants (i.e. updates all resources AND
-     *   classes using the provided root class as the initial node for a tree
-     *   traversal, which may be slow and resource-intensive). This is provided
-     *   for backward compatibility purposes.
-     *
-     * - For non-recursive commands having a class as the root AND including
-     *   nested resources, updates permissions for the class and all instances
-     *   of that class, but skips all nested classes and instances of them (i.e.
-     *   does not go down into nested levels of the resource tree).
-     *
-     * - Otherwise (i.e. non-class roots), it updates only the resource set as
-     *   the root resource for the command.
-     */
     public function applyPermissions(ChangePermissionsCommand $command): void
     {
         $resources = $this->getResourcesToUpdate($command);

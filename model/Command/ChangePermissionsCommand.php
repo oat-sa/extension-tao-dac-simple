@@ -25,8 +25,15 @@ namespace oat\taoDacSimple\model\Command;
 use core_kernel_classes_Resource;
 
 /**
- * Value object holding data about permission changes to be
- * done in a resource or class.
+ * Value object holding data about permission changes to be done in a resource.
+ *
+ * By default, the command is set up to apply a given set of ACLs to a single
+ * resource designated as the command's root.
+ *
+ * However, it also provides methods to create copies of the command having
+ * different recursion settings, making PermissionsService to operate
+ * recursively or to modify class instances under the root resource in case the
+ * root itself is a class.
  */
 class ChangePermissionsCommand
 {
@@ -51,6 +58,17 @@ class ChangePermissionsCommand
         $this->privilegesPerUser = $privileges;
     }
 
+    /**
+     * Clones the current command setting its recursive flag to a new value.
+     *
+     * For commands having a class as the root, setting the recursion flag
+     * makes PermissionsService to update permissions for the class and all its
+     * descendants (i.e. updates all resources AND classes using the provided
+     * root class as the initial node for a tree traversal, which may be slow
+     * and resource-intensive).
+     *
+     * This is provided for backward compatibility purposes.
+     */
     public function withRecursion(bool $isRecursive = true): self
     {
         $ret = clone $this;
@@ -59,6 +77,16 @@ class ChangePermissionsCommand
         return $ret;
     }
 
+    /**
+     * Clones the current command setting its applyToNestedResources flag to a
+     * new value.
+     *
+     * For commands having a class as the root AND not having the recursion
+     * flag set, setting the nested resources flag makes PermissionsService to
+     * update permissions for the class and all instances of that class, but
+     * skips all nested classes and instances of them (i.e. does not go down
+     * into nested levels of the resource tree).
+     */
     public function withNestedResources(bool $applyToNestedResources = true): self
     {
         $ret = clone $this;
