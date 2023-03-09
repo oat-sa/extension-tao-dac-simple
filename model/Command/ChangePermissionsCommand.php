@@ -67,33 +67,21 @@ class ChangePermissionsCommand
         return $ret;
     }
 
-    /**
-     * @return core_kernel_classes_Resource
-     */
     public function getRoot(): core_kernel_classes_Resource
     {
         return $this->root;
     }
 
-    /**
-     * @return array
-     */
     public function getPrivilegesPerUser(): array
     {
         return $this->privilegesPerUser;
     }
 
-    /**
-     * @return bool
-     */
     public function isRecursive(): bool
     {
         return $this->isRecursive;
     }
 
-    /**
-     * @return bool
-     */
     public function applyToNestedResources(): bool
     {
         return $this->applyToNestedResources;
