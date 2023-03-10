@@ -25,15 +25,13 @@ namespace oat\taoDacSimple\model\Command;
 use core_kernel_classes_Resource;
 
 /**
- * Value object holding data about permission changes to be done in a resource.
+ * Holds data about permission changes to be done in a resource.
  *
  * By default, the command is set up to apply a given set of ACLs to a single
- * resource designated as the command's root.
- *
- * However, it also provides methods to create copies of the command having
- * different recursion settings, making PermissionsService to operate
- * recursively or to modify class instances under the root resource in case the
- * root itself is a class.
+ * resource designated as the command's root. However, it also provides methods
+ * to change its recursion settings after the command creation, making
+ * PermissionsService to operate recursively or to modify class instances under
+ * the root resource in case the root itself is a class.
  */
 class ChangePermissionsCommand
 {
@@ -59,7 +57,7 @@ class ChangePermissionsCommand
     }
 
     /**
-     * Clones the current command setting its recursive flag to a new value.
+     * Sets the isRecursive flag for the command.
      *
      * For commands having a class as the root, setting the recursion flag
      * makes PermissionsService to update permissions for the class and all its
@@ -69,17 +67,13 @@ class ChangePermissionsCommand
      *
      * This is provided for backward compatibility purposes.
      */
-    public function withRecursion(bool $isRecursive = true): self
+    public function withRecursion(): void
     {
-        $ret = clone $this;
-        $ret->isRecursive = $isRecursive;
-
-        return $ret;
+        $this->isRecursive = true;
     }
 
     /**
-     * Clones the current command setting its applyToNestedResources flag to a
-     * new value.
+     * Sets the applyToNestedResources flag for the command.
      *
      * For commands having a class as the root AND not having the recursion
      * flag set, setting the nested resources flag makes PermissionsService to
@@ -87,12 +81,9 @@ class ChangePermissionsCommand
      * skips all nested classes and instances of them (i.e. does not go down
      * into nested levels of the resource tree).
      */
-    public function withNestedResources(bool $applyToNestedResources = true): self
+    public function withNestedResources(): void
     {
-        $ret = clone $this;
-        $ret->applyToNestedResources = $applyToNestedResources;
-
-        return $ret;
+        $this->applyToNestedResources = true;
     }
 
     public function getRoot(): core_kernel_classes_Resource

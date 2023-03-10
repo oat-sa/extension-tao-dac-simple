@@ -24,8 +24,6 @@ namespace oat\taoDacSimple\test\unit\model\Copy\Service;
 
 use core_kernel_classes_Resource;
 use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
-use oat\taoDacSimple\model\Copy\Service\DacSimplePermissionCopier;
-use oat\taoDacSimple\model\DataBaseAccess;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -72,54 +70,29 @@ class ChangePermissionsCommandTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider withRecursionGeneratesNewInstanceDataProvider
-     */
-    public function testWithRecursionGeneratesNewInstance(bool $isRecursive): void
+    public function testWithRecursion(): void
     {
-        $source = new ChangePermissionsCommand($this->root, []);
-        $sut = $source->withRecursion($isRecursive);
+        $sut = new ChangePermissionsCommand($this->root, []);
+        $sut->withRecursion();
 
-        $this->assertNotSame($source, $sut);
+        $this->assertTrue($sut->isRecursive());
         $this->assertFalse($sut->applyToNestedResources());
-        $this->assertEquals($isRecursive, $sut->isRecursive());
     }
 
-    public function withRecursionGeneratesNewInstanceDataProvider(): array
-    {
-        return [
-            'isRecursive=true' => [
-                'isRecursive' => true,
-            ],
-            'isRecursive=false' => [
-                'isRecursive' => false,
-            ],
-        ];
+    public function testWithNestedResources(): void {
+        $sut = new ChangePermissionsCommand($this->root, []);
+        $sut->withNestedResources();
+
+        $this->assertFalse($sut->isRecursive());
+        $this->assertTrue($sut->applyToNestedResources());
     }
 
-    /**
-     * @dataProvider withNestedResourcesGeneratesNewInstanceDataProvider
-     */
-    public function testWithNestedResourcesGeneratesNewInstance(
-        bool $applyToNestedResources
-    ): void {
-        $source = new ChangePermissionsCommand($this->root, []);
-        $sut = $source->withNestedResources($applyToNestedResources);
+    public function testWithBoth(): void {
+        $sut = new ChangePermissionsCommand($this->root, []);
+        $sut->withRecursion();
+        $sut->withNestedResources();
 
-        $this->assertNotSame($source, $sut);
-        $this->assertFalse($source->applyToNestedResources());
-        $this->assertEquals($applyToNestedResources, $sut->applyToNestedResources());
-    }
-
-    public function withNestedResourcesGeneratesNewInstanceDataProvider(): array
-    {
-        return [
-            'applyToNestedResources=true' => [
-                'applyToNestedResources' => true,
-            ],
-            'applyToNestedResources=false' => [
-                'applyToNestedResources' => false,
-            ],
-        ];
+        $this->assertTrue($sut->isRecursive());
+        $this->assertTrue($sut->applyToNestedResources());
     }
 }

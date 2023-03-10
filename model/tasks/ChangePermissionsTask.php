@@ -89,10 +89,10 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 $root->getLabel()
             );
 
-            $this->getPermissionService()->applyPermissions(
-                (new ChangePermissionsCommand($root, $privileges))
-                    ->withNestedResources()
-            );
+            $command = new ChangePermissionsCommand($root, $privileges);
+            $command->withNestedResources();
+
+            $this->getPermissionService()->applyPermissions($command);
         } elseif ($isRecursive) {
             $message = 'Starting recursive permissions update';
 

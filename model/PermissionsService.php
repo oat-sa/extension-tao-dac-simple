@@ -81,11 +81,11 @@ class PermissionsService
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
     ): void {
-        $this->applyPermissions(
-            (new ChangePermissionsCommand($resource, $privilegesToSet))
-                ->withRecursion()
-                ->withNestedResources()
-        );
+        $command = new ChangePermissionsCommand($resource, $privilegesToSet);
+        $command->withRecursion();
+        $command->withNestedResources();
+
+        $this->applyPermissions($command);
     }
 
     /**
@@ -97,11 +97,14 @@ class PermissionsService
         core_kernel_classes_Class $class,
         array $privilegesToSet
     ): void {
-        $this->applyPermissions(
-            (new ChangePermissionsCommand($class, $privilegesToSet))
-                ->withRecursion($isRecursive)
-                ->withNestedResources($isRecursive)
-        );
+        $command = new ChangePermissionsCommand($class, $privilegesToSet);
+
+        if ($isRecursive) {
+            $command->withRecursion();
+            $command->withNestedResources();
+        }
+
+        $this->applyPermissions($command);
     }
 
     /**
