@@ -69,6 +69,7 @@ class PermissionsService
         $this->triggerEvents(
             $permissionsDelta[$command->getRoot()->getUri()],
             $command->getRoot()->getUri(),
+            $command->isRecursive(),
             $command->applyToNestedResources()
         );
     }
@@ -327,8 +328,12 @@ class PermissionsService
         }
     }
 
-    private function triggerEvents(array $addRemove, string $resourceId, bool $applyToNestedResources): void
-    {
+    private function triggerEvents(
+        array $addRemove,
+        string $resourceId,
+        bool $isRecursive,
+        bool $applyToNestedResources
+    ): void {
         $this->getLogger()->info(sprintf("Triggering events for %s", $resourceId));
 
         if (!empty($addRemove['add'])) {
@@ -352,6 +357,7 @@ class PermissionsService
             new DataAccessControlChangedEvent(
                 $resourceId,
                 $addRemove,
+                $isRecursive,
                 $applyToNestedResources
             )
         );
