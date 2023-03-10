@@ -274,7 +274,13 @@ class PermissionsService
         $resources = [$resource];
 
         if ($resource->isClass()) {
-            return array_merge($resources, $resource->getInstances(true));
+            $class = $resource->getClass($resource->getUri());
+
+            $resources = array_merge(
+                $resources,
+                $class->getSubClasses(true),
+                $class->getInstances(true)
+            );
         }
 
         return $resources;
