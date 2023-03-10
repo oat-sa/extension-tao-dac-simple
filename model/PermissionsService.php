@@ -334,8 +334,6 @@ class PermissionsService
         bool $isRecursive,
         bool $applyToNestedResources
     ): void {
-        $this->getLogger()->info(sprintf("Triggering events for %s", $resourceId));
-
         if (!empty($addRemove['add'])) {
             foreach ($addRemove['add'] as $userId => $rights) {
                 $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, (array)$rights));
