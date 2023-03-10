@@ -79,7 +79,8 @@ class ChangePermissionsCommandTest extends TestCase
         $this->assertFalse($sut->applyToNestedResources());
     }
 
-    public function testWithNestedResources(): void {
+    public function testWithNestedResources(): void
+    {
         $sut = new ChangePermissionsCommand($this->root, []);
         $sut->withNestedResources();
 
@@ -87,7 +88,8 @@ class ChangePermissionsCommandTest extends TestCase
         $this->assertTrue($sut->applyToNestedResources());
     }
 
-    public function testWithBoth(): void {
+    public function testWithBoth(): void
+    {
         $sut = new ChangePermissionsCommand($this->root, []);
         $sut->withRecursion();
         $sut->withNestedResources();
