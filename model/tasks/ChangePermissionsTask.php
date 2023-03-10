@@ -51,7 +51,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RESOURCE = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
     public const PARAM_RECURSIVE = 'recursive';
-    public const PARAM_RECURSIVE_CLASS = 'recursive_class';
+    public const PARAM_NESTED_RESOURCES = 'recursive_class';
 
     private const MANDATORY_PARAMS = [
         self::PARAM_RESOURCE,
@@ -67,7 +67,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 $this->getClass($params[self::PARAM_RESOURCE]),
                 (array) $params[self::PARAM_PRIVILEGES],
                 (bool) ($params[self::PARAM_RECURSIVE] ?? false),
-                (bool) ($params[self::PARAM_RECURSIVE_CLASS] ?? false)
+                (bool) ($params[self::PARAM_NESTED_RESOURCES] ?? false)
             );
         } catch (Exception $e) {
             $errMessage = sprintf('Saving permissions failed: %s', $e->getMessage());
@@ -81,9 +81,9 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         core_kernel_classes_Class $root,
         array $privileges,
         bool $isRecursive,
-        bool $isRecursiveClass
+        bool $withNestedResources
     ): Report {
-        if ($isRecursiveClass) {
+        if ($withNestedResources) {
             $message = sprintf(
                 "Permissions saved for resources under subclass %s [%s]",
                 $this->formatLabel($root),
@@ -126,7 +126,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                     self::PARAM_RESOURCE => $oneClass->getUri(),
                     self::PARAM_PRIVILEGES => $privileges,
                     self::PARAM_RECURSIVE => false,
-                    self::PARAM_RECURSIVE_CLASS => true,
+                    self::PARAM_NESTED_RESOURCES => true,
                 ],
                 sprintf(
                     'Processing permissions for class %s [%s]',
