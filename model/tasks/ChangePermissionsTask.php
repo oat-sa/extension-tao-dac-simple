@@ -25,6 +25,7 @@ namespace oat\taoDacSimple\model\tasks;
 use common_exception_MissingParameter;
 use common_report_Report as Report;
 use core_kernel_classes_Class;
+use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\extension\AbstractAction;
 use oat\tao\model\taskQueue\QueueDispatcher;
@@ -85,8 +86,8 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         if ($isRecursiveClass) {
             $message = sprintf(
                 "Permissions saved for resources under subclass %s [%s]",
-                $root->getUri(),
-                $root->getLabel()
+                $this->formatLabel($root),
+                $root->getUri()
             );
 
             $command = new ChangePermissionsCommand($root, $privileges);
@@ -129,11 +130,18 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 ],
                 sprintf(
                     'Processing permissions for class %s [%s]',
-                    $oneClass->getLabel(),
+                    $this->formatLabel($oneClass),
                     $oneClass->getUri()
                 )
             );
         }
+    }
+
+    protected function formatLabel(core_kernel_classes_Resource $resource): string
+    {
+        return strlen($resource->getLabel()) > 128
+            ? '...' . substr($resource->getLabel(), -128)
+            : $resource->getLabel();
     }
 
     private function getDispatcher(): QueueDispatcher
