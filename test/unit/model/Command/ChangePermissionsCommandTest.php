@@ -44,7 +44,11 @@ class ChangePermissionsCommandTest extends TestCase
      */
     public function testConstructor(array $privileges): void
     {
-        $sut = new ChangePermissionsCommand($this->root, $privileges);
+        $sut = new ChangePermissionsCommand(
+            $this->root,
+            $this->root->getUri(),
+            $privileges
+        );
 
         $this->assertSame($this->root, $sut->getRoot());
         $this->assertSame($privileges, $sut->getPrivilegesPerUser());
@@ -72,7 +76,11 @@ class ChangePermissionsCommandTest extends TestCase
 
     public function testWithRecursion(): void
     {
-        $sut = new ChangePermissionsCommand($this->root, []);
+        $sut = new ChangePermissionsCommand(
+            $this->root,
+            $this->root->getUri(),
+            []
+        );
         $sut->withRecursion();
 
         $this->assertTrue($sut->isRecursive());
@@ -81,7 +89,11 @@ class ChangePermissionsCommandTest extends TestCase
 
     public function testWithNestedResources(): void
     {
-        $sut = new ChangePermissionsCommand($this->root, []);
+        $sut = new ChangePermissionsCommand(
+            $this->root,
+            $this->root->getUri(),
+            []
+        );
         $sut->withNestedResources();
 
         $this->assertFalse($sut->isRecursive());
@@ -90,7 +102,11 @@ class ChangePermissionsCommandTest extends TestCase
 
     public function testWithBoth(): void
     {
-        $sut = new ChangePermissionsCommand($this->root, []);
+        $sut = new ChangePermissionsCommand(
+            $this->root,
+            $this->root->getUri(),
+            []
+        );
         $sut->withRecursion();
         $sut->withNestedResources();
 

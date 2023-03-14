@@ -325,9 +325,11 @@ class PermissionsServiceTest extends TestCase
             ->with(
                 new DataAccessControlChangedEvent(
                     $resourceId,
+                    $resourceId,
                     [
                         'add' => ['uid1' => ['GRANT', 'READ', 'WRITE']]
                     ],
+                    $isRecursive,
                     $isRecursive
                 )
             );

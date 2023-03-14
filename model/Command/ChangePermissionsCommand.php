@@ -52,7 +52,7 @@ class ChangePermissionsCommand
 
     public function __construct(
         core_kernel_classes_Resource $root,
-        string $masterRequest, // @fixme Fix/extend unit tests
+        string $masterRequest,
         array $privileges
     ) {
         $this->root = $root;
