@@ -101,10 +101,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             $message = 'Starting recursive permissions update';
 
             $this->createSubtasksForClasses(
-                array_merge(
-                    [$root],
-                    $root->getSubClasses(true) // recursive, NOT including the root
-                ),
+                array_merge([$root], $root->getSubClasses(true)),
                 $requestRoot,
                 $privileges
             );
