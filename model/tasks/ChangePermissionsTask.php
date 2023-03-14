@@ -51,7 +51,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RESOURCE = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
     public const PARAM_RECURSIVE = 'recursive';
-    public const PARAM_NESTED_RESOURCES = 'recursive_class';
+    public const PARAM_NESTED_RESOURCES = 'nested_resources';
 
     private const MANDATORY_PARAMS = [
         self::PARAM_RESOURCE,
