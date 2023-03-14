@@ -67,8 +67,9 @@ class PermissionsService
         $this->wetRun($actions);
 
         $this->triggerEvents(
-            $permissionsDelta[$command->getRoot()->getUri()],
             $command->getRoot()->getUri(),
+            $command->getMasterRequest(),
+            $permissionsDelta[$command->getRoot()->getUri()],
             $command->isRecursive(),
             $command->applyToNestedResources()
         );
@@ -82,7 +83,11 @@ class PermissionsService
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
     ): void {
-        $command = new ChangePermissionsCommand($resource, $privilegesToSet);
+        $command = new ChangePermissionsCommand(
+            $resource,
+            $resource->getUri(),
+            $privilegesToSet
+        );
         $command->withRecursion();
         $command->withNestedResources();
 
@@ -98,7 +103,11 @@ class PermissionsService
         core_kernel_classes_Class $class,
         array $privilegesToSet
     ): void {
-        $command = new ChangePermissionsCommand($class, $privilegesToSet);
+        $command = new ChangePermissionsCommand(
+            $class,
+            $class->getUri(),
+            $privilegesToSet
+        );
 
         if ($isRecursive) {
             $command->withRecursion();
@@ -329,8 +338,9 @@ class PermissionsService
     }
 
     private function triggerEvents(
-        array $addRemove,
         string $resourceId,
+        string $rootResourceId,
+        array $addRemove,
         bool $isRecursive,
         bool $applyToNestedResources
     ): void {
@@ -354,6 +364,7 @@ class PermissionsService
         $this->eventManager->trigger(
             new DataAccessControlChangedEvent(
                 $resourceId,
+                $rootResourceId,
                 $addRemove,
                 $isRecursive,
                 $applyToNestedResources

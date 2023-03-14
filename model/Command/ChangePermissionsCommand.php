@@ -37,6 +37,8 @@ class ChangePermissionsCommand
 {
     private core_kernel_classes_Resource $root;
 
+    private string $masterRequest;
+
     /**
      * An array in the form ['userId' => ['READ', 'WRITE], ...]
      *
@@ -50,9 +52,11 @@ class ChangePermissionsCommand
 
     public function __construct(
         core_kernel_classes_Resource $root,
+        string $masterRequest, // @fixme Fix/extend unit tests
         array $privileges
     ) {
         $this->root = $root;
+        $this->masterRequest = $masterRequest;
         $this->privilegesPerUser = $privileges;
     }
 
@@ -89,6 +93,11 @@ class ChangePermissionsCommand
     public function getRoot(): core_kernel_classes_Resource
     {
         return $this->root;
+    }
+
+    public function getMasterRequest(): string
+    {
+        return $this->masterRequest;
     }
 
     public function getPrivilegesPerUser(): array
