@@ -364,10 +364,10 @@ class PermissionsService
         $this->eventManager->trigger(
             new DataAccessControlChangedEvent(
                 $resourceId,
-                $rootResourceId,
                 $addRemove,
                 $isRecursive,
-                $applyToNestedResources
+                $applyToNestedResources,
+                $rootResourceId
             )
         );
     }

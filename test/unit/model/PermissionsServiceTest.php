@@ -100,7 +100,7 @@ class PermissionsServiceTest extends TestCase
         $resource = $this->createMock(core_kernel_classes_Class::class);
         $resource->method('getUri')->willReturn('res1');
 
-        $this->mockTriggeredEvents('res1', 'uid1', false);
+        $this->mockTriggeredEvents('res1', 'res1', 'uid1', false);
 
         $this->service->savePermissions(
             false,
@@ -151,7 +151,7 @@ class PermissionsServiceTest extends TestCase
         $resource->method('getInstances')->willReturn([]);
         $resource->method('getUri')->willReturn('uid2uri');
 
-        $this->mockTriggeredEvents('uid2uri', 'uid1', true);
+        $this->mockTriggeredEvents('uid2uri', 'uid2uri', 'uid1', true);
 
         $this->service->savePermissions(
             true,
@@ -299,8 +299,12 @@ class PermissionsServiceTest extends TestCase
         );
     }
 
-    private function mockTriggeredEvents(string $resourceId, string $userId, bool $isRecursive): void
-    {
+    private function mockTriggeredEvents(
+        string $resourceId,
+        ?string $rootResourceId,
+        string $userId,
+        bool $isRecursive
+    ): void {
         $this->eventManager->expects($this->at(0))
             ->method('trigger')
             ->with(
@@ -325,12 +329,12 @@ class PermissionsServiceTest extends TestCase
             ->with(
                 new DataAccessControlChangedEvent(
                     $resourceId,
-                    $resourceId,
                     [
                         'add' => ['uid1' => ['GRANT', 'READ', 'WRITE']]
                     ],
                     $isRecursive,
-                    $isRecursive
+                    $isRecursive,
+                    $rootResourceId
                 )
             );
     }
