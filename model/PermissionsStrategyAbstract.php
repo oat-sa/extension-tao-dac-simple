@@ -15,8 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020 (original work) Open Assessment Technologies SA;
- *
+ * Copyright (c) 2020-2023 (original work) Open Assessment Technologies SA;
  */
 
 declare(strict_types=1);
@@ -31,7 +30,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
     {
         $outputDiff = [];
 
-        if (!($this->isAssoc($array1) || $this->isAssoc($array2))) {
+        if (!($this->isAssociative($array1) || $this->isAssociative($array2))) {
             return array_values(array_diff($array1, $array2));
         }
 
@@ -62,7 +61,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
     {
         $return = [];
 
-        if (!($this->isAssoc($array1) || $this->isAssoc($array2))) {
+        if (!($this->isAssociative($array1) || $this->isAssociative($array2))) {
             return array_intersect($array1, $array2);
         }
 
@@ -83,7 +82,7 @@ abstract class PermissionsStrategyAbstract implements PermissionsStrategyInterfa
         return $return;
     }
 
-    private function isAssoc(array $array): bool
+    private function isAssociative(array $array): bool
     {
         return count(array_filter(array_keys($array), 'is_string')) > 0;
     }

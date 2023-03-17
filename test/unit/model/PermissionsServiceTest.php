@@ -15,8 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020-2022 (original work) Open Assessment Technologies SA;
- *
+ * Copyright (c) 2020-2023 (original work) Open Assessment Technologies SA;
  */
 
 declare(strict_types=1);
@@ -101,7 +100,7 @@ class PermissionsServiceTest extends TestCase
         $resource = $this->createMock(core_kernel_classes_Class::class);
         $resource->method('getUri')->willReturn('res1');
 
-        $this->mockTriggeredEvents('res1', 'uid1', false);
+        $this->mockTriggeredEvents('res1', 'res1', 'uid1', false);
 
         $this->service->savePermissions(
             false,
@@ -152,7 +151,7 @@ class PermissionsServiceTest extends TestCase
         $resource->method('getInstances')->willReturn([]);
         $resource->method('getUri')->willReturn('uid2uri');
 
-        $this->mockTriggeredEvents('uid2uri', 'uid1', true);
+        $this->mockTriggeredEvents('uid2uri', 'uid2uri', 'uid1', true);
 
         $this->service->savePermissions(
             true,
@@ -245,7 +244,7 @@ class PermissionsServiceTest extends TestCase
         $this->databaseAccess->expects($this->never())->method('addPermissions');
         $this->databaseAccess->expects($this->never())->method('removePermissions');
 
-        $this->databaseAccess->method('getResourcePermissions')->willReturn([]);
+        $this->databaseAccess->method('getResourcesPermissions')->willReturn([]);
 
         $this->strategy->method('normalizeRequest')->willReturn([]);
 
@@ -300,11 +299,21 @@ class PermissionsServiceTest extends TestCase
         );
     }
 
-    private function mockTriggeredEvents(string $resourceId, string $userId, bool $isRecursive): void
-    {
+    private function mockTriggeredEvents(
+        string $resourceId,
+        ?string $rootResourceId,
+        string $userId,
+        bool $isRecursive
+    ): void {
         $this->eventManager->expects($this->at(0))
             ->method('trigger')
-            ->with(new DacRootAddedEvent($userId, $resourceId, ['GRANT', 'READ', 'WRITE']));
+            ->with(
+                new DacRootAddedEvent(
+                    $userId,
+                    $resourceId,
+                    ['GRANT', 'READ', 'WRITE']
+                )
+            );
 
         $this->eventManager->expects($this->at(1))
             ->method('trigger')
@@ -323,7 +332,9 @@ class PermissionsServiceTest extends TestCase
                     [
                         'add' => ['uid1' => ['GRANT', 'READ', 'WRITE']]
                     ],
-                    $isRecursive
+                    $isRecursive,
+                    $isRecursive,
+                    $rootResourceId
                 )
             );
     }
