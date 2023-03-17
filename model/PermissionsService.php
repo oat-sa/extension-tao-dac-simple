@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020-2022 (original work) Open Assessment Technologies SA.
+ * Copyright (c) 2020-2023 (original work) Open Assessment Technologies SA.
  */
 
 declare(strict_types=1);
@@ -27,6 +27,7 @@ use core_kernel_classes_Resource;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\log\LoggerAwareTrait;
 use oat\tao\model\event\DataAccessControlChangedEvent;
+use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
 use oat\taoDacSimple\model\event\DacRootAddedEvent;
 use oat\taoDacSimple\model\event\DacRootRemovedEvent;
@@ -35,14 +36,11 @@ class PermissionsService
 {
     use LoggerAwareTrait;
 
-    /** @var DataBaseAccess */
-    private $dataBaseAccess;
+    private DataBaseAccess $dataBaseAccess;
 
-    /** @var PermissionsStrategyInterface */
-    private $strategy;
+    private PermissionsStrategyInterface $strategy;
 
-    /** @var EventManager */
-    private $eventManager;
+    private EventManager $eventManager;
 
     public function __construct(
         DataBaseAccess $dataBaseAccess,
@@ -54,61 +52,157 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
+    public function applyPermissions(ChangePermissionsCommand $command): void
+    {
+        $resources = $this->getResourcesToUpdate($command);
+        $currentPermissions = $this->getResourcesPermissions($resources);
+        $permissionsDelta = $this->getDeltaForResourceTree($command, $currentPermissions);
+
+        if (empty($permissionsDelta)) {
+            return;
+        }
+
+        $actions = $this->getActions($resources, $currentPermissions, $permissionsDelta);
+        $this->dryRun($actions, $currentPermissions);
+        $this->wetRun($actions);
+
+        $this->triggerEvents(
+            $command->getRoot()->getUri(),
+            $command->getMasterRequest(),
+            $permissionsDelta[$command->getRoot()->getUri()],
+            $command->isRecursive(),
+            $command->applyToNestedResources()
+        );
+    }
+
+    /**
+     * @deprecated Use applyPermissions() instead
+     * @see applyPermissions
+     */
     public function saveResourcePermissionsRecursive(
         core_kernel_classes_Resource $resource,
         array $privilegesToSet
     ): void {
-        $this->saveResourcePermissions($resource, $privilegesToSet, true);
+        $command = new ChangePermissionsCommand(
+            $resource,
+            $resource->getUri(),
+            $privilegesToSet
+        );
+        $command->withRecursion();
+        $command->withNestedResources();
+
+        $this->applyPermissions($command);
     }
 
-    private function saveResourcePermissions(
-        core_kernel_classes_Resource $resource,
-        array $privilegesToSet,
-        bool $isRecursive
-    ): void {
-        $currentPrivileges = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
-        $addRemove = $this->strategy->normalizeRequest($currentPrivileges, $privilegesToSet);
-
-        if (empty($addRemove)) {
-            return;
-        }
-
-        $resourcesToUpdate = $this->getResourcesToUpdate($resource, $isRecursive);
-        $permissionsList = $this->getResourcesPermissions($resourcesToUpdate);
-        $actions = $this->getActions($resourcesToUpdate, $permissionsList, $addRemove);
-
-        $this->dryRun($actions, $permissionsList);
-        $this->wetRun($actions);
-        $this->triggerEvents($addRemove, $resource->getUri(), $isRecursive);
-    }
-
+    /**
+     * @deprecated Use applyPermissions() instead
+     * @see applyPermissions
+     */
     public function savePermissions(
         bool $isRecursive,
         core_kernel_classes_Class $class,
         array $privilegesToSet
     ): void {
-        $this->saveResourcePermissions($class, $privilegesToSet, $isRecursive);
+        $command = new ChangePermissionsCommand(
+            $class,
+            $class->getUri(),
+            $privilegesToSet
+        );
+
+        if ($isRecursive) {
+            $command->withRecursion();
+            $command->withNestedResources();
+        }
+
+        $this->applyPermissions($command);
     }
 
-    private function getActions(array $resourcesToUpdate, array $permissionsList, array $addRemove): array
-    {
-        $actions = ['remove' => [], 'add' => []];
+    /**
+     * @param ChangePermissionsCommand $command
+     * @param string[][] $currentResourcePermissions
+     *
+     * @return string[][][]
+     */
+    private function getDeltaForResourceTree(
+        ChangePermissionsCommand $command,
+        array $currentResourcePermissions
+    ): array {
+        $delta = [];
 
-        foreach ($resourcesToUpdate as $resource) {
-            $currentPrivileges = $permissionsList[$resource->getUri()];
+        foreach ($currentResourcePermissions as $resourceId => $permissions) {
+            $permissionsDelta = $this->strategy->normalizeRequest(
+                $permissions,
+                $command->getPrivilegesPerUser()
+            );
 
-            $remove = $this->strategy->getPermissionsToRemove($currentPrivileges, $addRemove);
-            if ($remove) {
-                $actions['remove'][] = ['permissions' => $remove, 'resource' => $resource];
-            }
-
-            $add = $this->strategy->getPermissionsToAdd($currentPrivileges, $addRemove);
-            if ($add) {
-                $actions['add'][] = ['permissions' => $add, 'resource' => $resource];
+            if (!empty($permissionsDelta['add']) || !empty($permissionsDelta['remove'])) {
+                $delta[$resourceId] = $permissionsDelta;
             }
         }
 
-        return $this->deduplicateActions($actions);
+        return $delta;
+    }
+
+    /**
+     * Gets the list of resources to update for a given command.
+     *
+     * - For recursive requests, lists both instances and classes contained in
+     *   the root class pointed out by $command. This is used to provide
+     *   backwards-compatible behaviour for savePermissions() and
+     *   saveResourcePermissionsRecursive().
+     *
+     * - For non-recursive requests, returns only resource instances contained
+     *   in the provided class, but skips child classes (as well as resources
+     *   contained in child classes, etc).
+     *
+     * @return core_kernel_classes_Resource[]
+     */
+    private function getResourcesToUpdate(ChangePermissionsCommand $command): array
+    {
+        $root = $command->getRoot();
+
+        if ($command->isRecursive()) {
+            return $this->getResourcesByClassRecursive($root);
+        }
+
+        if ($command->applyToNestedResources() && $root->isClass()) {
+            return array_merge([$root], $root->getInstances()); // non-recursive
+        }
+
+         return [$root];
+    }
+
+    private function getActions(
+        array $resourcesToUpdate,
+        array $currentResourcePermissions,
+        array $permissionsDelta
+    ): array {
+        $addActions = [];
+        $removeActions = [];
+
+        foreach ($resourcesToUpdate as $resource) {
+            $thisResourcePermissions = $currentResourcePermissions[$resource->getUri()];
+
+            $remove = $this->strategy->getPermissionsToRemove(
+                $thisResourcePermissions,
+                $permissionsDelta[$resource->getUri()] ?? []
+            );
+
+            if (!empty($remove)) {
+                $removeActions[] = ['permissions' => $remove, 'resource' => $resource];
+            }
+
+            $add = $this->strategy->getPermissionsToAdd(
+                $thisResourcePermissions,
+                $permissionsDelta[$resource->getUri()] ?? []
+            );
+
+            if (!empty($add)) {
+                $addActions[] = ['permissions' => $add, 'resource' => $resource];
+            }
+        }
+
+        return $this->deduplicateActions(['add' => $addActions, 'remove' => $removeActions]);
     }
 
     private function dryRun(array $actions, array $permissionsList): void
@@ -122,7 +216,7 @@ class PermissionsService
             $this->dryAdd($item['permissions'], $item['resource'], $resultPermissions);
         }
 
-        $this->validateResources($resultPermissions);
+        $this->assertHasUserWithGrantPermission($resultPermissions);
     }
 
     private function wetRun(array $actions): void
@@ -178,14 +272,25 @@ class PermissionsService
         return $actions;
     }
 
-    private function getResourcesToUpdate(
-        core_kernel_classes_Resource $resource,
-        bool $isRecursive
-    ): array {
+    /**
+     * Provides an array holding the provided resource and, if it is a class, all
+     * resources that are instances of the provided class or any of its descendants
+     * plus all descendant classes.
+     *
+     * @return core_kernel_classes_Resource[]
+     */
+    private function getResourcesByClassRecursive(core_kernel_classes_Resource $resource): array
+    {
         $resources = [$resource];
 
-        if ($isRecursive && $resource->isClass()) {
-            return array_merge($resources, $resource->getSubClasses(true), $resource->getInstances(true));
+        if ($resource->isClass()) {
+            $class = $resource->getClass($resource->getUri());
+
+            $resources = array_merge(
+                $resources,
+                $class->getSubClasses(true),
+                $class->getInstances(true)
+            );
         }
 
         return $resources;
@@ -205,19 +310,23 @@ class PermissionsService
         return $this->dataBaseAccess->getResourcesPermissions($resourceIds);
     }
 
-    private function validateResources(array $resultPermissions): void
+    /**
+     * Checks if all resources after all actions are applied will have at least
+     * one user with GRANT permission.
+     */
+    private function assertHasUserWithGrantPermission(array $resultPermissions): void
     {
-        // check if all resources after all actions are applied will have al least one user with GRANT permission
         foreach ($resultPermissions as $resultResources => $resultUsers) {
-            $grunt = false;
+            $granted = false;
             foreach ($resultUsers as $permissions) {
-                if (in_array(PermissionProvider::PERMISSION_GRANT, $permissions, true)) {
-                    $grunt = true;
+                $granted = in_array(PermissionProvider::PERMISSION_GRANT, $permissions, true);
+
+                if ($granted) {
                     break;
                 }
             }
 
-            if (!$grunt) {
+            if (!$granted) {
                 throw new PermissionsServiceException(
                     sprintf(
                         'Resource %s should have at least one user with GRANT access',
@@ -228,14 +337,13 @@ class PermissionsService
         }
     }
 
-    /**
-     * @param array $addRemove
-     * @param string $resourceId
-     * @param bool $isRecursive
-     */
-
-    private function triggerEvents(array $addRemove, string $resourceId, bool $isRecursive): void
-    {
+    private function triggerEvents(
+        string $resourceId,
+        string $rootResourceId,
+        array $addRemove,
+        bool $isRecursive,
+        bool $applyToNestedResources
+    ): void {
         if (!empty($addRemove['add'])) {
             foreach ($addRemove['add'] as $userId => $rights) {
                 $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, (array)$rights));
@@ -257,7 +365,9 @@ class PermissionsService
             new DataAccessControlChangedEvent(
                 $resourceId,
                 $addRemove,
-                $isRecursive
+                $isRecursive,
+                $applyToNestedResources,
+                $rootResourceId
             )
         );
     }
