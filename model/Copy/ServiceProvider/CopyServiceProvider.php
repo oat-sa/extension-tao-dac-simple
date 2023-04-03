@@ -46,6 +46,8 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
             )
             ->tag('tao.copier.permissions.class.items')
             ->tag('tao.copier.permissions.instance.items')
+            ->tag('tao.copier.permissions.class.tests')
+            ->tag('tao.copier.permissions.instance.tests')
             ->tag('tao.copier.permissions.class.assets')
             ->tag('tao.copier.permissions.instance.assets');
     }
