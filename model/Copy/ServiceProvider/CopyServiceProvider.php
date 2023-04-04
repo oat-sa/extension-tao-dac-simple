@@ -44,6 +44,7 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
                     service(DataBaseAccess::SERVICE_ID),
                 ]
             )
+            ->tag('tao.copier.permissions')
             ->tag('tao.copier.permissions.class.items')
             ->tag('tao.copier.permissions.instance.items')
             ->tag('tao.copier.permissions.class.tests')
