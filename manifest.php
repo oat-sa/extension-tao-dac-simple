@@ -1,5 +1,6 @@
 <?php
 
+use oat\taoDacSimple\model\ClientConfig\ClientConfigServiceProvider;
 use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
@@ -66,6 +67,7 @@ return [
         'BASE_URL' => ROOT_URL . 'taoDacSimple/',
     ],
     'containerServiceProviders' => [
-        CopyServiceProvider::class
+        CopyServiceProvider::class,
+        ClientConfigServiceProvider::class,
     ]
 ];
