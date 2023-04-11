@@ -1,11 +1,11 @@
 <?php
 
-use oat\taoDacSimple\model\ClientConfig\ClientConfigServiceProvider;
-use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
-use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
+use oat\taoDacSimple\scripts\install\RegisterAction;
+use oat\taoDacSimple\scripts\install\SetupDataAccess;
+use oat\taoDacSimple\controller\AdminAccessController;
 
-/**
+/*
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; under version 2
@@ -23,10 +23,10 @@ use oat\taoDacSimple\scripts\update\Updater;
  * Copyright (c) 2014-2022 (original work) Open Assessment Technologies SA;
  */
 
-use oat\taoDacSimple\scripts\install\SetupDataAccess;
-use oat\taoDacSimple\scripts\install\RegisterAction;
-use oat\taoDacSimple\controller\AdminAccessController;
+use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\uninstall\RemoveDataAccess;
+use oat\taoDacSimple\model\ClientConfig\ClientConfigServiceProvider;
+use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
 
 return [
     'name' => 'taoDacSimple',
@@ -38,13 +38,13 @@ return [
     'acl' => [
         ['grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager', ['ext' => 'taoDacSimple']],
         ['grant', 'http://www.tao.lu/Ontologies/TAOItem.rdf#ItemsManagerRole', AdminAccessController::class],
-        ['grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', AdminAccessController::class]
+        ['grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', AdminAccessController::class],
     ],
     'install' => [
         'php' => [
             SetupDataAccess::class,
             RegisterAction::class,
-            AttachEventHandler::class
+            AttachEventHandler::class,
         ],
         'rdf' => [
             __DIR__ . '/model/ontology/dac.rdf',
@@ -52,12 +52,12 @@ return [
     ],
     'uninstall' => [
         'php' => [
-            RemoveDataAccess::class
-        ]
+            RemoveDataAccess::class,
+        ],
     ],
     'update' => Updater::class,
     'routes' => [
-        '/taoDacSimple' => 'oat\\taoDacSimple\\controller'
+        '/taoDacSimple' => 'oat\\taoDacSimple\\controller',
     ],
     'constants' => [
         # views directory
@@ -69,5 +69,5 @@ return [
     'containerServiceProviders' => [
         CopyServiceProvider::class,
         ClientConfigServiceProvider::class,
-    ]
+    ],
 ];
