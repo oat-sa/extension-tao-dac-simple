@@ -59,7 +59,7 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
                 [
                     [
                         'libConfigs' => [
-                            'provider/resources' => [
+                            'layout/actions/common' => [
                                 'aclTransferMode' => env('ACL_TRANSFER_MODE')
                                     ->default('ACL_TRANSFER_MODE')
                                     ->string(),
