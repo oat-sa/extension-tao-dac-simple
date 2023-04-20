@@ -22,25 +22,22 @@ namespace oat\taoDacSimple\controller;
 
 use common_exception_Error;
 use common_exception_Unauthorized;
-use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use Exception;
+use oat\generis\model\OntologyRdfs;
 use oat\oatbox\log\LoggerAwareTrait;
+use oat\oatbox\user\UserService;
 use oat\tao\model\taskQueue\QueueDispatcher;
 use oat\tao\model\taskQueue\TaskLogActionTrait;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
-use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
+use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
-use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
-
 use function GuzzleHttp\Psr7\stream_for;
 
-use oat\oatbox\user\UserService;
-use oat\generis\model\OntologyRdfs;
 
 /**
  * This controller is used to manage permission administration
