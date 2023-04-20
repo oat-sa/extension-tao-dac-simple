@@ -42,6 +42,7 @@ use oat\taoDacSimple\model\SyncPermissionsStrategy;
  *
  * @author Joel Bout <joel@taotesting.com>
  * @deprecated use migrations instead. See https://github.com/oat-sa/generis/wiki/Tao-Update-Process
+ * @codeCoverageIgnore
  */
 class Updater extends \common_ext_ExtensionUpdater
 {
