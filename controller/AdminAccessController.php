@@ -36,7 +36,9 @@ use oat\taoDacSimple\model\PermissionsServiceFactory;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
 use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
+
 use function GuzzleHttp\Psr7\stream_for;
+
 use oat\oatbox\user\UserService;
 use oat\generis\model\OntologyRdfs;
 
@@ -113,7 +115,6 @@ class AdminAccessController extends tao_actions_CommonModule
         $recursive = ($this->getRequest()->getParameter('recursive') === '1');
 
         try {
-
             $taskParameters = [
                 ChangePermissionsTask::PARAM_RECURSIVE  => $recursive,
                 ChangePermissionsTask::PARAM_RESOURCE   => $this->getResourceFromRequest(),

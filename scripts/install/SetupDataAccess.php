@@ -38,9 +38,9 @@ class SetupDataAccess extends InstallAction
     {
         /** @var DataBaseAccess $databaseAccess */
         $databaseAccess = $this->getServiceLocator()->get(DataBaseAccess::SERVICE_ID);
-        
+
         $databaseAccess->createTables();
-        
+
         $impl = new PermissionProvider();
         $toRegister = $impl;
         $rights = $impl->getSupportedRights();
@@ -58,7 +58,7 @@ class SetupDataAccess extends InstallAction
         }
 
         $this->registerService(PermissionInterface::SERVICE_ID, $toRegister);
-        
+
 
         return new \common_report_Report(\common_report_Report::TYPE_SUCCESS, 'Setup SimpleDac');
     }

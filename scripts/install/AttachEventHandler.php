@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\scripts\install;
 
-
 use oat\oatbox\event\EventManager;
 use oat\oatbox\extension\InstallAction;
 use oat\tao\model\event\ResourceMovedEvent;
@@ -39,7 +38,6 @@ class AttachEventHandler extends InstallAction
                 ResourceUpdateHandler::class,
                 'catchResourceUpdated'
             ]
-
         );
         $this->getServiceManager()->register(EventManager::SERVICE_ID, $eventManager);
     }
