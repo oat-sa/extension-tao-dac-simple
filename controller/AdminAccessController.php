@@ -36,8 +36,8 @@ use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
-use function GuzzleHttp\Psr7\stream_for;
 
+use function GuzzleHttp\Psr7\stream_for;
 
 /**
  * This controller is used to manage permission administration
@@ -94,7 +94,10 @@ class AdminAccessController extends tao_actions_CommonModule
         $this->setData('isClass', $resource->isClass());
 
         $permissionsServiceFactory = $this->getServiceLocator()->get(PermissionsServiceFactory::SERVICE_ID);
-        $this->setData('recursive', $permissionsServiceFactory->getOption(PermissionsServiceFactory::OPTION_RECURSIVE_BY_DEFAULT));
+        $this->setData(
+            'recursive',
+            $permissionsServiceFactory->getOption(PermissionsServiceFactory::OPTION_RECURSIVE_BY_DEFAULT)
+        );
 
         $this->setData('uri', $resource->getUri());
         $this->setData('label', _dh($resource->getLabel()));
@@ -119,7 +122,11 @@ class AdminAccessController extends tao_actions_CommonModule
             ];
             /** @var QueueDispatcher $queueDispatcher */
             $queueDispatcher = $this->getServiceLocator()->get(QueueDispatcher::SERVICE_ID);
-            $task = $queueDispatcher->createTask(new ChangePermissionsTask(), $taskParameters, 'Processing permissions');
+            $task = $queueDispatcher->createTask(
+                new ChangePermissionsTask(),
+                $taskParameters,
+                'Processing permissions'
+            );
             $this->returnTaskJson($task);
         } catch (common_exception_Unauthorized $e) {
             $this->response = $this->getPsrResponse()->withStatus(403, __('Unable to process your request'));

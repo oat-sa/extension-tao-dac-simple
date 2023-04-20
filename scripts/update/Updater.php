@@ -47,12 +47,11 @@ class Updater extends \common_ext_ExtensionUpdater
 {
     /**
      *
-     * @param string $currentVersion
-     * @return string $versionUpdatedTo
+     * @param string $initialVersion
+     * @return string versionUpdatedTo
      */
     public function update($initialVersion)
     {
-
         if ($this->isVersion('1.0')) {
             $impl = new PermissionProvider();
 
@@ -62,7 +61,11 @@ class Updater extends \common_ext_ExtensionUpdater
 
             // add backoffice user rights to Tests
             $class = new \core_kernel_classes_Class(TaoOntology::TEST_CLASS_URI);
-            AdminService::addPermissionToClass($class, TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
+            AdminService::addPermissionToClass(
+                $class,
+                TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE,
+                $impl->getSupportedRights()
+            );
 
             $this->setVersion('1.0.1');
         }
@@ -121,11 +124,17 @@ class Updater extends \common_ext_ExtensionUpdater
 
         if ($this->isVersion('2.1.0')) {
             $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
-            if (!$currentService instanceof PermissionProvider && !$currentService instanceof FreeAccess && !$currentService instanceof NoAccess) {
+            if (
+                !$currentService instanceof PermissionProvider
+                && !$currentService instanceof FreeAccess
+                && !$currentService instanceof NoAccess
+            ) {
                 if ($currentService instanceof IntersectionUnionSupported) {
                     $toRegister = $currentService->add(new PermissionProvider());
                 } else {
-                    $toRegister = new IntersectionUnionSupported(['inner' => [$currentService, new PermissionProvider()]]);
+                    $toRegister = new IntersectionUnionSupported(
+                        ['inner' => [$currentService, new PermissionProvider()]]
+                    );
                 }
                 $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, $toRegister);
             }
