@@ -15,30 +15,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014-2020 (original work) Open Assessment Technologies SA;
+ * Copyright (c) 2014-2023 (original work) Open Assessment Technologies SA.
  */
 
 namespace oat\taoDacSimple\controller;
 
 use common_exception_Error;
 use common_exception_Unauthorized;
-use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use Exception;
+use oat\generis\model\OntologyRdfs;
 use oat\oatbox\log\LoggerAwareTrait;
+use oat\oatbox\user\UserService;
 use oat\tao\model\taskQueue\QueueDispatcher;
 use oat\tao\model\taskQueue\TaskLogActionTrait;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
-use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceException;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
+use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
-use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
+
 use function GuzzleHttp\Psr7\stream_for;
-use oat\oatbox\user\UserService;
-use oat\generis\model\OntologyRdfs;
 
 /**
  * This controller is used to manage permission administration
@@ -95,7 +94,10 @@ class AdminAccessController extends tao_actions_CommonModule
         $this->setData('isClass', $resource->isClass());
 
         $permissionsServiceFactory = $this->getServiceLocator()->get(PermissionsServiceFactory::SERVICE_ID);
-        $this->setData('recursive', $permissionsServiceFactory->getOption(PermissionsServiceFactory::OPTION_RECURSIVE_BY_DEFAULT));
+        $this->setData(
+            'recursive',
+            $permissionsServiceFactory->getOption(PermissionsServiceFactory::OPTION_RECURSIVE_BY_DEFAULT)
+        );
 
         $this->setData('uri', $resource->getUri());
         $this->setData('label', _dh($resource->getLabel()));
@@ -113,7 +115,6 @@ class AdminAccessController extends tao_actions_CommonModule
         $recursive = ($this->getRequest()->getParameter('recursive') === '1');
 
         try {
-
             $taskParameters = [
                 ChangePermissionsTask::PARAM_RECURSIVE  => $recursive,
                 ChangePermissionsTask::PARAM_RESOURCE   => $this->getResourceFromRequest(),
@@ -121,7 +122,11 @@ class AdminAccessController extends tao_actions_CommonModule
             ];
             /** @var QueueDispatcher $queueDispatcher */
             $queueDispatcher = $this->getServiceLocator()->get(QueueDispatcher::SERVICE_ID);
-            $task = $queueDispatcher->createTask(new ChangePermissionsTask(), $taskParameters, 'Processing permissions');
+            $task = $queueDispatcher->createTask(
+                new ChangePermissionsTask(),
+                $taskParameters,
+                'Processing permissions'
+            );
             $this->returnTaskJson($task);
         } catch (common_exception_Unauthorized $e) {
             $this->response = $this->getPsrResponse()->withStatus(403, __('Unable to process your request'));
