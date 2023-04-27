@@ -112,3 +112,9 @@ return new oat\taoDacSimple\model\PermissionsServiceFactory(
     ]
 );
 ```
+
+# Environment variables
+
+| Variable          | Description                      | Default value       | Values                                         |
+|-------------------|----------------------------------|---------------------|------------------------------------------------|
+| ACL_TRANSFER_MODE | Set the preferable transfer mode | `acl.keep.original` | `acl.keep.original`<br/> `acl.use.destination` |
