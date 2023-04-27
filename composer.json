@@ -21,10 +21,10 @@
     "minimum-stability": "dev",
     "require": {
         "oat-sa/oatbox-extension-installer": "~1.1||dev-master",
-        "oat-sa/generis": ">=15.22",
-        "oat-sa/tao-core": "dev-feat/RFE-530/integration-branch as 52.0",
+        "oat-sa/generis": ">=15.24",
+        "oat-sa/tao-core": ">=52.1",
         "oat-sa/extension-tao-backoffice": ">=6.0.0",
-        "oat-sa/extension-tao-item": "dev-feat/RFE-530/integration-branch as 12.0"
+        "oat-sa/extension-tao-item": ">=11.3"
     },
     "autoload": {
         "psr-4": {
