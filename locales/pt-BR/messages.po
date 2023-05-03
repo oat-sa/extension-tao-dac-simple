@@ -66,7 +66,7 @@ msgid "Roles"
 msgstr "Papéis"
 
 msgid "Save"
-msgstr "Guardar"
+msgstr "Salvar"
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
 msgstr "algo deu errado durante a desinstalação taoDacSimple\n"
