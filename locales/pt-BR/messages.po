@@ -1,0 +1,94 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: tao-3x\n"
+"PO-Revision-Date: 2023-04-21 15:46\n"
+"Last-Translator: TAO Translation Team <translation@tao.lu>\n"
+"MIME-Version: 1.0\n"
+"Language: pt\n"
+"sourceLanguage: en-US\n"
+"targetLanguage: en-US\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../../\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-SearchPath-0: .\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Crowdin-Project: tao-3x\n"
+"X-Crowdin-Project-ID: 582145\n"
+"X-Crowdin-Language: pt-BR\n"
+"X-Crowdin-File: /taoDacSimple/locales/en-US/messages.po\n"
+"X-Crowdin-File-ID: 1437\n"
+"Language-Team: Portuguese, Brazilian\n"
+
+msgid "%s classes and instances have been updated"
+msgstr "%s classes e instâncias foram atualizadas"
+
+msgid "Access control"
+msgstr "Controle de Acesso"
+
+msgid "Access Permissions for"
+msgstr "Permissões de Acesso para"
+
+msgid "Actions"
+msgstr "Ações"
+
+msgid "Add role(s)"
+msgstr "Adicionar funções"
+
+msgid "Add user(s)"
+msgstr "Adicionar usuário(s)"
+
+msgid "Error"
+msgstr "ERRO"
+
+msgid "grant"
+msgstr "conceder"
+
+msgid "Name"
+msgstr "Nome:"
+
+msgid "Permissions saved"
+msgstr "Permissões salvas"
+
+msgid "read"
+msgstr "lidos"
+
+msgid "Recursive"
+msgstr "Recursiva"
+
+msgid "Remove"
+msgstr "Excluir"
+
+msgid "role"
+msgstr "Função"
+
+msgid "Roles"
+msgstr "Papéis"
+
+msgid "Save"
+msgstr "Salvar"
+
+msgid "something went wrong during taoDacSimple uninstallation\n"
+msgstr "algo deu errado durante a desinstalação taoDacSimple\n"
+
+msgid "taoDacSimple extension correctly uninstalled"
+msgstr "extensão taoDacSimple desinstalada corretamente"
+
+msgid "Type"
+msgstr "tipo"
+
+msgid "Unable to process your request"
+msgstr "Não foi possível processar sua solicitação"
+
+msgid "user"
+msgstr "usuário"
+
+msgid "Users"
+msgstr "Utilizadores"
+
+msgid "write"
+msgstr "escrever"
+
+msgid "You must have one role or user that have the manage permission on this element."
+msgstr "Você deve ter uma função ou usuário que tenha a permissão de gerenciar este elemento."
+
