@@ -1,9 +1,5 @@
 <?php
 
-use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
-use oat\taoDacSimple\scripts\install\AttachEventHandler;
-use oat\taoDacSimple\scripts\update\Updater;
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +18,9 @@ use oat\taoDacSimple\scripts\update\Updater;
  * Copyright (c) 2014-2022 (original work) Open Assessment Technologies SA;
  */
 
+use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
+use oat\taoDacSimple\scripts\install\AttachEventHandler;
+use oat\taoDacSimple\scripts\update\Updater;
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
 use oat\taoDacSimple\scripts\install\RegisterAction;
 use oat\taoDacSimple\controller\AdminAccessController;
