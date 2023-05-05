@@ -169,7 +169,7 @@ class PermissionsService
             return array_merge([$root], $root->getInstances()); // non-recursive
         }
 
-         return [$root];
+        return [$root];
     }
 
     private function getActions(

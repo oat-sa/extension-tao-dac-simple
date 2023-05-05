@@ -276,4 +276,3 @@ class PDOStatementForTest extends PDOStatement
     }
 }
 // @codingStandardsIgnoreEnd
-
