@@ -1,6 +1,8 @@
 <?php
 
+use oat\tao\model\accessControl\func\AccessRule;
 use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
+use oat\taoDacSimple\model\DacRoles;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
 
@@ -26,6 +28,7 @@ use oat\taoDacSimple\scripts\install\SetupDataAccess;
 use oat\taoDacSimple\scripts\install\RegisterAction;
 use oat\taoDacSimple\controller\AdminAccessController;
 use oat\taoDacSimple\scripts\uninstall\RemoveDataAccess;
+use oat\taoItems\model\user\TaoItemsRoles;
 
 return [
     'name' => 'taoDacSimple',
@@ -37,7 +40,10 @@ return [
     'acl' => [
         ['grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager', ['ext' => 'taoDacSimple']],
         ['grant', 'http://www.tao.lu/Ontologies/TAOItem.rdf#ItemsManagerRole', AdminAccessController::class],
-        ['grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', AdminAccessController::class]
+        ['grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', AdminAccessController::class],
+        [AccessRule::GRANT, DacRoles::RESTRICTED_ITEM_AUTHOR, ['ext' => 'taoItems', 'mod' => 'Items']],
+        [AccessRule::GRANT, DacRoles::RESTRICTED_ITEM_AUTHOR, ['ext' => 'taoItems', 'mod' => 'ItemExport']],
+        [AccessRule::GRANT, DacRoles::RESTRICTED_TEST_AUTHOR, ['ext' => 'taoTests', 'mod' => 'Tests']]
     ],
     'install' => [
         'php' => [
