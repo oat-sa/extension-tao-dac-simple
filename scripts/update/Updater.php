@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014 (original work) Open Assessment Technologies SA;
+ * Copyright (c) 2014-2023 (original work) Open Assessment Technologies SA.
  *
  *
  */
@@ -42,18 +42,17 @@ use oat\taoDacSimple\model\SyncPermissionsStrategy;
  *
  * @author Joel Bout <joel@taotesting.com>
  * @deprecated use migrations instead. See https://github.com/oat-sa/generis/wiki/Tao-Update-Process
+ * @codeCoverageIgnore
  */
 class Updater extends \common_ext_ExtensionUpdater
 {
-
     /**
      *
-     * @param string $currentVersion
-     * @return string $versionUpdatedTo
+     * @param string $initialVersion
+     * @return string versionUpdatedTo
      */
     public function update($initialVersion)
     {
-
         if ($this->isVersion('1.0')) {
             $impl = new PermissionProvider();
 
@@ -63,7 +62,11 @@ class Updater extends \common_ext_ExtensionUpdater
 
             // add backoffice user rights to Tests
             $class = new \core_kernel_classes_Class(TaoOntology::TEST_CLASS_URI);
-            AdminService::addPermissionToClass($class, TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE, $impl->getSupportedRights());
+            AdminService::addPermissionToClass(
+                $class,
+                TaoOntology::PROPERTY_INSTANCE_ROLE_BACKOFFICE,
+                $impl->getSupportedRights()
+            );
 
             $this->setVersion('1.0.1');
         }
@@ -122,11 +125,17 @@ class Updater extends \common_ext_ExtensionUpdater
 
         if ($this->isVersion('2.1.0')) {
             $currentService = $this->getServiceManager()->get(PermissionProvider::SERVICE_ID);
-            if (!$currentService instanceof PermissionProvider && !$currentService instanceof FreeAccess && !$currentService instanceof NoAccess) {
+            if (
+                !$currentService instanceof PermissionProvider
+                && !$currentService instanceof FreeAccess
+                && !$currentService instanceof NoAccess
+            ) {
                 if ($currentService instanceof IntersectionUnionSupported) {
                     $toRegister = $currentService->add(new PermissionProvider());
                 } else {
-                    $toRegister = new IntersectionUnionSupported(['inner' => [$currentService, new PermissionProvider()]]);
+                    $toRegister = new IntersectionUnionSupported(
+                        ['inner' => [$currentService, new PermissionProvider()]]
+                    );
                 }
                 $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, $toRegister);
             }
@@ -144,10 +153,12 @@ class Updater extends \common_ext_ExtensionUpdater
         $this->skip('2.7.0', '5.1.1');
 
         if ($this->isVersion('5.1.1')) {
-            $this->getServiceManager()->register(PermissionsServiceFactory::SERVICE_ID,
+            $this->getServiceManager()->register(
+                PermissionsServiceFactory::SERVICE_ID,
                 new PermissionsServiceFactory([
                     PermissionsServiceFactory::OPTION_SAVE_STRATEGY => SyncPermissionsStrategy::class
-                ]));
+                ])
+            );
 
             $this->setVersion('5.2.0');
         }
@@ -155,7 +166,6 @@ class Updater extends \common_ext_ExtensionUpdater
         $this->skip('5.2.0', '6.4.0');
 
         if ($this->isVersion('6.4.0')) {
-
             $permissionServiceFactory = $this->getServiceManager()->get(PermissionsServiceFactory::SERVICE_ID);
 
             $serviceOptions = $permissionServiceFactory->getOptions();
@@ -192,7 +202,7 @@ class Updater extends \common_ext_ExtensionUpdater
         }
 
         $this->skip('6.7.1', '6.7.2');
-        
+
         //Updater files are deprecated. Please use migrations.
         //See: https://github.com/oat-sa/generis/wiki/Tao-Update-Process
 

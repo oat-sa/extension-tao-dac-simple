@@ -47,7 +47,9 @@ class RemoveDataAccess extends UninstallAction
 
             $this->getServiceManager()->register(PermissionInterface::SERVICE_ID, new FreeAccess());
         } catch (\Exception $e) {
-            return \common_report_Report::createFailure(__("something went wrong during taoDacSimple uninstallation\n" . $e->getMessage()));
+            return \common_report_Report::createFailure(
+                __("something went wrong during taoDacSimple uninstallation\n" . $e->getMessage())
+            );
         }
 
         return \common_report_Report::createSuccess(__('taoDacSimple extension correctly uninstalled'));

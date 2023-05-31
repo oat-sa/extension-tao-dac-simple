@@ -24,11 +24,13 @@ use oat\taoDacSimple\scripts\update\Updater;
  * Copyright (c) 2014-2022 (original work) Open Assessment Technologies SA;
  */
 
+use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
+use oat\taoDacSimple\scripts\install\AttachEventHandler;
+use oat\taoDacSimple\scripts\update\Updater;
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
 use oat\taoDacSimple\scripts\install\RegisterAction;
 use oat\taoDacSimple\controller\AdminAccessController;
 use oat\taoDacSimple\scripts\uninstall\RemoveDataAccess;
-use oat\taoItems\model\user\TaoItemsRoles;
 
 return [
     'name' => 'taoDacSimple',

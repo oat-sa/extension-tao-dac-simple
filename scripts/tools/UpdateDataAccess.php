@@ -51,7 +51,10 @@ class UpdateDataAccess extends AbstractAction
             $updated += $this->addPermissionsToClass($class, $rights);
         }
 
-        return new \common_report_Report(\common_report_Report::TYPE_SUCCESS, __('%s classes and instances have been updated', $updated));
+        return new \common_report_Report(
+            \common_report_Report::TYPE_SUCCESS,
+            __('%s classes and instances have been updated', $updated)
+        );
     }
 
 
