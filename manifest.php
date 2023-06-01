@@ -1,11 +1,5 @@
 <?php
 
-use oat\tao\model\accessControl\func\AccessRule;
-use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
-use oat\taoDacSimple\model\DacRoles;
-use oat\taoDacSimple\scripts\install\AttachEventHandler;
-use oat\taoDacSimple\scripts\update\Updater;
-
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
