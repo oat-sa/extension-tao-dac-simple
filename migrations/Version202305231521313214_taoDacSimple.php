@@ -29,7 +29,7 @@ final class Version202305231521313214_taoDacSimple extends AbstractMigration
 
     public function getDescription(): string
     {
-        return 'Add and configure limited reults manager';
+        return 'Add and configure limited results manager';
     }
 
     public function up(Schema $schema): void
