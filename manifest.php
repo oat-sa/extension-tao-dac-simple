@@ -18,7 +18,9 @@
  * Copyright (c) 2014-2022 (original work) Open Assessment Technologies SA;
  */
 
+use oat\tao\model\accessControl\func\AccessRule;
 use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
+use oat\taoDacSimple\model\DacRoles;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
