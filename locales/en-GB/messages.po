@@ -1,0 +1,94 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: tao-open-source\n"
+"PO-Revision-Date: 2023-06-07 08:22\n"
+"Last-Translator: TAO Translation Team <translation@tao.lu>\n"
+"MIME-Version: 1.0\n"
+"Language: en_GB\n"
+"sourceLanguage: en-US\n"
+"targetLanguage: en-US\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ../../\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-SearchPath-0: .\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Crowdin-Project: tao-open-source\n"
+"X-Crowdin-Project-ID: 590867\n"
+"X-Crowdin-Language: en-GB\n"
+"X-Crowdin-File: /[oat-sa.extension-tao-dac-simple] develop/locales/en-US/messages.po\n"
+"X-Crowdin-File-ID: 511\n"
+"Language-Team: English, United Kingdom\n"
+
+msgid "%s classes and instances have been updated"
+msgstr ""
+
+msgid "Access control"
+msgstr ""
+
+msgid "Access Permissions for"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "Add role(s)"
+msgstr ""
+
+msgid "Add user(s)"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "grant"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Permissions saved"
+msgstr ""
+
+msgid "read"
+msgstr ""
+
+msgid "Recursive"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "role"
+msgstr ""
+
+msgid "Roles"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "something went wrong during taoDacSimple uninstallation\n"
+msgstr ""
+
+msgid "taoDacSimple extension correctly uninstalled"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Unable to process your request"
+msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "Users"
+msgstr ""
+
+msgid "write"
+msgstr ""
+
+msgid "You must have one role or user that have the manage permission on this element."
+msgstr ""
+
