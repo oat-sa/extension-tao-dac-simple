@@ -1,23 +1,27 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: TAO 3.4.0-sprint117\n"
-"PO-Revision-Date: 2020-09-22T16:02:17\n"
+"Project-Id-Version: tao-open-source\n"
+"PO-Revision-Date: 2023-06-07 08:22\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: ja-JP\n"
+"Language: ja\n"
 "sourceLanguage: en-US\n"
-"targetLanguage: ja-JP\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"targetLanguage: en-US\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Basepath: ../../\n"
 "X-Poedit-KeywordsList: __\n"
 "X-Poedit-SearchPath-0: .\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Crowdin-Project: tao-open-source\n"
+"X-Crowdin-Project-ID: 590867\n"
+"X-Crowdin-Language: ja\n"
+"X-Crowdin-File: /[oat-sa.extension-tao-dac-simple] develop/locales/en-US/messages.po\n"
+"X-Crowdin-File-ID: 511\n"
+"Language-Team: Japanese\n"
 
 msgid "%s classes and instances have been updated"
 msgstr "%s クラスとインスタンスはアップロード済みです"
-
-msgid "Access can not be revoked for the current user."
-msgstr "現在のユーザのアクセスを取り消すことはできません"
 
 msgid "Access control"
 msgstr "アクセス制限"
@@ -26,13 +30,16 @@ msgid "Access Permissions for"
 msgstr "アクセス権限："
 
 msgid "Actions"
-msgstr "操作"
+msgstr "アクション"
 
 msgid "Add role(s)"
 msgstr "ロール追加"
 
 msgid "Add user(s)"
 msgstr "ユーザ追加"
+
+msgid "Error"
+msgstr ""
 
 msgid "grant"
 msgstr "付与"
@@ -56,13 +63,12 @@ msgid "role"
 msgstr "ロール"
 
 msgid "Roles"
-msgstr "ロール"
+msgstr "権限"
 
 msgid "Save"
 msgstr "保存"
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
-""
 msgstr "taoDacSimpleのアンインストール中に不具合が発生しました。"
 
 msgid "taoDacSimple extension correctly uninstalled"
@@ -78,7 +84,7 @@ msgid "user"
 msgstr "ユーザ"
 
 msgid "Users"
-msgstr "ユーザ"
+msgstr "ユーザー"
 
 msgid "write"
 msgstr "書き込み"
