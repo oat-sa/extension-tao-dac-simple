@@ -50,14 +50,18 @@ class ChangePermissionsCommand
 
     private bool $applyToNestedResources = false;
 
+    private array $permissionsDelta;
+
     public function __construct(
         core_kernel_classes_Resource $root,
         string $masterRequest,
-        array $privileges
+        array $privileges,
+        array $permissionsDelta
     ) {
         $this->root = $root;
         $this->masterRequest = $masterRequest;
         $this->privilegesPerUser = $privileges;
+        $this->permissionsDelta = $permissionsDelta;
     }
 
     /**
@@ -103,6 +107,11 @@ class ChangePermissionsCommand
     public function getPrivilegesPerUser(): array
     {
         return $this->privilegesPerUser;
+    }
+
+    public function getPermissionsDelta(): array
+    {
+        return $this->permissionsDelta;
     }
 
     public function isRecursive(): bool
