@@ -20,7 +20,7 @@
 
 declare(strict_types=1);
 
-namespace oat\taoDacSimple\test\unit\model\Copy\Service;
+namespace oat\taoDacSimple\test\unit\model\Command;
 
 use core_kernel_classes_Resource;
 use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
@@ -44,14 +44,11 @@ class ChangePermissionsCommandTest extends TestCase
      */
     public function testConstructor(array $privileges): void
     {
-        $sut = new ChangePermissionsCommand(
-            $this->root,
-            $this->root->getUri(),
-            $privileges
-        );
+        $sut = new ChangePermissionsCommand($this->root, $this->root->getUri(), $privileges, []);
 
         $this->assertSame($this->root, $sut->getRoot());
         $this->assertSame($privileges, $sut->getPrivilegesPerUser());
+        $this->assertSame([], $sut->getPermissionsDelta());
         $this->assertFalse($sut->isRecursive());
         $this->assertFalse($sut->applyToNestedResources());
     }
@@ -76,11 +73,7 @@ class ChangePermissionsCommandTest extends TestCase
 
     public function testWithRecursion(): void
     {
-        $sut = new ChangePermissionsCommand(
-            $this->root,
-            $this->root->getUri(),
-            []
-        );
+        $sut = new ChangePermissionsCommand($this->root, $this->root->getUri(), [], []);
         $sut->withRecursion();
 
         $this->assertTrue($sut->isRecursive());
@@ -89,11 +82,7 @@ class ChangePermissionsCommandTest extends TestCase
 
     public function testWithNestedResources(): void
     {
-        $sut = new ChangePermissionsCommand(
-            $this->root,
-            $this->root->getUri(),
-            []
-        );
+        $sut = new ChangePermissionsCommand($this->root, $this->root->getUri(), [], []);
         $sut->withNestedResources();
 
         $this->assertFalse($sut->isRecursive());
@@ -102,11 +91,7 @@ class ChangePermissionsCommandTest extends TestCase
 
     public function testWithBoth(): void
     {
-        $sut = new ChangePermissionsCommand(
-            $this->root,
-            $this->root->getUri(),
-            []
-        );
+        $sut = new ChangePermissionsCommand($this->root, $this->root->getUri(), [], []);
         $sut->withRecursion();
         $sut->withNestedResources();
 
