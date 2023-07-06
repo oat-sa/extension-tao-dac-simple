@@ -53,6 +53,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RECURSIVE = 'recursive';
     public const PARAM_NESTED_RESOURCES = 'nested_resources';
     public const PARAM_REQUEST_ROOT = 'request_root';
+    public const PARAM_PERMISSIONS_DELTA = 'permissions_delta';
 
     private const MANDATORY_PARAMS = [
         self::PARAM_RESOURCE,
@@ -69,7 +70,8 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 ($params[self::PARAM_REQUEST_ROOT] ?? $params[self::PARAM_RESOURCE]),
                 (array) $params[self::PARAM_PRIVILEGES],
                 (bool) ($params[self::PARAM_RECURSIVE] ?? false),
-                (bool) ($params[self::PARAM_NESTED_RESOURCES] ?? false)
+                (bool) ($params[self::PARAM_NESTED_RESOURCES] ?? false),
+                $params[self::PARAM_PERMISSIONS_DELTA] ?? null
             );
         } catch (Exception $e) {
             $errMessage = sprintf('Saving permissions failed: %s', $e->getMessage());
@@ -84,8 +86,12 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         string $requestRoot,
         array $privileges,
         bool $isRecursive,
-        bool $withNestedResources
+        bool $withNestedResources,
+        ?array $permissionsDelta
     ): Report {
+        $permissionService = $this->getPermissionService();
+        $permissionsDelta ??= $permissionService->getPermissionsDelta($root, $privileges);
+
         if ($withNestedResources) {
             $message = sprintf(
                 "Permissions saved for resources under subclass %s [%s]",
@@ -93,7 +99,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 $root->getUri()
             );
 
-            $command = new ChangePermissionsCommand($root, $requestRoot, $privileges);
+            $command = new ChangePermissionsCommand($root, $requestRoot, $privileges, $permissionsDelta);
             $command->withNestedResources();
 
             $this->getPermissionService()->applyPermissions($command);
@@ -103,13 +109,14 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
             $this->createSubtasksForClasses(
                 array_merge([$root], $root->getSubClasses(true)),
                 $requestRoot,
-                $privileges
+                $privileges,
+                $permissionsDelta
             );
         } else {
             $message = 'Permissions saved';
 
             $this->getPermissionService()->applyPermissions(
-                new ChangePermissionsCommand($root, $requestRoot, $privileges)
+                new ChangePermissionsCommand($root, $requestRoot, $privileges, $permissionsDelta)
             );
         }
 
@@ -119,7 +126,8 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     private function createSubtasksForClasses(
         array $allClasses,
         string $requestRoot,
-        array $privileges
+        array $privileges,
+        array $permissionsDelta
     ): void {
         foreach ($allClasses as $oneClass) {
             $this->getDispatcher()->createTask(
@@ -130,6 +138,7 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                     self::PARAM_PRIVILEGES => $privileges,
                     self::PARAM_RECURSIVE => false,
                     self::PARAM_NESTED_RESOURCES => true,
+                    self::PARAM_PERMISSIONS_DELTA => $permissionsDelta,
                 ],
                 sprintf(
                     'Processing permissions for class %s [%s]',
