@@ -56,20 +56,19 @@ class PermissionsService
     {
         $resources = $this->getResourcesToUpdate($command);
         $currentPermissions = $this->getResourcesPermissions($resources);
-        $permissionsDelta = $this->getDeltaForResourceTree($command, $currentPermissions);
 
-        if (empty($permissionsDelta)) {
+        if (empty($command->getPermissionsDelta())) {
             return;
         }
 
-        $actions = $this->getActions($resources, $currentPermissions, $permissionsDelta);
+        $actions = $this->getActions($resources, $currentPermissions, $command->getPermissionsDelta());
         $this->dryRun($actions, $currentPermissions);
         $this->wetRun($actions);
 
         $this->triggerEvents(
             $command->getRoot()->getUri(),
             $command->getMasterRequest(),
-            $permissionsDelta[$command->getRoot()->getUri()],
+            $command->getPermissionsDelta(),
             $command->isRecursive(),
             $command->applyToNestedResources()
         );
@@ -86,7 +85,8 @@ class PermissionsService
         $command = new ChangePermissionsCommand(
             $resource,
             $resource->getUri(),
-            $privilegesToSet
+            $privilegesToSet,
+            $this->getPermissionsDelta($resource, $privilegesToSet)
         );
         $command->withRecursion();
         $command->withNestedResources();
@@ -106,7 +106,8 @@ class PermissionsService
         $command = new ChangePermissionsCommand(
             $class,
             $class->getUri(),
-            $privilegesToSet
+            $privilegesToSet,
+            $this->getPermissionsDelta($class, $privilegesToSet)
         );
 
         if ($isRecursive) {
@@ -117,30 +118,11 @@ class PermissionsService
         $this->applyPermissions($command);
     }
 
-    /**
-     * @param ChangePermissionsCommand $command
-     * @param string[][] $currentResourcePermissions
-     *
-     * @return string[][][]
-     */
-    private function getDeltaForResourceTree(
-        ChangePermissionsCommand $command,
-        array $currentResourcePermissions
-    ): array {
-        $delta = [];
+    public function getPermissionsDelta(core_kernel_classes_Resource $resource, array $permissionsToSet): array
+    {
+        $currentPermissions = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
 
-        foreach ($currentResourcePermissions as $resourceId => $permissions) {
-            $permissionsDelta = $this->strategy->normalizeRequest(
-                $permissions,
-                $command->getPrivilegesPerUser()
-            );
-
-            if (!empty($permissionsDelta['add']) || !empty($permissionsDelta['remove'])) {
-                $delta[$resourceId] = $permissionsDelta;
-            }
-        }
-
-        return $delta;
+        return $this->strategy->normalizeRequest($currentPermissions, $permissionsToSet);
     }
 
     /**
@@ -183,19 +165,13 @@ class PermissionsService
         foreach ($resourcesToUpdate as $resource) {
             $thisResourcePermissions = $currentResourcePermissions[$resource->getUri()];
 
-            $remove = $this->strategy->getPermissionsToRemove(
-                $thisResourcePermissions,
-                $permissionsDelta[$resource->getUri()] ?? []
-            );
+            $remove = $this->strategy->getPermissionsToRemove($thisResourcePermissions, $permissionsDelta);
 
             if (!empty($remove)) {
                 $removeActions[] = ['permissions' => $remove, 'resource' => $resource];
             }
 
-            $add = $this->strategy->getPermissionsToAdd(
-                $thisResourcePermissions,
-                $permissionsDelta[$resource->getUri()] ?? []
-            );
+            $add = $this->strategy->getPermissionsToAdd($thisResourcePermissions, $permissionsDelta);
 
             if (!empty($add)) {
                 $addActions[] = ['permissions' => $add, 'resource' => $resource];
