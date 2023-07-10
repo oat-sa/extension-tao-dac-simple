@@ -363,17 +363,18 @@ class DataBaseAccess extends ConfigurableService
      */
     public function checkPermissions($userIds)
     {
-        $chunks = array_chunk($userIds, $this->getOption(self::OPTION_FETCH_USER_PERMISSIONS_CHUNK_SIZE, 10));
+        $chunks = array_chunk($userIds, $this->getOption(self::OPTION_FETCH_USER_PERMISSIONS_CHUNK_SIZE, 20));
         $existingUsers = [];
 
         foreach ($chunks as $chunkUserIds) {
             $inQueryUser = implode(',', array_fill(0, count($chunkUserIds), ' ? '));
             $query = sprintf(
-                'SELECT %s FROM %s WHERE %s IN (%s)',
+                'SELECT %s FROM %s WHERE %s IN (%s) GROUP BY %s',
                 self::COLUMN_USER_ID,
                 self::TABLE_PRIVILEGES_NAME,
                 self::COLUMN_USER_ID,
-                $inQueryUser
+                $inQueryUser,
+                self::COLUMN_USER_ID
             );
             $results = $this->fetchQuery($query, array_values($chunkUserIds));
             foreach ($results as $result) {
