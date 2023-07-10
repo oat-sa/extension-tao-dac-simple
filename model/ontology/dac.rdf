@@ -7,49 +7,13 @@
 	xmlns:widget="http://www.tao.lu/datatypes/WidgetDefinitions.rdf#"
 	xmlns:generis="http://www.tao.lu/Ontologies/generis.rdf#"
 >
-  <rdf:Description rdf:about="http://www.tao.lu/Ontologies/TAOItem.rdf#AclRoles">
-    <rdfs:subClassOf rdf:resource="http://www.tao.lu/Ontologies/generis.rdf#UserRole"/>
-    <rdfs:label xml:lang="en-US"><![CDATA[ACL Roles]]></rdfs:label>
-    <rdfs:comment xml:lang="en-US"><![CDATA[ACL Roles Class]]></rdfs:comment>
-  </rdf:Description>
   <rdf:Description rdf:about="http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator">
     <rdf:type rdf:resource="http://www.tao.lu/Ontologies/generis.rdf#UserRole"/>
     <rdfs:label xml:lang="en-US"><![CDATA[Data Access Administrator]]></rdfs:label>
     <rdfs:comment xml:lang="en-US"><![CDATA[Data Access Administrator role]]></rdfs:comment>
     <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://www.tao.lu/Ontologies/TAO.rdf#RestrictedItemAuthor">
-    <rdf:type rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#AclRoles"/>
-    <rdfs:label xml:lang="en-US"><![CDATA[Restricted Item Author]]></rdfs:label>
-    <rdfs:comment xml:lang="en-US"><![CDATA[Limited Access to ACL]]></rdfs:comment>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAO.rdf#PropertyManagerRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole"/>
-    <!-- Item Actions Roles-->
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#AbstractItemAuthor"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#AbstractItemAuthor"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemClassNavigatorRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemClassEditorRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemClassCreatorRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemClassSchemaManagerRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemViewerRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemReplicatorRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemPreviewerRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemPropertiesEditorRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemContentCreatorRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemResourceCreatorRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemImporterRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemDeleterRole"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAO.rdf#RestPublisher"/>
-    <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#ItemContentCreatorRole"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://www.tao.lu/Ontologies/TAO.rdf#RestrictedTestAuthor">
-  	<rdf:type rdf:resource="http://www.tao.lu/Ontologies/TAOItem.rdf#AclRoles"/>
-  	<generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAO.rdf#PropertyManagerRole"/>
-  	<generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/generis.rdf#TestXMLEditor"/>
-  	<generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAOTest.rdf#TaoQtiManagerRole"/>
-  	<rdfs:label xml:lang="en-US"><![CDATA[Restricted Test Author]]></rdfs:label>
-    <rdfs:comment xml:lang="en-US"><![CDATA[Test Author with limitation for ACL]]></rdfs:comment>
-  </rdf:Description>
+
   <!-- Add DacAdministrator role to SysAdmin -->
   <rdf:Description rdf:about="http://www.tao.lu/Ontologies/TAO.rdf#SysAdminRole">
       <generis:includesRole rdf:resource="http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator"/>

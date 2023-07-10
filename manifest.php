@@ -18,9 +18,7 @@
  * Copyright (c) 2014-2022 (original work) Open Assessment Technologies SA;
  */
 
-use oat\tao\model\accessControl\func\AccessRule;
 use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
-use oat\taoDacSimple\model\DacRoles;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
@@ -38,10 +36,7 @@ return [
     'acl' => [
         ['grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoDacSimpleManager', ['ext' => 'taoDacSimple']],
         ['grant', 'http://www.tao.lu/Ontologies/TAOItem.rdf#ItemsManagerRole', AdminAccessController::class],
-        ['grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', AdminAccessController::class],
-        [AccessRule::GRANT, DacRoles::RESTRICTED_ITEM_AUTHOR, ['ext' => 'taoItems', 'mod' => 'Items']],
-        [AccessRule::GRANT, DacRoles::RESTRICTED_ITEM_AUTHOR, ['ext' => 'taoItems', 'mod' => 'ItemExport']],
-        [AccessRule::GRANT, DacRoles::RESTRICTED_TEST_AUTHOR, ['ext' => 'taoTests', 'mod' => 'Tests']]
+        ['grant', 'http://www.tao.lu/Ontologies/TAOTest.rdf#TestsManagerRole', AdminAccessController::class]
     ],
     'install' => [
         'php' => [
