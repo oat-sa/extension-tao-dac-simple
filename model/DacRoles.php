@@ -24,6 +24,4 @@ namespace oat\taoDacSimple\model;
 interface DacRoles
 {
     public const DAC_ADMINISTRATOR = 'http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator';
-    public const RESTRICTED_TEST_AUTHOR = 'http://www.tao.lu/Ontologies/TAO.rdf#RestrictedTestAuthor';
-    public const RESTRICTED_ITEM_AUTHOR = 'http://www.tao.lu/Ontologies/TAO.rdf#RestrictedItemAuthor';
 }
