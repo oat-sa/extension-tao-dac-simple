@@ -40,6 +40,7 @@ class DataBaseAccess extends ConfigurableService
     public const SERVICE_ID = 'taoDacSimple/DataBaseAccess';
 
     public const OPTION_PERSISTENCE = 'persistence';
+    public const OPTION_FETCH_USER_PERMISSIONS_CHUNK_SIZE = 'fetch_user_permissions_chunk_size';
 
     public const COLUMN_USER_ID = 'user_id';
     public const COLUMN_RESOURCE_ID = 'resource_id';
@@ -362,19 +363,26 @@ class DataBaseAccess extends ConfigurableService
      */
     public function checkPermissions($userIds)
     {
-        $inQueryUser = implode(',', array_fill(0, count($userIds), ' ? '));
-        $query = sprintf(
-            'SELECT %s FROM %s WHERE %s IN (%s)',
-            self::COLUMN_USER_ID,
-            self::TABLE_PRIVILEGES_NAME,
-            self::COLUMN_USER_ID,
-            $inQueryUser
-        );
-        $results = $this->fetchQuery($query, array_values($userIds));
-        foreach ($results as $result) {
-            $existsUsers[$result[self::COLUMN_USER_ID]] = $result[self::COLUMN_USER_ID];
+        $chunks = array_chunk($userIds, $this->getOption(self::OPTION_FETCH_USER_PERMISSIONS_CHUNK_SIZE, 20));
+        $existingUsers = [];
+
+        foreach ($chunks as $chunkUserIds) {
+            $inQueryUser = implode(',', array_fill(0, count($chunkUserIds), ' ? '));
+            $query = sprintf(
+                'SELECT %s FROM %s WHERE %s IN (%s) GROUP BY %s',
+                self::COLUMN_USER_ID,
+                self::TABLE_PRIVILEGES_NAME,
+                self::COLUMN_USER_ID,
+                $inQueryUser,
+                self::COLUMN_USER_ID
+            );
+            $results = $this->fetchQuery($query, array_values($chunkUserIds));
+            foreach ($results as $result) {
+                $existingUsers[$result[self::COLUMN_USER_ID]] = $result[self::COLUMN_USER_ID];
+            }
         }
-        return $existsUsers ?? [];
+
+        return $existingUsers;
     }
 
     /**

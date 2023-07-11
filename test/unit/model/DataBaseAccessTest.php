@@ -89,6 +89,41 @@ class DataBaseAccessTest extends TestCase
         ];
     }
 
+    public function testCheckPermissions(): void
+    {
+        $userIds = ['a', 'b', 'c'];
+
+        $statementMock = $this->getMockBuilder(PDOStatementForTest::class)
+            ->onlyMethods(['fetchAll'])
+            ->getMock();
+
+        $statementMock->expects($this->once())
+            ->method('fetchAll')
+            ->with(PDO::FETCH_ASSOC)
+            ->willReturn(
+                [
+                    [
+                        'user_id' => 'b',
+                    ]
+                ]
+            );
+
+        $this->persistenceMock
+            ->method('query')
+            ->with(
+                'SELECT user_id FROM data_privileges WHERE user_id IN ( ? , ? , ? ) GROUP BY user_id',
+                $userIds
+            )
+            ->willReturn($statementMock);
+
+        $this->assertSame(
+            [
+                'b' => 'b'
+            ],
+            $this->sut->checkPermissions($userIds)
+        );
+    }
+
     /**
      * @dataProvider resourceIdsProvider
      * @preserveGlobalState disable
