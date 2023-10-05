@@ -32,6 +32,7 @@ use oat\tao\model\taskQueue\QueueDispatcher;
 use oat\tao\model\taskQueue\QueueDispatcherInterface;
 use oat\tao\model\taskQueue\Task\TaskAwareInterface;
 use oat\tao\model\taskQueue\Task\TaskAwareTrait;
+use oat\taoDacSimple\model\ChangePermissionsService;
 use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use oat\taoDacSimple\model\PermissionsService;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
@@ -65,7 +66,14 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         $this->validateParams($params);
 
         try {
-            return $this->doHandle(
+            /** @var ChangePermissionsService $changePermissionsService */
+            $changePermissionsService = $this->getServiceManager()->getContainer()->get(ChangePermissionsService::class);
+            $changePermissionsService(
+                $this->getResource($params[self::PARAM_RESOURCE]),
+                (array) $params[self::PARAM_PRIVILEGES],
+                filter_var($params[self::PARAM_RECURSIVE] ?? false, FILTER_VALIDATE_BOOL)
+            );
+            $this->doHandle(
                 $this->getClass($params[self::PARAM_RESOURCE]),
                 ($params[self::PARAM_REQUEST_ROOT] ?? $params[self::PARAM_RESOURCE]),
                 (array) $params[self::PARAM_PRIVILEGES],
@@ -73,6 +81,8 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 (bool) ($params[self::PARAM_NESTED_RESOURCES] ?? false),
                 $params[self::PARAM_PERMISSIONS_DELTA] ?? null
             );
+
+            return Report::createSuccess('Permissions saved');
         } catch (Exception $e) {
             $errMessage = sprintf('Saving permissions failed: %s', $e->getMessage());
 
