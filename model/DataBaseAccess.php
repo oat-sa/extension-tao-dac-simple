@@ -22,6 +22,8 @@ namespace oat\taoDacSimple\model;
 
 use common_persistence_SqlPersistence;
 use core_kernel_classes_Resource;
+use oat\generis\model\OntologyRdf;
+use oat\generis\model\OntologyRdfs;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
@@ -66,27 +68,36 @@ class DataBaseAccess extends ConfigurableService
         return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
     }
 
-    public function getTreeIds(core_kernel_classes_Resource $resource): array
+    public function getResourceTree(core_kernel_classes_Resource $resource): array
     {
         $query = <<<'SQL'
 WITH RECURSIVE statements_tree AS (
-    SELECT r.subject FROM statements r WHERE r.subject = ? GROUP BY r.subject
+    SELECT r.subject, r.predicate, 1 as level FROM statements r WHERE r.subject = ? AND r.predicate IN (?, ?) GROUP BY r.subject
     UNION ALL
-    SELECT s.subject FROM statements s JOIN statements_tree st ON s.predicate IN (?, ?) AND s.object = st.subject
+    SELECT s.subject, s.predicate, level + 1 FROM statements s JOIN statements_tree st ON s.object = st.subject
 )
-SELECT subject FROM statements_tree;
+SELECT subject, predicate, level FROM statements_tree;
 SQL;
 
         $results = $this->fetchQuery(
             $query,
             [
                 $resource->getUri(),
-                'http://www.w3.org/2000/01/rdf-schema#subClassOf',
-                'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+                OntologyRdfs::RDFS_SUBCLASSOF,
+                OntologyRdf::RDF_TYPE,
             ]
         );
 
-        return array_map(static fn (array $result): string => $result['subject'], $results);
+        $resources = [];
+
+        foreach ($results as $result) {
+            $resources[$result['subject']] = [
+                'id' => $result['subject'],
+                'isClass' => $result['predicate'] === OntologyRdfs::RDFS_SUBCLASSOF,
+            ];
+        }
+
+        return $resources;
     }
 
     /**
@@ -237,24 +248,25 @@ SQL;
      * Add batch permissions
      *
      * @access public
-     * @param array $permissionData
      * @return void
      * @throws Throwable
      */
-    public function addMultiplePermissionsNew(array $permissionData)
+    public function addMultiplePermissionsNew(array $resources)
     {
         $insert = [];
 
-        foreach ($permissionData as $permissionItem) {
-            foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
-                if (!empty($privilegeIds)) {
-                    foreach ($privilegeIds as $privilegeId) {
-                        $insert [] = [
-                            self::COLUMN_USER_ID => $userId,
-                            self::COLUMN_RESOURCE_ID => $permissionItem['resourceId'],
-                            self::COLUMN_PRIVILEGE => $privilegeId
-                        ];
-                    }
+        foreach ($resources as $resource) {
+            foreach ($resource['permissions']['add'] as $userId => $addPermissions) {
+                if (empty($addPermissions)) {
+                    continue;
+                }
+
+                foreach ($addPermissions as $permission) {
+                    $insert[] = [
+                        self::COLUMN_USER_ID => $userId,
+                        self::COLUMN_RESOURCE_ID => $resource['id'],
+                        self::COLUMN_PRIVILEGE => $permission,
+                    ];
                 }
             }
         }
@@ -262,11 +274,13 @@ SQL;
         $this->insertPermissions($insert);
 
         foreach ($insert as $inserted) {
-            $this->getEventManager()->trigger(new DacAddedEvent(
-                $inserted[self::COLUMN_USER_ID],
-                $inserted[self::COLUMN_RESOURCE_ID],
-                (array)$inserted[self::COLUMN_PRIVILEGE]
-            ));
+            $this->getEventManager()->trigger(
+                new DacAddedEvent(
+                    $inserted[self::COLUMN_USER_ID],
+                    $inserted[self::COLUMN_RESOURCE_ID],
+                    (array) $inserted[self::COLUMN_PRIVILEGE]
+                )
+            );
         }
     }
 
@@ -399,33 +413,34 @@ SQL;
      * @param array $data
      * @return void
      */
-    public function removeMultiplePermissionsNew(array $data)
+    public function removeMultiplePermissionsNew(array $resources)
     {
         $groupedRemove = [];
         $eventsData = [];
 
-        foreach ($data as $permissionItem) {
-            $resourceId = $permissionItem['resourceId'];
-
-            foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
-                if (!empty($privilegeIds)) {
-                    $idString = implode($privilegeIds);
-
-                    $groupedRemove[$userId][$idString]['resources'][] = $resourceId;
-                    $groupedRemove[$userId][$idString]['privileges'] = $privilegeIds;
-
-                    $eventsData[] = [
-                        'userId' => $userId,
-                        'resourceId' => $resourceId,
-                        'privileges' => $privilegeIds
-                    ];
+        foreach ($resources as $resource) {
+            foreach ($resource['permissions']['remove'] as $userId => $removePermissions) {
+                if (empty($removePermissions)) {
+                    continue;
                 }
+
+                $idString = implode($removePermissions);
+
+                $groupedRemove[$userId][$idString]['resources'][] = $resource['id'];
+                $groupedRemove[$userId][$idString]['privileges'] = $removePermissions;
+
+                $eventsData[] = [
+                    'userId' => $userId,
+                    'resourceId' => $resource['id'],
+                    'privileges' => $removePermissions,
+                ];
             }
         }
-        foreach ($groupedRemove as $userId => $resources) {
-            foreach ($resources as $permissions) {
-                $inQueryPrivilege = implode(',', array_fill(0, count($permissions['privileges']), ' ? '));
-                $inQueryResources = implode(',', array_fill(0, count($permissions['resources']), ' ? '));
+
+        foreach ($groupedRemove as $userId => $priviligeGroups) {
+            foreach ($priviligeGroups as $privilegeGroup) {
+                $inQueryPrivilege = implode(',', array_fill(0, count($privilegeGroup['privileges']), ' ? '));
+                $inQueryResources = implode(',', array_fill(0, count($privilegeGroup['resources']), ' ? '));
                 $query = sprintf(
                     'DELETE FROM %s WHERE %s IN (%s) AND %s IN (%s) AND %s = ?',
                     self::TABLE_PRIVILEGES_NAME,
@@ -437,8 +452,8 @@ SQL;
                 );
 
                 $params = array_merge(
-                    array_values($permissions['resources']),
-                    array_values($permissions['privileges']),
+                    array_values($privilegeGroup['resources']),
+                    array_values($privilegeGroup['privileges']),
                     [$userId]
                 );
 

@@ -73,14 +73,14 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
                 (array) $params[self::PARAM_PRIVILEGES],
                 filter_var($params[self::PARAM_RECURSIVE] ?? false, FILTER_VALIDATE_BOOL)
             );
-            $this->doHandle(
-                $this->getClass($params[self::PARAM_RESOURCE]),
-                ($params[self::PARAM_REQUEST_ROOT] ?? $params[self::PARAM_RESOURCE]),
-                (array) $params[self::PARAM_PRIVILEGES],
-                (bool) ($params[self::PARAM_RECURSIVE] ?? false),
-                (bool) ($params[self::PARAM_NESTED_RESOURCES] ?? false),
-                $params[self::PARAM_PERMISSIONS_DELTA] ?? null
-            );
+//            $this->doHandle(
+//                $this->getClass($params[self::PARAM_RESOURCE]),
+//                ($params[self::PARAM_REQUEST_ROOT] ?? $params[self::PARAM_RESOURCE]),
+//                (array) $params[self::PARAM_PRIVILEGES],
+//                (bool) ($params[self::PARAM_RECURSIVE] ?? false),
+//                (bool) ($params[self::PARAM_NESTED_RESOURCES] ?? false),
+//                $params[self::PARAM_PERMISSIONS_DELTA] ?? null
+//            );
 
             return Report::createSuccess('Permissions saved');
         } catch (Exception $e) {

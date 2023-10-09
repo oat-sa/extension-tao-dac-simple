@@ -3,188 +3,139 @@
 namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Resource;
+use oat\oatbox\event\EventManager;
+use oat\tao\model\event\DataAccessControlChangedEvent;
+use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
+use oat\taoDacSimple\model\event\DacRootAddedEvent;
+use oat\taoDacSimple\model\event\DacRootRemovedEvent;
 
 class ChangePermissionsService
 {
     private DataBaseAccess $dataBaseAccess;
     private PermissionsStrategyInterface $strategy;
+    private EventManager $eventManager;
 
-    public function __construct(DataBaseAccess $dataBaseAccess, PermissionsStrategyInterface $strategy)
-    {
+    public function __construct(
+        DataBaseAccess $dataBaseAccess,
+        PermissionsStrategyInterface $strategy,
+        EventManager $eventManager
+    ) {
         $this->dataBaseAccess = $dataBaseAccess;
         $this->strategy = $strategy;
+        $this->eventManager = $eventManager;
     }
 
     public function __invoke(core_kernel_classes_Resource $resource, array $permissionsToSet, bool $isRecursive): void
     {
-        $resourceIds = $this->getResourceIdsToUpdate($resource, $isRecursive);
-        $currentPermissions = $this->getResourcesPermissions($resourceIds);
+        $resources = $this->getResourceToUpdate($resource, $isRecursive);
+        $this->enrichWithPermissions($resources);
+        $rootResourcePermissions = $resources[$resource->getUri()]['permissions'];
+
         $permissionsDelta = $this->strategy->getDeltaPermissions(
-            $currentPermissions[$resource->getUri()] ?? [],
+            $rootResourcePermissions['current'] ?? [],
             $permissionsToSet
         );
 
-        if (empty($permissionsDelta)) {
+        if (empty($permissionsDelta['remove']) && empty($permissionsDelta['add'])) {
             return;
         }
 
-        $actions = $this->getActions($resourceIds, $currentPermissions, $permissionsDelta);
-        $this->dryRun($actions, $currentPermissions);
-        $this->wetRun($actions);
+        $resources = $this->enrichWithAddRemoveActions($resources, $permissionsDelta);
+        $this->dryRun($resources);
+        $this->wetRun($resources);
 
-
-
-
-        // >>> UDIR
-
-        // <<< UDIR
+        $this->triggerEvents($resource->getUri(), $permissionsDelta, $isRecursive);
     }
 
-    /*
-    private function triggerEvents(
-        string $resourceId,
-        string $rootResourceId,
-        array $addRemove,
-        bool $isRecursive,
-        bool $applyToNestedResources
-    ): void {
-        if (!empty($addRemove['add'])) {
-            foreach ($addRemove['add'] as $userId => $rights) {
-                $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, (array)$rights));
-            }
-        }
-        if (!empty($addRemove['remove'])) {
-            foreach ($addRemove['remove'] as $userId => $rights) {
-                $this->eventManager->trigger(new DacRootRemovedEvent($userId, $resourceId, (array)$rights));
-            }
-        }
-        $this->eventManager->trigger(
-            new DacAffectedUsersEvent(
-                array_keys($addRemove['add'] ?? []),
-                array_keys($addRemove['remove'] ?? [])
-            )
-        );
-
-        $this->eventManager->trigger(
-            new DataAccessControlChangedEvent(
-                $resourceId,
-                $addRemove,
-                $isRecursive,
-                $applyToNestedResources,
-                $rootResourceId
-            )
-        );
-    }*/
-
-    private function getResourceIdsToUpdate(core_kernel_classes_Resource $resource, bool $isRecursive): array
+    private function getResourceToUpdate(core_kernel_classes_Resource $resource, bool $isRecursive): array
     {
         if ($isRecursive) {
-            return $this->dataBaseAccess->getTreeIds($resource);
+            return $this->dataBaseAccess->getResourceTree($resource);
         }
 
-        return [$resource->getUri()];
+        return [
+            $resource->getUri() => [
+                'id' => $resource->getUri(),
+                'isClass' => $resource->isClass(),
+                'level' => 1,
+            ],
+        ];
     }
 
-    private function getResourcesPermissions(array $resourceIds): array
+    private function enrichWithPermissions(array &$resources): void
     {
-        if (empty($resourceIds)) {
-            return [];
+        if (empty($resources)) {
+            return;
         }
 
-        return $this->dataBaseAccess->getResourcesPermissions($resourceIds);
-    }
+        $permissions = $this->dataBaseAccess->getResourcesPermissions(array_column($resources, 'id'));
 
-    private function getActions(
-        array $resourceIdsToUpdate,
-        array $currentResourcePermissions,
-        array $permissionsDelta
-    ): array {
-        $addActions = [];
-        $removeActions = [];
-
-        foreach ($resourceIdsToUpdate as $resourceId) {
-            $resourcePermissions = $currentResourcePermissions[$resourceId];
-
-            $remove = $this->strategy->getPermissionsToRemove($resourcePermissions, $permissionsDelta);
-
-            if (!empty($remove)) {
-                $removeActions[] = ['permissions' => $remove, 'resourceId' => $resourceId];
-            }
-
-            $add = $this->strategy->getPermissionsToAdd($resourcePermissions, $permissionsDelta);
-
-            if (!empty($add)) {
-                $addActions[] = ['permissions' => $add, 'resourceId' => $resourceId];
-            }
+        foreach ($resources as &$resource) {
+            $resource['permissions']['current'] = $permissions[$resource['id']];
         }
-
-        return $this->deduplicateActions(['add' => $addActions, 'remove' => $removeActions]);
     }
 
-    private function deduplicateActions(array $actions): array
+    private function enrichWithAddRemoveActions(array $resources, array $permissionsDelta): array
     {
-        foreach ($actions['add'] as &$entry) {
-            foreach ($entry['permissions'] as &$grants) {
-                $grants = array_unique($grants);
-            }
+        foreach ($resources as &$resource) {
+            $resource['permissions']['remove'] = $this->strategy->getPermissionsToRemove(
+                $resource['permissions']['current'],
+                $permissionsDelta
+            );
+
+            $resource['permissions']['add'] = $this->strategy->getPermissionsToAdd(
+                $resource['permissions']['current'],
+                $permissionsDelta
+            );
         }
 
-        foreach ($actions['remove'] as &$entry) {
-            foreach ($entry['permissions'] as &$grants) {
-                $grants = array_unique($grants);
+        return $this->deduplicateChanges($resources);
+    }
+
+    private function deduplicateChanges(array $resources): array
+    {
+        foreach ($resources as &$resource) {
+            foreach ($resource['permissions']['remove'] as &$removePermissions) {
+                $removePermissions = array_unique($removePermissions);
+            }
+
+            foreach ($resource['permissions']['add'] as &$addPermissions) {
+                $addPermissions = array_unique($addPermissions);
             }
         }
 
-        return $actions;
+        return $resources;
     }
 
-    private function dryRun(array $actions, array $permissionsList): void
+    private function dryRun(array $resources): void
     {
-        $resultPermissions = $permissionsList;
+        foreach ($resources as $resource) {
+            $newPermissions = $resource['permissions']['current'];
 
-        foreach ($actions['remove'] as $item) {
-            $this->dryRemove($item['permissions'], $item['resourceId'], $resultPermissions);
-        }
-        foreach ($actions['add'] as $item) {
-            $this->dryAdd($item['permissions'], $item['resourceId'], $resultPermissions);
-        }
+            $this->dryRemove($resource, $newPermissions);
+            $this->dryAdd($resource, $newPermissions);
 
-        $this->assertHasUserWithGrantPermission($resultPermissions);
-    }
-
-    private function wetRun(array $actions): void
-    {
-        if (!empty($actions['remove'])) {
-            $this->dataBaseAccess->removeMultiplePermissionsNew($actions['remove']);
-        }
-        if (!empty($actions['add'])) {
-            $this->dataBaseAccess->addMultiplePermissionsNew($actions['add']);
+            $this->assertHasUserWithGrantPermission($resource['id'], $newPermissions);
         }
     }
 
-    private function dryRemove(array $remove, string $resourceId, array &$resultPermissions): void
+    private function dryRemove(array $resource, array &$newPermissions): void
     {
-        foreach ($remove as $userToRemove => $permissionToRemove) {
-            if (!empty($resultPermissions[$resourceId][$userToRemove])) {
-                $resultPermissions[$resourceId][$userToRemove] = array_diff(
-                    $resultPermissions[$resourceId][$userToRemove],
-                    $permissionToRemove
-                );
-            }
+        foreach ($resource['permissions']['remove'] as $user => $removePermissions) {
+            $newPermissions[$user] = array_diff(
+                $newPermissions[$user] ?? [],
+                $removePermissions
+            );
         }
     }
 
-    private function dryAdd(array $add, string $resourceId, array &$resultPermissions): void
+    private function dryAdd(array $resource, array &$newPermissions): void
     {
-        foreach ($add as $userToAdd => $permissionToAdd) {
-            if (empty($resultPermissions[$resourceId][$userToAdd])) {
-                $resultPermissions[$resourceId][$userToAdd] = $permissionToAdd;
-            } else {
-                $resultPermissions[$resourceId][$userToAdd] = array_merge(
-                    $resultPermissions[$resourceId][$userToAdd],
-                    $permissionToAdd
-                );
-            }
+        foreach ($resource['permissions']['add'] as $user => $addPermissions) {
+            $newPermissions[$user] = array_merge(
+                $resource['permissions']['current'][$user] ?? [],
+                $addPermissions
+            );
         }
     }
 
@@ -192,26 +143,49 @@ class ChangePermissionsService
      * Checks if all resources after all actions are applied will have at least
      * one user with GRANT permission.
      */
-    private function assertHasUserWithGrantPermission(array $resultPermissions): void
+    private function assertHasUserWithGrantPermission(string $resourceId, array $newPermissions): void
     {
-        foreach ($resultPermissions as $resultResources => $resultUsers) {
-            $granted = false;
-            foreach ($resultUsers as $permissions) {
-                $granted = in_array(PermissionProvider::PERMISSION_GRANT, $permissions, true);
-
-                if ($granted) {
-                    break;
-                }
-            }
-
-            if (!$granted) {
-                throw new PermissionsServiceException(
-                    sprintf(
-                        'Resource %s should have at least one user with GRANT access',
-                        $resultResources
-                    )
-                );
+        foreach ($newPermissions as $permissions) {
+            if (in_array(PermissionProvider::PERMISSION_GRANT, $permissions, true)) {
+                return;
             }
         }
+
+        throw new PermissionsServiceException(
+            sprintf(
+                'Resource %s should have at least one user with GRANT access',
+                $resourceId
+            )
+        );
+    }
+
+    private function wetRun(array $resources): void
+    {
+        $this->dataBaseAccess->removeMultiplePermissionsNew($resources);
+        $this->dataBaseAccess->addMultiplePermissionsNew($resources);
+    }
+
+    private function triggerEvents(string $resourceId, array $permissionsDelta, bool $isRecursive): void
+    {
+        // >>> UDIR
+        // TODO Collect all users and do in a single event
+        foreach ($permissionsDelta['add'] as $userId => $permissions) {
+            $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, $permissions));
+        }
+
+        // TODO Collect all users and do in a single event
+        foreach ($permissionsDelta['remove'] as $userId => $permissions) {
+            $this->eventManager->trigger(new DacRootRemovedEvent($userId, $resourceId, $permissions));
+        }
+
+        $this->eventManager->trigger(
+            new DacAffectedUsersEvent(
+                array_keys($permissionsDelta['add']),
+                array_keys($permissionsDelta['remove'])
+            )
+        );
+        // <<< UDIR
+
+        $this->eventManager->trigger(new DataAccessControlChangedEvent($resourceId, $permissionsDelta, $isRecursive));
     }
 }
