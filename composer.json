@@ -22,7 +22,7 @@
     "require": {
         "oat-sa/oatbox-extension-installer": "~1.1||dev-master",
         "oat-sa/generis": ">=15.24",
-        "oat-sa/tao-core": ">=52.1",
+        "oat-sa/tao-core": "dev-feature/adf-1590/optimize-permissions-task-queue as 99.99",
         "oat-sa/extension-tao-backoffice": ">=6.0.0",
         "oat-sa/extension-tao-item": ">=11.3"
     },
