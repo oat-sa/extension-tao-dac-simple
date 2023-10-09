@@ -3,7 +3,7 @@
 namespace oat\taoDacSimple\model;
 
 use oat\generis\model\DependencyInjection\ContainerServiceProviderInterface;
-use oat\oatbox\event\EventManager;
+use oat\tao\model\taskQueue\QueueDispatcherInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -22,7 +22,7 @@ class PermissionServiceProvider implements ContainerServiceProviderInterface
             ->args([
                 service(DataBaseAccess::SERVICE_ID),
                 service(SavePermissionsStrategy::class),
-                service(EventManager::SERVICE_ID),
+                service(QueueDispatcherInterface::SERVICE_ID),
             ]);
     }
 }

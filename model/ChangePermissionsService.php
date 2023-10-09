@@ -3,26 +3,24 @@
 namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Resource;
-use oat\oatbox\event\EventManager;
-use oat\tao\model\event\DataAccessControlChangedEvent;
-use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
-use oat\taoDacSimple\model\event\DacRootAddedEvent;
-use oat\taoDacSimple\model\event\DacRootRemovedEvent;
+use oat\generis\model\OntologyRdfs;
+use oat\tao\model\taskQueue\QueueDispatcherInterface;
+use oat\taoDacSimple\model\tasks\PostChangePermissionsTask;
 
 class ChangePermissionsService
 {
     private DataBaseAccess $dataBaseAccess;
     private PermissionsStrategyInterface $strategy;
-    private EventManager $eventManager;
+    private QueueDispatcherInterface $queueDispatcher;
 
     public function __construct(
         DataBaseAccess $dataBaseAccess,
         PermissionsStrategyInterface $strategy,
-        EventManager $eventManager
+        QueueDispatcherInterface $queueDispatcher
     ) {
         $this->dataBaseAccess = $dataBaseAccess;
         $this->strategy = $strategy;
-        $this->eventManager = $eventManager;
+        $this->queueDispatcher = $queueDispatcher;
     }
 
     public function __invoke(core_kernel_classes_Resource $resource, array $permissionsToSet, bool $isRecursive): void
@@ -44,13 +42,23 @@ class ChangePermissionsService
         $this->dryRun($resources);
         $this->wetRun($resources);
 
-        $this->triggerEvents($resource->getUri(), $permissionsDelta, $isRecursive);
+        $this->triggerEvents($resource, $permissionsDelta, $isRecursive);
     }
 
     private function getResourceToUpdate(core_kernel_classes_Resource $resource, bool $isRecursive): array
     {
         if ($isRecursive) {
-            return $this->dataBaseAccess->getResourceTree($resource);
+            $resources = [];
+
+            foreach ($this->dataBaseAccess->getResourceTree($resource) as $result) {
+                $resources[$result['subject']] = [
+                    'id' => $result['subject'],
+                    'isClass' => $result['predicate'] === OntologyRdfs::RDFS_SUBCLASSOF,
+                    'level' => $result['level']
+                ];
+            }
+
+            return $resources;
         }
 
         return [
@@ -165,27 +173,23 @@ class ChangePermissionsService
         $this->dataBaseAccess->addMultiplePermissionsNew($resources);
     }
 
-    private function triggerEvents(string $resourceId, array $permissionsDelta, bool $isRecursive): void
-    {
-        // >>> UDIR
-        // TODO Collect all users and do in a single event
-        foreach ($permissionsDelta['add'] as $userId => $permissions) {
-            $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, $permissions));
-        }
-
-        // TODO Collect all users and do in a single event
-        foreach ($permissionsDelta['remove'] as $userId => $permissions) {
-            $this->eventManager->trigger(new DacRootRemovedEvent($userId, $resourceId, $permissions));
-        }
-
-        $this->eventManager->trigger(
-            new DacAffectedUsersEvent(
-                array_keys($permissionsDelta['add']),
-                array_keys($permissionsDelta['remove'])
+    private function triggerEvents(
+        core_kernel_classes_Resource $resource,
+        array $permissionsDelta,
+        bool $isRecursive
+    ): void {
+        $this->queueDispatcher->createTask(
+            new PostChangePermissionsTask(),
+            [
+                PostChangePermissionsTask::PARAM_RESOURCE_ID => $resource->getUri(),
+                PostChangePermissionsTask::PARAM_PERMISSIONS_DELTA => $permissionsDelta,
+                PostChangePermissionsTask::PARAM_IS_RECURSIVE => $isRecursive,
+            ],
+            sprintf(
+                'Triggering permissions changes events for resource %s [%s]',
+                $resource->getLabel(),
+                $resource->getUri()
             )
         );
-        // <<< UDIR
-
-        $this->eventManager->trigger(new DataAccessControlChangedEvent($resourceId, $permissionsDelta, $isRecursive));
     }
 }

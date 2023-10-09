@@ -79,7 +79,7 @@ WITH RECURSIVE statements_tree AS (
 SELECT subject, predicate, level FROM statements_tree;
 SQL;
 
-        $results = $this->fetchQuery(
+        return $this->fetchQuery(
             $query,
             [
                 $resource->getUri(),
@@ -87,17 +87,6 @@ SQL;
                 OntologyRdf::RDF_TYPE,
             ]
         );
-
-        $resources = [];
-
-        foreach ($results as $result) {
-            $resources[$result['subject']] = [
-                'id' => $result['subject'],
-                'isClass' => $result['predicate'] === OntologyRdfs::RDFS_SUBCLASSOF,
-            ];
-        }
-
-        return $resources;
     }
 
     /**
