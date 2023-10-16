@@ -68,13 +68,88 @@ class DataBaseAccess extends ConfigurableService
         return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
     }
 
+    public function getParentClassesIds(string $resourceUri): array
+    {
+        $query = <<<'SQL'
+WITH RECURSIVE statements_tree AS (
+    SELECT
+        r.object
+    FROM statements r
+    WHERE r.subject = ?
+      AND r.predicate IN (?, ?)
+    UNION ALL
+    SELECT
+        s.object
+    FROM statements s
+        JOIN statements_tree st
+            ON s.subject = st.object
+                   AND s.predicate IN (?, ?)
+                   AND s.object NOT IN (?, ?, ?, ?)
+)
+SELECT object FROM statements_tree;
+SQL;
+
+        return array_column(
+            $this->fetchQuery(
+                $query,
+                [
+                    $resourceUri,
+                    OntologyRdfs::RDFS_SUBCLASSOF,
+                    OntologyRdf::RDF_TYPE,
+                    OntologyRdfs::RDFS_SUBCLASSOF,
+                    OntologyRdf::RDF_TYPE,
+                    'http://www.tao.lu/Ontologies/TAO.rdf#AssessmentContentObject',
+                    'http://www.tao.lu/Ontologies/TAO.rdf#TAOObject',
+                    'http://www.tao.lu/Ontologies/generis.rdf#generis_Ressource',
+                    'http://www.w3.org/2000/01/rdf-schema#Resource',
+                ]
+            ),
+            'object'
+        );
+    }
+
+    public function getClassesResources(array $classesIds): array
+    {
+        $inQuery = implode(',', array_fill(0, count($classesIds), '?'));
+        $query = "SELECT subject, object FROM statements WHERE predicate IN (?, ?) AND object IN ($inQuery)";
+
+        $results = $this->fetchQuery(
+            $query,
+            [
+                OntologyRdfs::RDFS_SUBCLASSOF,
+                OntologyRdf::RDF_TYPE,
+                ...$classesIds,
+            ]
+        );
+
+        $classesResources = [];
+
+        foreach ($results as $result) {
+            $classesResources[$result['object']][] = $result['subject'];
+        }
+
+        return $classesResources;
+    }
+
     public function getResourceTree(core_kernel_classes_Resource $resource): array
     {
         $query = <<<'SQL'
 WITH RECURSIVE statements_tree AS (
-    SELECT r.subject, r.predicate, 1 as level FROM statements r WHERE r.subject = ? AND r.predicate IN (?, ?) GROUP BY r.subject
+    SELECT
+        r.subject,
+        r.predicate,
+        1 as level
+    FROM statements r
+    WHERE r.subject = ?
+      AND r.predicate IN (?, ?)
     UNION ALL
-    SELECT s.subject, s.predicate, level + 1 FROM statements s JOIN statements_tree st ON s.object = st.subject
+    SELECT
+        s.subject,
+        s.predicate,
+        level + 1
+    FROM statements s
+        JOIN statements_tree st
+            ON s.object = st.subject
 )
 SELECT subject, predicate, level FROM statements_tree;
 SQL;
@@ -149,6 +224,38 @@ SQL;
             $returnValue[$result[self::COLUMN_RESOURCE_ID]][] = $result[self::COLUMN_PRIVILEGE];
         }
         return $returnValue;
+    }
+
+    public function getPermissionsByUsersAndResources(array $userIds, array $resourceIds): array
+    {
+        // Permissions for an empty set of resources must be an empty array
+        if (empty($resourceIds)) {
+            return [];
+        }
+
+        $inQueryResources = implode(',', array_fill(0, count($resourceIds), '?'));
+        $inQueryUsers = implode(',', array_fill(0, count($userIds), '?'));
+
+        $query = <<<SQL
+SELECT
+    resource_id,
+    user_id,
+    privilege
+FROM data_privileges
+WHERE resource_id IN ($inQueryResources)
+  AND user_id IN ($inQueryUsers)
+SQL;
+
+        $results = $this->fetchQuery($query, [...$resourceIds, ...$userIds]);
+
+        // If resource doesn't have permission don't return null
+        $data = array_fill_keys($resourceIds, []);
+
+        foreach ($results as $result) {
+            $data[$result[self::COLUMN_RESOURCE_ID]][$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
+        }
+
+        return $data;
     }
 
     public function getResourcesPermissions(array $resourceIds)
@@ -233,14 +340,7 @@ SQL;
         }
     }
 
-    /**
-     * Add batch permissions
-     *
-     * @access public
-     * @return void
-     * @throws Throwable
-     */
-    public function addMultiplePermissionsNew(array $resources)
+    public function addResourcesPermissions(array $resources): void
     {
         $insert = [];
 
@@ -332,6 +432,57 @@ SQL;
         return true;
     }
 
+    public function addReadAccess(array $addAccessList): bool
+    {
+        if (empty($addAccessList)) {
+            return true;
+        }
+
+        $values = [];
+        $valuesQuery = [];
+
+        foreach ($addAccessList as $resourceId => $usersIds) {
+            foreach ($usersIds as $userId) {
+                $values = array_merge($values, [$userId, $resourceId, PermissionProvider::PERMISSION_READ]);
+                $valuesQuery[] = '(?, ?, ?)';
+            }
+        }
+
+        $statement = sprintf(
+            'INSERT INTO data_privileges (user_id, resource_id, privilege) VALUES %s',
+            implode(', ', $valuesQuery)
+        );
+
+        return $this->getPersistence()->exec($statement, $values);
+    }
+
+    public function revokeAccess(array $revokeAccessList): bool
+    {
+        if (empty($revokeAccessList)) {
+            return true;
+        }
+
+        try {
+            foreach ($revokeAccessList as $resourceId => $usersIds) {
+                $inQueryUsers = implode(',', array_fill(0, count($usersIds), ' ? '));
+
+                $this->getPersistence()->exec(
+                    "DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN ($inQueryUsers)",
+                    [
+                        $resourceId,
+                        ...$usersIds,
+                    ]
+                );
+            }
+
+            return true;
+        } catch (Throwable $exception) {
+            $this->logError('Error when revoking access: ' . $exception->getMessage());
+
+            return false;
+        }
+    }
+
     /**
      * Remove batch permissions
      *
@@ -395,14 +546,7 @@ SQL;
         }
     }
 
-    /**
-     * Remove batch permissions
-     *
-     * @access public
-     * @param array $data
-     * @return void
-     */
-    public function removeMultiplePermissionsNew(array $resources)
+    public function removeResourcesPermissions(array $resources): void
     {
         $groupedRemove = [];
         $eventsData = [];
@@ -430,15 +574,14 @@ SQL;
             foreach ($priviligeGroups as $privilegeGroup) {
                 $inQueryPrivilege = implode(',', array_fill(0, count($privilegeGroup['privileges']), ' ? '));
                 $inQueryResources = implode(',', array_fill(0, count($privilegeGroup['resources']), ' ? '));
-                $query = sprintf(
-                    'DELETE FROM %s WHERE %s IN (%s) AND %s IN (%s) AND %s = ?',
-                    self::TABLE_PRIVILEGES_NAME,
-                    self::COLUMN_RESOURCE_ID,
-                    $inQueryResources,
-                    self::COLUMN_PRIVILEGE,
-                    $inQueryPrivilege,
-                    self::COLUMN_USER_ID
-                );
+
+                $query = <<<SQL
+DELETE
+FROM data_privileges
+WHERE resource_id IN ($inQueryResources)
+  AND privilege IN ($inQueryPrivilege)
+  AND user_id = ?
+SQL;
 
                 $params = array_merge(
                     array_values($privilegeGroup['resources']),

@@ -40,21 +40,46 @@ class PermissionsServiceFactory extends ConfigurableService
      */
     public function create(): PermissionsService
     {
-        if (!$this->hasOption(self::OPTION_SAVE_STRATEGY)) {
+        return new PermissionsService(
+            $this->getDataBaseAccess(),
+            $this->getPermissionsStrategy(),
+            $this->getEventManager()
+        );
+    }
+
+    public function createChangePermissionsService(): ChangePermissionsService
+    {
+        return new ChangePermissionsService(
+            $this->getDataBaseAccess(),
+            $this->getPermissionsStrategy(),
+            $this->getEventManager()
+        );
+    }
+
+    private function getDataBaseAccess(): DataBaseAccess
+    {
+        return $this->serviceLocator->get(DataBaseAccess::SERVICE_ID);
+    }
+
+    private function getPermissionsStrategy(): PermissionsStrategyInterface
+    {
+        $strategyClass = $this->getOption(self::OPTION_SAVE_STRATEGY);
+
+        if ($strategyClass === null) {
             throw new RuntimeException(
-                sprintf('Option %s is not configured. Please check %s', self::OPTION_SAVE_STRATEGY, self::SERVICE_ID)
+                sprintf(
+                    'Option %s is not configured. Please check %s',
+                    self::OPTION_SAVE_STRATEGY,
+                    self::SERVICE_ID
+                )
             );
         }
 
-        /** @var DataBaseAccess $dataBaseAccess */
-        $dataBaseAccess = $this->serviceLocator->get(DataBaseAccess::SERVICE_ID);
+        return new $strategyClass();
+    }
 
-        /** @var EventManager $eventManager */
-        $eventManager = $this->serviceLocator->get(EventManager::SERVICE_ID);
-
-        $strategyClass = $this->getOption(self::OPTION_SAVE_STRATEGY);
-        $permissionsStrategy = new $strategyClass();
-
-        return new PermissionsService($dataBaseAccess, $permissionsStrategy, $eventManager);
+    private function getEventManager(): EventManager
+    {
+        return $this->serviceLocator->get(EventManager::SERVICE_ID);
     }
 }

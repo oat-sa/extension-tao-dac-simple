@@ -1,29 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Resource;
 use oat\generis\model\OntologyRdfs;
-use oat\tao\model\taskQueue\QueueDispatcherInterface;
-use oat\taoDacSimple\model\tasks\PostChangePermissionsTask;
+use oat\oatbox\event\EventManager;
+use oat\tao\model\event\DataAccessControlChangedEvent;
+use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
+use oat\taoDacSimple\model\event\DacRootChangedEvent;
 
 class ChangePermissionsService
 {
     private DataBaseAccess $dataBaseAccess;
     private PermissionsStrategyInterface $strategy;
-    private QueueDispatcherInterface $queueDispatcher;
+    private EventManager $eventManager;
 
     public function __construct(
         DataBaseAccess $dataBaseAccess,
         PermissionsStrategyInterface $strategy,
-        QueueDispatcherInterface $queueDispatcher
+        EventManager $eventManager
     ) {
         $this->dataBaseAccess = $dataBaseAccess;
         $this->strategy = $strategy;
-        $this->queueDispatcher = $queueDispatcher;
+        $this->eventManager = $eventManager;
     }
 
-    public function __invoke(core_kernel_classes_Resource $resource, array $permissionsToSet, bool $isRecursive): void
+    public function change(core_kernel_classes_Resource $resource, array $permissionsToSet, bool $isRecursive): void
     {
         $resources = $this->getResourceToUpdate($resource, $isRecursive);
         $this->enrichWithPermissions($resources);
@@ -169,8 +173,8 @@ class ChangePermissionsService
 
     private function wetRun(array $resources): void
     {
-        $this->dataBaseAccess->removeMultiplePermissionsNew($resources);
-        $this->dataBaseAccess->addMultiplePermissionsNew($resources);
+        $this->dataBaseAccess->removeResourcesPermissions($resources);
+        $this->dataBaseAccess->addResourcesPermissions($resources);
     }
 
     private function triggerEvents(
@@ -178,17 +182,22 @@ class ChangePermissionsService
         array $permissionsDelta,
         bool $isRecursive
     ): void {
-        $this->queueDispatcher->createTask(
-            new PostChangePermissionsTask(),
-            [
-                PostChangePermissionsTask::PARAM_RESOURCE_ID => $resource->getUri(),
-                PostChangePermissionsTask::PARAM_PERMISSIONS_DELTA => $permissionsDelta,
-                PostChangePermissionsTask::PARAM_IS_RECURSIVE => $isRecursive,
-            ],
-            sprintf(
-                'Triggering permissions changes events for resource %s [%s]',
-                $resource->getLabel(),
-                $resource->getUri()
+        if (!empty($permissionsDelta['add']) || !empty($permissionsDelta['remove'])) {
+            $this->eventManager->trigger(new DacRootChangedEvent($resource->getUri(), $permissionsDelta));
+        }
+
+        $this->eventManager->trigger(
+            new DacAffectedUsersEvent(
+                array_keys($permissionsDelta['add']),
+                array_keys($permissionsDelta['remove'])
+            )
+        );
+
+        $this->eventManager->trigger(
+            new DataAccessControlChangedEvent(
+                $resource->getUri(),
+                $permissionsDelta,
+                $isRecursive
             )
         );
     }
