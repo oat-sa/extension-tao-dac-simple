@@ -164,6 +164,187 @@ SQL;
         );
     }
 
+    public function getPermissionsByUsersAndResources(array $userIds, array $resourceIds): array
+    {
+        // Permissions for an empty set of resources must be an empty array
+        if (empty($resourceIds)) {
+            return [];
+        }
+
+        $inQueryResources = implode(',', array_fill(0, count($resourceIds), '?'));
+        $inQueryUsers = implode(',', array_fill(0, count($userIds), '?'));
+
+        $query = <<<SQL
+SELECT
+    resource_id,
+    user_id,
+    privilege
+FROM data_privileges
+WHERE resource_id IN ($inQueryResources)
+  AND user_id IN ($inQueryUsers)
+SQL;
+
+        $results = $this->fetchQuery($query, [...$resourceIds, ...$userIds]);
+
+        // If resource doesn't have permission don't return null
+        $data = array_fill_keys($resourceIds, []);
+
+        foreach ($results as $result) {
+            $data[$result[self::COLUMN_RESOURCE_ID]][$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
+        }
+
+        return $data;
+    }
+
+    public function addResourcesPermissions(array $resources): void
+    {
+        $insert = [];
+
+        foreach ($resources as $resource) {
+            foreach ($resource['permissions']['add'] as $userId => $addPermissions) {
+                if (empty($addPermissions)) {
+                    continue;
+                }
+
+                foreach ($addPermissions as $permission) {
+                    $insert[] = [
+                        self::COLUMN_USER_ID => $userId,
+                        self::COLUMN_RESOURCE_ID => $resource['id'],
+                        self::COLUMN_PRIVILEGE => $permission,
+                    ];
+                }
+            }
+        }
+
+        $this->insertPermissions($insert);
+
+        foreach ($insert as $inserted) {
+            $this->getEventManager()->trigger(
+                new DacAddedEvent(
+                    $inserted[self::COLUMN_USER_ID],
+                    $inserted[self::COLUMN_RESOURCE_ID],
+                    (array) $inserted[self::COLUMN_PRIVILEGE]
+                )
+            );
+        }
+    }
+
+    public function removeResourcesPermissions(array $resources): void
+    {
+        $groupedRemove = [];
+        $eventsData = [];
+
+        foreach ($resources as $resource) {
+            foreach ($resource['permissions']['remove'] as $userId => $removePermissions) {
+                if (empty($removePermissions)) {
+                    continue;
+                }
+
+                $idString = implode($removePermissions);
+
+                $groupedRemove[$userId][$idString]['resources'][] = $resource['id'];
+                $groupedRemove[$userId][$idString]['privileges'] = $removePermissions;
+
+                $eventsData[] = [
+                    'userId' => $userId,
+                    'resourceId' => $resource['id'],
+                    'privileges' => $removePermissions,
+                ];
+            }
+        }
+
+        foreach ($groupedRemove as $userId => $priviligeGroups) {
+            foreach ($priviligeGroups as $privilegeGroup) {
+                $inQueryPrivilege = implode(',', array_fill(0, count($privilegeGroup['privileges']), ' ? '));
+                $inQueryResources = implode(',', array_fill(0, count($privilegeGroup['resources']), ' ? '));
+
+                $query = <<<SQL
+DELETE
+FROM data_privileges
+WHERE resource_id IN ($inQueryResources)
+  AND privilege IN ($inQueryPrivilege)
+  AND user_id = ?
+SQL;
+
+                $params = array_merge(
+                    array_values($privilegeGroup['resources']),
+                    array_values($privilegeGroup['privileges']),
+                    [$userId]
+                );
+
+                $this->getPersistence()->exec($query, $params);
+            }
+        }
+
+        foreach ($eventsData as $eventData) {
+            $this->getEventManager()->trigger(new DacRemovedEvent(
+                $eventData['userId'],
+                $eventData['resourceId'],
+                $eventData['privileges']
+            ));
+        }
+    }
+
+    public function addReadAccess(array $addAccessList): bool
+    {
+        if (empty($addAccessList)) {
+            return true;
+        }
+
+        $values = [];
+
+        try {
+            foreach ($addAccessList as $resourceId => $usersIds) {
+                foreach ($usersIds as $userId) {
+                    $values[] = [
+                        'user_id' => $userId,
+                        'resource_id' => $resourceId,
+                        'privilege' => PermissionProvider::PERMISSION_READ
+                    ];
+                }
+            }
+
+            $this->insertPermissions($values);
+
+            return true;
+        } catch (Throwable $exception) {
+            $this->logError('Error when adding READ access: ' . $exception->getMessage());
+
+            return false;
+        }
+    }
+
+    public function revokeAccess(array $revokeAccessList): bool
+    {
+        if (empty($revokeAccessList)) {
+            return true;
+        }
+
+        $persistence = $this->getPersistence();
+
+        try {
+            $persistence->transactional(static function () use ($revokeAccessList, $persistence): void {
+                foreach ($revokeAccessList as $resourceId => $usersIds) {
+                    $inQueryUsers = implode(',', array_fill(0, count($usersIds), ' ? '));
+
+                    $persistence->exec(
+                        "DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN ($inQueryUsers)",
+                        [
+                            $resourceId,
+                            ...$usersIds,
+                        ]
+                    );
+                }
+            });
+
+            return true;
+        } catch (Throwable $exception) {
+            $this->logError('Error when revoking access: ' . $exception->getMessage());
+
+            return false;
+        }
+    }
+
     /**
      * Retrieve info on users having privileges on a set of resources
      *
@@ -224,38 +405,6 @@ SQL;
             $returnValue[$result[self::COLUMN_RESOURCE_ID]][] = $result[self::COLUMN_PRIVILEGE];
         }
         return $returnValue;
-    }
-
-    public function getPermissionsByUsersAndResources(array $userIds, array $resourceIds): array
-    {
-        // Permissions for an empty set of resources must be an empty array
-        if (empty($resourceIds)) {
-            return [];
-        }
-
-        $inQueryResources = implode(',', array_fill(0, count($resourceIds), '?'));
-        $inQueryUsers = implode(',', array_fill(0, count($userIds), '?'));
-
-        $query = <<<SQL
-SELECT
-    resource_id,
-    user_id,
-    privilege
-FROM data_privileges
-WHERE resource_id IN ($inQueryResources)
-  AND user_id IN ($inQueryUsers)
-SQL;
-
-        $results = $this->fetchQuery($query, [...$resourceIds, ...$userIds]);
-
-        // If resource doesn't have permission don't return null
-        $data = array_fill_keys($resourceIds, []);
-
-        foreach ($results as $result) {
-            $data[$result[self::COLUMN_RESOURCE_ID]][$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
-        }
-
-        return $data;
     }
 
     public function getResourcesPermissions(array $resourceIds)
@@ -340,39 +489,6 @@ SQL;
         }
     }
 
-    public function addResourcesPermissions(array $resources): void
-    {
-        $insert = [];
-
-        foreach ($resources as $resource) {
-            foreach ($resource['permissions']['add'] as $userId => $addPermissions) {
-                if (empty($addPermissions)) {
-                    continue;
-                }
-
-                foreach ($addPermissions as $permission) {
-                    $insert[] = [
-                        self::COLUMN_USER_ID => $userId,
-                        self::COLUMN_RESOURCE_ID => $resource['id'],
-                        self::COLUMN_PRIVILEGE => $permission,
-                    ];
-                }
-            }
-        }
-
-        $this->insertPermissions($insert);
-
-        foreach ($insert as $inserted) {
-            $this->getEventManager()->trigger(
-                new DacAddedEvent(
-                    $inserted[self::COLUMN_USER_ID],
-                    $inserted[self::COLUMN_RESOURCE_ID],
-                    (array) $inserted[self::COLUMN_PRIVILEGE]
-                )
-            );
-        }
-    }
-
     /**
      * Get the permissions to resource
      *
@@ -432,57 +548,6 @@ SQL;
         return true;
     }
 
-    public function addReadAccess(array $addAccessList): bool
-    {
-        if (empty($addAccessList)) {
-            return true;
-        }
-
-        $values = [];
-        $valuesQuery = [];
-
-        foreach ($addAccessList as $resourceId => $usersIds) {
-            foreach ($usersIds as $userId) {
-                $values = array_merge($values, [$userId, $resourceId, PermissionProvider::PERMISSION_READ]);
-                $valuesQuery[] = '(?, ?, ?)';
-            }
-        }
-
-        $statement = sprintf(
-            'INSERT INTO data_privileges (user_id, resource_id, privilege) VALUES %s',
-            implode(', ', $valuesQuery)
-        );
-
-        return $this->getPersistence()->exec($statement, $values);
-    }
-
-    public function revokeAccess(array $revokeAccessList): bool
-    {
-        if (empty($revokeAccessList)) {
-            return true;
-        }
-
-        try {
-            foreach ($revokeAccessList as $resourceId => $usersIds) {
-                $inQueryUsers = implode(',', array_fill(0, count($usersIds), ' ? '));
-
-                $this->getPersistence()->exec(
-                    "DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN ($inQueryUsers)",
-                    [
-                        $resourceId,
-                        ...$usersIds,
-                    ]
-                );
-            }
-
-            return true;
-        } catch (Throwable $exception) {
-            $this->logError('Error when revoking access: ' . $exception->getMessage());
-
-            return false;
-        }
-    }
-
     /**
      * Remove batch permissions
      *
@@ -530,62 +595,6 @@ SQL;
                 $params = array_merge(
                     array_values($permissions['resources']),
                     array_values($permissions['privileges']),
-                    [$userId]
-                );
-
-                $this->getPersistence()->exec($query, $params);
-            }
-        }
-
-        foreach ($eventsData as $eventData) {
-            $this->getEventManager()->trigger(new DacRemovedEvent(
-                $eventData['userId'],
-                $eventData['resourceId'],
-                $eventData['privileges']
-            ));
-        }
-    }
-
-    public function removeResourcesPermissions(array $resources): void
-    {
-        $groupedRemove = [];
-        $eventsData = [];
-
-        foreach ($resources as $resource) {
-            foreach ($resource['permissions']['remove'] as $userId => $removePermissions) {
-                if (empty($removePermissions)) {
-                    continue;
-                }
-
-                $idString = implode($removePermissions);
-
-                $groupedRemove[$userId][$idString]['resources'][] = $resource['id'];
-                $groupedRemove[$userId][$idString]['privileges'] = $removePermissions;
-
-                $eventsData[] = [
-                    'userId' => $userId,
-                    'resourceId' => $resource['id'],
-                    'privileges' => $removePermissions,
-                ];
-            }
-        }
-
-        foreach ($groupedRemove as $userId => $priviligeGroups) {
-            foreach ($priviligeGroups as $privilegeGroup) {
-                $inQueryPrivilege = implode(',', array_fill(0, count($privilegeGroup['privileges']), ' ? '));
-                $inQueryResources = implode(',', array_fill(0, count($privilegeGroup['resources']), ' ? '));
-
-                $query = <<<SQL
-DELETE
-FROM data_privileges
-WHERE resource_id IN ($inQueryResources)
-  AND privilege IN ($inQueryPrivilege)
-  AND user_id = ?
-SQL;
-
-                $params = array_merge(
-                    array_values($privilegeGroup['resources']),
-                    array_values($privilegeGroup['privileges']),
                     [$userId]
                 );
 
