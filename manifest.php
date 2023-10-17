@@ -19,7 +19,6 @@
  */
 
 use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
-use oat\taoDacSimple\model\PermissionServiceProvider;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
@@ -66,7 +65,6 @@ return [
         'BASE_URL' => ROOT_URL . 'taoDacSimple/',
     ],
     'containerServiceProviders' => [
-        CopyServiceProvider::class,
-        PermissionServiceProvider::class,
+        CopyServiceProvider::class
     ]
 ];
