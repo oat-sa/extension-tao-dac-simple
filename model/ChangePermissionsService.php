@@ -187,17 +187,17 @@ class ChangePermissionsService
         }
 
         $this->eventManager->trigger(
-            new DacAffectedUsersEvent(
-                array_keys($permissionsDelta['add']),
-                array_keys($permissionsDelta['remove'])
-            )
-        );
-
-        $this->eventManager->trigger(
             new DataAccessControlChangedEvent(
                 $resource->getUri(),
                 $permissionsDelta,
                 $isRecursive
+            )
+        );
+
+        $this->eventManager->trigger(
+            new DacAffectedUsersEvent(
+                array_keys($permissionsDelta['add']),
+                array_keys($permissionsDelta['remove'])
             )
         );
     }
