@@ -122,13 +122,14 @@ SQL;
             ]
         );
 
-        $classesResources = [];
+        $tree = [];
 
-        foreach ($results as $result) {
-            $classesResources[$result['object']][] = $result['subject'];
+        foreach ($classesIds as $classId) {
+            $resources = array_filter($results, static fn (array $result): bool => $result['object'] === $classId);
+            $tree[$classId] = array_column($resources, 'subject');
         }
 
-        return $classesResources;
+        return $tree;
     }
 
     public function getResourceTree(core_kernel_classes_Resource $resource): array
