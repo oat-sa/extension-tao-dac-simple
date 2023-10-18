@@ -23,9 +23,9 @@ declare(strict_types=1);
 namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Resource;
-use oat\generis\model\OntologyRdfs;
 use oat\oatbox\event\EventManager;
 use oat\tao\model\event\DataAccessControlChangedEvent;
+use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
 use oat\taoDacSimple\model\event\DacRootChangedEvent;
 
@@ -45,15 +45,15 @@ class ChangePermissionsService
         $this->eventManager = $eventManager;
     }
 
-    public function change(core_kernel_classes_Resource $resource, array $permissionsToSet, bool $isRecursive): void
+    public function change(ChangePermissionsCommand $command): void
     {
-        $resources = $this->getResourceToUpdate($resource, $isRecursive);
+        $resources = $this->getResourceToUpdate($command->getRoot(), $command->isRecursive());
         $this->enrichWithPermissions($resources);
-        $rootResourcePermissions = $resources[$resource->getUri()]['permissions'];
+        $rootResourcePermissions = $resources[$command->getRoot()->getUri()]['permissions'];
 
         $permissionsDelta = $this->strategy->normalizeRequest(
             $rootResourcePermissions['current'] ?? [],
-            $permissionsToSet
+                $command->getPrivilegesPerUser()
         );
 
         if (empty($permissionsDelta['remove']) && empty($permissionsDelta['add'])) {
@@ -64,7 +64,7 @@ class ChangePermissionsService
         $this->dryRun($resources);
         $this->wetRun($resources);
 
-        $this->triggerEvents($resource, $permissionsDelta, $isRecursive);
+        $this->triggerEvents($command->getRoot(), $permissionsDelta, $command->isRecursive());
     }
 
     private function getResourceToUpdate(core_kernel_classes_Resource $resource, bool $isRecursive): array

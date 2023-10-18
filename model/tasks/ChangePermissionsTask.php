@@ -31,6 +31,7 @@ use oat\tao\model\taskQueue\Task\TaskAwareTrait;
 use oat\taoDacSimple\model\ChangePermissionsService;
 use Exception;
 use JsonSerializable;
+use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
 
 /**
@@ -57,11 +58,18 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         $this->validateParams($params);
 
         try {
-            $this->getChangePermissionsService()->change(
+            $command = new ChangePermissionsCommand(
                 $this->getResource($params[self::PARAM_RESOURCE]),
+                $params[self::PARAM_RESOURCE],
                 (array) $params[self::PARAM_PRIVILEGES],
-                filter_var($params[self::PARAM_RECURSIVE] ?? false, FILTER_VALIDATE_BOOL)
+                []
             );
+
+            if (filter_var($params[self::PARAM_RECURSIVE] ?? false, FILTER_VALIDATE_BOOL)) {
+                $command->withRecursion();
+            }
+
+            $this->getChangePermissionsService()->change($command);
 
             return Report::createSuccess('Permissions saved');
         } catch (Exception $e) {
