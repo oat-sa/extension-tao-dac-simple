@@ -152,7 +152,7 @@ WITH RECURSIVE statements_tree AS (
         JOIN statements_tree st
             ON s.object = st.subject
 )
-SELECT subject, predicate, level FROM statements_tree;
+SELECT subject as id, IF(predicate = ?, 1, 0) as isClass, level FROM statements_tree;
 SQL;
 
         return $this->fetchQuery(
@@ -161,6 +161,7 @@ SQL;
                 $resource->getUri(),
                 OntologyRdfs::RDFS_SUBCLASSOF,
                 OntologyRdf::RDF_TYPE,
+                OntologyRdfs::RDFS_SUBCLASSOF,
             ]
         );
     }
@@ -330,10 +331,7 @@ SQL;
 
                     $persistence->exec(
                         "DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN ($inQueryUsers)",
-                        [
-                            $resourceId,
-                            ...$usersIds,
-                        ]
+                        array_merge([$resourceId], array_values($usersIds))
                     );
                 }
             });

@@ -73,11 +73,7 @@ class ChangePermissionsService
             $resources = [];
 
             foreach ($this->dataBaseAccess->getResourceTree($resource) as $result) {
-                $resources[$result['subject']] = [
-                    'id' => $result['subject'],
-                    'isClass' => $result['predicate'] === OntologyRdfs::RDFS_SUBCLASSOF,
-                    'level' => $result['level']
-                ];
+                $resources[$result['id']] = $result;
             }
 
             return $resources;
