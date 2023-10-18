@@ -51,7 +51,7 @@ class ChangePermissionsService
         $this->enrichWithPermissions($resources);
         $rootResourcePermissions = $resources[$resource->getUri()]['permissions'];
 
-        $permissionsDelta = $this->strategy->getDeltaPermissions(
+        $permissionsDelta = $this->strategy->normalizeRequest(
             $rootResourcePermissions['current'] ?? [],
             $permissionsToSet
         );
