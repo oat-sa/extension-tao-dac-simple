@@ -23,7 +23,7 @@ namespace oat\taoDacSimple\model;
 use common_persistence_SqlPersistence;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
-use oat\taoDacSimple\model\Command\RevokeAccessCommand;
+use oat\taoDacSimple\model\Command\ChangeAccessCommand;
 use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 use oat\generis\persistence\PersistenceManager;
@@ -185,67 +185,63 @@ SQL;
         }
     }
 
-    public function addReadAccess(array $addAccessList): bool
+    public function changeAccess(ChangeAccessCommand $command): bool
     {
-        //@TODO Use proper object in the command instead of an array
-        if (empty($addAccessList)) {
-            return true;
-        }
+        $resourceIds = $command->getResourceIdsToGrant();
 
-        $values = [];
+        if (!empty($resourceIds)) {
+            $values = [];
 
-        try {
-            foreach ($addAccessList as $resourceId => $usersIds) {
-                foreach ($usersIds as $userId) {
-                    $values[] = [
-                        'user_id' => $userId,
-                        'resource_id' => $resourceId,
-                        'privilege' => PermissionProvider::PERMISSION_READ
-                    ];
-                }
-            }
-
-            $this->insertPermissions($values);
-
-            return true;
-        } catch (Throwable $exception) {
-            $this->logError('Error when adding READ access: ' . $exception->getMessage());
-
-            return false;
-        }
-    }
-
-    public function revokeAccess(RevokeAccessCommand $revokeAccess): bool
-    {
-        $resourceIds = $revokeAccess->getResourceIdsToRevoke();
-
-        if (empty($resourceIds)) {
-            return true;
-        }
-
-        $persistence = $this->getPersistence();
-
-        try {
-            $persistence->transactional(static function () use ($resourceIds, $revokeAccess, $persistence): void {
+            try {
                 foreach ($resourceIds as $resourceId) {
-                    $usersIds = $revokeAccess->getUserIdsToRevoke($resourceId);
+                    foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
+                        $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
 
-                    $persistence->exec(
-                        sprintf(
-                            'DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN (%s)',
-                            implode(',', array_fill(0, count($usersIds), ' ? '))
-                        ),
-                        array_merge([$resourceId], array_values($usersIds))
-                    );
+                        foreach ($usersIds as $userId) {
+                            $values[] = [
+                                'user_id' => $userId,
+                                'resource_id' => $resourceId,
+                                'privilege' => $permission,
+                            ];
+                        }
+                    }
                 }
-            });
 
-            return true;
-        } catch (Throwable $exception) {
-            $this->logError('Error when revoking access: ' . $exception->getMessage());
+                $this->insertPermissions($values);
+            } catch (Throwable $exception) {
+                $this->logError('Error when adding permission access: ' . $exception->getMessage());
 
-            return false;
+                return false;
+            }
         }
+
+        $resourceIds = $command->getResourceIdsToRevoke();
+
+        if (!empty($resourceIds)) {
+            $persistence = $this->getPersistence();
+
+            try {
+                $persistence->transactional(static function () use ($resourceIds, $command, $persistence): void {
+                    foreach ($resourceIds as $resourceId) {
+                        $usersIds = $command->getUserIdsToRevoke($resourceId);
+
+                        $persistence->exec(
+                            sprintf(
+                                'DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN (%s)',
+                                implode(',', array_fill(0, count($usersIds), ' ? '))
+                            ),
+                            array_merge([$resourceId], array_values($usersIds))
+                        );
+                    }
+                });
+            } catch (Throwable $exception) {
+                $this->logError('Error when revoking access: ' . $exception->getMessage());
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

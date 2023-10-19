@@ -48,6 +48,11 @@ class PermissionProvider extends ConfigurableService implements PermissionInterf
     public const PERMISSION_GRANT = 'GRANT';
     public const PERMISSION_READ = 'READ';
     public const PERMISSION_WRITE = 'WRITE';
+    public const ALLOWED_PERMISSIONS = [
+        PermissionProvider::PERMISSION_READ,
+        PermissionProvider::PERMISSION_GRANT,
+        PermissionProvider::PERMISSION_WRITE,
+    ];
 
     /**
      * (non-PHPdoc)
