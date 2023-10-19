@@ -25,6 +25,7 @@ use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\Command\ChangeAccessCommand;
 use oat\taoDacSimple\model\event\DacAddedEvent;
+use oat\taoDacSimple\model\event\DacChangedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 use oat\generis\persistence\PersistenceManager;
 use PDO;
@@ -102,9 +103,11 @@ SQL;
     public function changeResourcePermissions(array $resources): void
     {
         //@TODO Add a proper object as parameter rather than an array with unknown content
-        $insert = [];
+        $inserts = [];
         $groupedRemove = [];
-        $eventsData = [];
+
+        $addEventsData = [];
+        $removeEventsData = [];
 
         foreach ($resources as $resource) {
             foreach ($resource['permissions']['add'] as $userId => $addPermissions) {
@@ -113,12 +116,18 @@ SQL;
                 }
 
                 foreach ($addPermissions as $permission) {
-                    $insert[] = [
+                    $inserts[] = [
                         self::COLUMN_USER_ID => $userId,
                         self::COLUMN_RESOURCE_ID => $resource['id'],
                         self::COLUMN_PRIVILEGE => $permission,
                     ];
                 }
+
+                $addEventsData[] = [
+                    'userId' => $userId,
+                    'resourceId' => $resource['id'],
+                    'privileges' => $addPermissions,
+                ];
             }
 
             foreach ($resource['permissions']['remove'] as $userId => $removePermissions) {
@@ -131,7 +140,7 @@ SQL;
                 $groupedRemove[$userId][$idString]['resources'][] = $resource['id'];
                 $groupedRemove[$userId][$idString]['privileges'] = $removePermissions;
 
-                $eventsData[] = [
+                $removeEventsData[] = [
                     'userId' => $userId,
                     'resourceId' => $resource['id'],
                     'privileges' => $removePermissions,
@@ -139,25 +148,18 @@ SQL;
             }
         }
 
-        $this->insertPermissions($insert);
+        $persistence = $this->getPersistence();
 
-        foreach ($insert as $inserted) {
-            //@TODO @FIXME Do a single event to add multiple event logs entries
-            $this->getEventManager()->trigger(
-                new DacAddedEvent(
-                    $inserted[self::COLUMN_USER_ID],
-                    $inserted[self::COLUMN_RESOURCE_ID],
-                    (array) $inserted[self::COLUMN_PRIVILEGE]
-                )
-            );
-        }
+        try {
+            $persistence->transactional(function () use ($inserts, $groupedRemove, $persistence) {
+                $this->insertPermissions($inserts, $persistence);
 
-        foreach ($groupedRemove as $userId => $priviligeGroups) {
-            foreach ($priviligeGroups as $privilegeGroup) {
-                $inQueryPrivilege = implode(',', array_fill(0, count($privilegeGroup['privileges']), ' ? '));
-                $inQueryResources = implode(',', array_fill(0, count($privilegeGroup['resources']), ' ? '));
+                foreach ($groupedRemove as $userId => $privilegeGroups) {
+                    foreach ($privilegeGroups as $privilegeGroup) {
+                        $inQueryPrivilege = implode(',', array_fill(0, count($privilegeGroup['privileges']), ' ? '));
+                        $inQueryResources = implode(',', array_fill(0, count($privilegeGroup['resources']), ' ? '));
 
-                $query = <<<SQL
+                        $query = <<<SQL
 DELETE
 FROM data_privileges
 WHERE resource_id IN ($inQueryResources)
@@ -165,23 +167,22 @@ WHERE resource_id IN ($inQueryResources)
   AND user_id = ?
 SQL;
 
-                $params = array_merge(
-                    array_values($privilegeGroup['resources']),
-                    array_values($privilegeGroup['privileges']),
-                    [$userId]
-                );
+                        $params = array_merge(
+                            array_values($privilegeGroup['resources']),
+                            array_values($privilegeGroup['privileges']),
+                            [$userId]
+                        );
 
-                $this->getPersistence()->exec($query, $params);
+                        $persistence->exec($query, $params);
+                    }
+                }
+            });
+
+            if (!empty($addEventsData) || !empty($removeEventsData)) {
+                $this->getEventManager()->trigger(new DacChangedEvent($addEventsData, $removeEventsData));
             }
-        }
-
-        //@TODO @FIXME Do a single event to add multiple event logs entries
-        foreach ($eventsData as $eventData) {
-            $this->getEventManager()->trigger(new DacRemovedEvent(
-                $eventData['userId'],
-                $eventData['resourceId'],
-                $eventData['privileges']
-            ));
+        } catch (Throwable $exception) {
+            $this->logError('Error while changing resource permissions: ' . $exception->getMessage());
         }
     }
 
@@ -207,7 +208,8 @@ SQL;
                     }
                 }
 
-                $this->insertPermissions($values);
+                $persistence = $this->getPersistence();
+                $persistence->transactional(fn () => $this->insertPermissions($values, $persistence));
             } catch (Throwable $exception) {
                 $this->logError('Error when adding permission access: ' . $exception->getMessage());
 
@@ -377,7 +379,8 @@ SQL;
             }
         }
 
-        $this->insertPermissions($insert);
+        $persistence = $this->getPersistence();
+        $persistence->transactional(fn () => $this->insertPermissions($insert, $persistence));
 
         foreach ($insert as $inserted) {
             $this->getEventManager()->trigger(new DacAddedEvent(
@@ -624,7 +627,7 @@ SQL;
     /**
      * @throws Throwable
      */
-    private function insertPermissions(array $insert): void
+    private function insertPermissions(array $insert, common_persistence_SqlPersistence $persistence): void
     {
         if (empty($insert)) {
             return;
@@ -632,21 +635,18 @@ SQL;
 
         $logger = $this->getLogger();
         $insertCount = count($insert);
-        $persistence = $this->getPersistence();
 
-        $persistence->transactional(function () use ($insert, $logger, $insertCount, $persistence) {
-            foreach (array_chunk($insert, $this->insertChunkSize) as $index => $batch) {
-                $logger->debug(
-                    'Processing chunk {index}/{total} with {items} ACL entries',
-                    [
-                        'index' => $index + 1,
-                        'total' => ceil($insertCount / $this->insertChunkSize),
-                        'items' => count($batch)
-                    ]
-                );
+        foreach (array_chunk($insert, $this->insertChunkSize) as $index => $batch) {
+            $logger->debug(
+                sprintf(
+                    'Processing chunk %d/%d with %d ACL entries',
+                    $index + 1,
+                    ceil($insertCount / $this->insertChunkSize),
+                    count($batch),
+                )
+            );
 
-                $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
-            }
-        });
+            $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
+        }
     }
 }
