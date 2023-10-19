@@ -25,6 +25,7 @@ namespace oat\taoDacSimple\model;
 use core_kernel_classes_Resource;
 use oat\oatbox\event\EventManager;
 use oat\tao\model\event\DataAccessControlChangedEvent;
+use oat\taoDacSimple\model\Command\ChangeAccessCommand;
 use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
 use oat\taoDacSimple\model\event\DacRootChangedEvent;
@@ -60,10 +61,11 @@ class ChangePermissionsService
             return;
         }
 
-        $resources = $this->enrichWithAddRemoveActions($resources, $permissionsDelta);
+        $changeAccessCommand = new ChangeAccessCommand();
+        $resources = $this->enrichWithAddRemoveActions($resources, $permissionsDelta, $changeAccessCommand);
         $this->dryRun($resources);
 
-        $this->dataBaseAccess->changeResourcePermissions($resources);
+        $this->dataBaseAccess->changeAccess($changeAccessCommand);
 
         $this->triggerEvents($command->getRoot(), $permissionsDelta, $command->isRecursive());
     }
@@ -102,32 +104,36 @@ class ChangePermissionsService
         }
     }
 
-    private function enrichWithAddRemoveActions(array $resources, array $permissionsDelta): array
-    {
+    private function enrichWithAddRemoveActions(
+        array $resources,
+        array $permissionsDelta,
+        ChangeAccessCommand $command
+    ): array {
         foreach ($resources as &$resource) {
-            $resource['permissions']['remove'] = $this->strategy->getPermissionsToRemove(
-                $resource['permissions']['current'],
-                $permissionsDelta
+            $resource['permissions']['remove'] = array_unique(
+                $this->strategy->getPermissionsToRemove(
+                    $resource['permissions']['current'],
+                    $permissionsDelta
+                )
             );
 
-            $resource['permissions']['add'] = $this->strategy->getPermissionsToAdd(
-                $resource['permissions']['current'],
-                $permissionsDelta
-            );
-        }
-
-        return $this->deduplicateChanges($resources);
-    }
-
-    private function deduplicateChanges(array $resources): array
-    {
-        foreach ($resources as &$resource) {
-            foreach ($resource['permissions']['remove'] as &$removePermissions) {
-                $removePermissions = array_unique($removePermissions);
+            foreach ($resource['permissions']['remove'] as $userId => $permissions) {
+                foreach ($permissions as $permission) {
+                    $command->revokeResourceForUser($resource['id'], $permission, $userId);
+                }
             }
 
-            foreach ($resource['permissions']['add'] as &$addPermissions) {
-                $addPermissions = array_unique($addPermissions);
+            $resource['permissions']['add'] =  array_unique(
+                $this->strategy->getPermissionsToAdd(
+                    $resource['permissions']['current'],
+                    $permissionsDelta
+                )
+            );
+
+            foreach ($resource['permissions']['add'] as $userId => $permissions) {
+                foreach ($permissions as $permission) {
+                    $command->grantResourceForUser($resource['id'], $permission, $userId);
+                }
             }
         }
 

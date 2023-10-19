@@ -102,6 +102,7 @@ SQL;
 
     public function changeResourcePermissions(array $resources): void
     {
+        // @TODO Remove this method after it is not needed anymore
         //@TODO Add a proper object as parameter rather than an array with unknown content
         $inserts = [];
         $groupedRemove = [];
@@ -217,6 +218,41 @@ SQL;
             }
         }
 
+        //@TODO Group users per privilege per resource to reduce the amount of DELETE queries - Check this::changeResourcePermissions
+        //@TODO Call proper events
+        $resourceIds = $command->getResourceIdsToRevoke();
+
+        if (!empty($resourceIds)) {
+            $persistence = $this->getPersistence();
+
+            try {
+                $persistence->transactional(static function () use ($resourceIds, $command, $persistence): void {
+                    foreach ($resourceIds as $resourceId) {
+                        foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
+                            $userIds = $command->getUserIdsToRevoke($resourceId, $permission);
+
+                            if (count($userIds) === 0) {
+                                continue;
+                            }
+
+                            $persistence->exec(
+                                sprintf(
+                                    'DELETE FROM data_privileges WHERE resource_id = ? AND privilege = ? AND user_id IN (%s)',
+                                    implode(',', array_fill(0, count($userIds), ' ? '))
+                                ),
+                                array_merge([$resourceId, $permission], array_values($userIds))
+                            );
+                        }
+                    }
+                });
+            } catch (Throwable $exception) {
+                $this->logError('Error when revoking access: ' . $exception->getMessage());
+
+                return false;
+            }
+        }
+
+        //@TODO @FIXME Stop using this and use Revoke instead
         $resourceIds = $command->getResourceIdsToRemove();
 
         if (!empty($resourceIds)) {
@@ -225,19 +261,23 @@ SQL;
             try {
                 $persistence->transactional(static function () use ($resourceIds, $command, $persistence): void {
                     foreach ($resourceIds as $resourceId) {
-                        $usersIds = $command->getUserIdsToRemove($resourceId);
+                        $userIds = $command->getUserIdsToRemove($resourceId);
+
+                        if (empty($userIds)) {
+                            continue;
+                        }
 
                         $persistence->exec(
                             sprintf(
                                 'DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN (%s)',
-                                implode(',', array_fill(0, count($usersIds), ' ? '))
+                                implode(',', array_fill(0, count($userIds), ' ? '))
                             ),
-                            array_merge([$resourceId], array_values($usersIds))
+                            array_merge([$resourceId], array_values($userIds))
                         );
                     }
                 });
             } catch (Throwable $exception) {
-                $this->logError('Error when revoking access: ' . $exception->getMessage());
+                $this->logError('Error when removing access: ' . $exception->getMessage());
 
                 return false;
             }
