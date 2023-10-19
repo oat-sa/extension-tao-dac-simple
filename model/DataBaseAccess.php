@@ -23,6 +23,7 @@ namespace oat\taoDacSimple\model;
 use common_persistence_SqlPersistence;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
+use oat\taoDacSimple\model\Command\RevokeAccessCommand;
 use oat\taoDacSimple\model\event\DacAddedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 use oat\generis\persistence\PersistenceManager;
@@ -186,6 +187,7 @@ SQL;
 
     public function addReadAccess(array $addAccessList): bool
     {
+        //@TODO Use proper object in the command instead of an array
         if (empty($addAccessList)) {
             return true;
         }
@@ -213,21 +215,26 @@ SQL;
         }
     }
 
-    public function revokeAccess(array $revokeAccessList): bool
+    public function revokeAccess(RevokeAccessCommand $revokeAccess): bool
     {
-        if (empty($revokeAccessList)) {
+        $resourceIds = $revokeAccess->getResourceIdsToRevoke();
+
+        if (empty($resourceIds)) {
             return true;
         }
 
         $persistence = $this->getPersistence();
 
         try {
-            $persistence->transactional(static function () use ($revokeAccessList, $persistence): void {
-                foreach ($revokeAccessList as $resourceId => $usersIds) {
-                    $inQueryUsers = implode(',', array_fill(0, count($usersIds), ' ? '));
+            $persistence->transactional(static function () use ($resourceIds, $revokeAccess, $persistence): void {
+                foreach ($resourceIds as $resourceId) {
+                    $usersIds = $revokeAccess->getUserIdsToRevoke($resourceId);
 
                     $persistence->exec(
-                        "DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN ($inQueryUsers)",
+                        sprintf(
+                            'DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN (%s)',
+                            implode(',', array_fill(0, count($usersIds), ' ? '))
+                        ),
                         array_merge([$resourceId], array_values($usersIds))
                     );
                 }
