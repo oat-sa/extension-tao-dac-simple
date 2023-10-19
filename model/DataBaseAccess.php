@@ -109,7 +109,7 @@ SQL;
         $class = $this;
 
         $persistence->transactional(static function () use ($command, $persistence, $class): void {
-            foreach ($command->getUserIdsToRevokedPermissions() as $userId) {
+            foreach ($command->getUserIdsToRevokePermissions() as $userId) {
                 foreach ($command->getUserPermissionsToRevoke($userId) as $permission) {
                     $resourceIds = $command->getResourceIdsByUserAndPermissionToRevoke($userId, $permission);
 

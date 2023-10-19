@@ -117,7 +117,7 @@ class ChangeAccessCommand
         return $this->revokeAccessMap[$resourceId][$permission] ?? [];
     }
 
-    public function getUserIdsToRevokedPermissions(): array
+    public function getUserIdsToRevokePermissions(): array
     {
         return array_keys($this->userRevokedPermissions);
     }
