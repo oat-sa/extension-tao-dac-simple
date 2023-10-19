@@ -252,37 +252,6 @@ SQL;
             }
         }
 
-        //@TODO @FIXME Stop using this and use Revoke instead
-        $resourceIds = $command->getResourceIdsToRemove();
-
-        if (!empty($resourceIds)) {
-            $persistence = $this->getPersistence();
-
-            try {
-                $persistence->transactional(static function () use ($resourceIds, $command, $persistence): void {
-                    foreach ($resourceIds as $resourceId) {
-                        $userIds = $command->getUserIdsToRemove($resourceId);
-
-                        if (empty($userIds)) {
-                            continue;
-                        }
-
-                        $persistence->exec(
-                            sprintf(
-                                'DELETE FROM data_privileges WHERE resource_id = ? AND user_id IN (%s)',
-                                implode(',', array_fill(0, count($userIds), ' ? '))
-                            ),
-                            array_merge([$resourceId], array_values($userIds))
-                        );
-                    }
-                });
-            } catch (Throwable $exception) {
-                $this->logError('Error when removing access: ' . $exception->getMessage());
-
-                return false;
-            }
-        }
-
         return true;
     }
 

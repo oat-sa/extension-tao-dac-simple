@@ -25,13 +25,6 @@ namespace oat\taoDacSimple\model\Command;
 class ChangeAccessCommand
 {
     /**
-     * An array in the form ['resourceId' => ['userId1', 'userId2']]
-     *
-     * @var string[][]
-     */
-    private array $removeAccessMap = [];
-
-    /**
      * An array in the form ['resourceId' [ 'READ' => ['userId1', 'userId2']]]
      *
      * @var string[][][]
@@ -46,35 +39,6 @@ class ChangeAccessCommand
     private array $revokeAccessMap = [];
 
     public function __construct() {
-    }
-
-    public function removeResourceForUser(string $resourceId, string $userId): void
-    {
-        $this->removeAccessMap[$resourceId] = $this->removeAccessMap[$resourceId] ?? [];
-        $this->removeAccessMap[$resourceId] = array_unique(array_merge($this->removeAccessMap[$resourceId], [$userId]));
-    }
-
-    public function cancelRemoveResourceForUser(string $resourceId, string $userId): void
-    {
-        $this->removeAccessMap[$resourceId] = $this->removeAccessMap[$resourceId] ?? [];
-
-        $key = array_search($userId, $this->removeAccessMap[$resourceId]);
-
-        if ($key === false) {
-            return;
-        }
-
-        unset($this->removeAccessMap[$resourceId][$key]);
-    }
-
-    public function getResourceIdsToRemove(): array
-    {
-        return array_keys($this->removeAccessMap);
-    }
-
-    public function getUserIdsToRemove(string $resourceId): array
-    {
-        return $this->removeAccessMap[$resourceId] ?? [];
     }
 
     public function grantResourceForUser(string $resourceId, string $permission, string $userId): void
@@ -109,6 +73,19 @@ class ChangeAccessCommand
                 [$userId]
             )
         );
+    }
+
+    public function removeRevokeResourceForUser(string $resourceId, string $permission, string $userId): void
+    {
+        $this->revokeAccessMap[$resourceId][$permission] = $this->revokeAccessMap[$resourceId][$permission] ?? [];
+
+        $key = array_search($userId, $this->revokeAccessMap[$resourceId][$permission]);
+
+        if ($key === false) {
+            return;
+        }
+
+        unset($this->revokeAccessMap[$resourceId][$permission][$key]);
     }
 
     public function getResourceIdsToRevoke(): array
