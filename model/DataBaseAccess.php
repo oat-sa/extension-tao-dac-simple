@@ -78,6 +78,7 @@ WITH RECURSIVE statements_tree AS (
     FROM statements r
     WHERE r.subject = ?
       AND r.predicate IN (?, ?)
+      AND r.object != ?
     UNION ALL
     SELECT
         s.object
@@ -97,6 +98,7 @@ SQL;
                     $resourceUri,
                     OntologyRdfs::RDFS_SUBCLASSOF,
                     OntologyRdf::RDF_TYPE,
+                    'http://www.tao.lu/Ontologies/TAO.rdf#AssessmentContentObject',
                     OntologyRdfs::RDFS_SUBCLASSOF,
                     OntologyRdf::RDF_TYPE,
                     'http://www.tao.lu/Ontologies/TAO.rdf#AssessmentContentObject',
