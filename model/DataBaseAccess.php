@@ -154,6 +154,7 @@ WITH RECURSIVE statements_tree AS (
     FROM statements s
         JOIN statements_tree st
             ON s.object = st.subject
+    WHERE s.predicate IN (?, ?)
 )
 SELECT subject as id, IF(predicate = ?, 1, 0) as isClass, level FROM statements_tree;
 SQL;
@@ -162,6 +163,8 @@ SQL;
             $query,
             [
                 $resource->getUri(),
+                OntologyRdfs::RDFS_SUBCLASSOF,
+                OntologyRdf::RDF_TYPE,
                 OntologyRdfs::RDFS_SUBCLASSOF,
                 OntologyRdf::RDF_TYPE,
                 OntologyRdfs::RDFS_SUBCLASSOF,
