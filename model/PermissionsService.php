@@ -32,6 +32,9 @@ use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
 use oat\taoDacSimple\model\event\DacRootAddedEvent;
 use oat\taoDacSimple\model\event\DacRootRemovedEvent;
 
+/**
+ * @deprecated Use oat\taoDacSimple\model\ChangePermissionsService
+ */
 class PermissionsService
 {
     use LoggerAwareTrait;
@@ -52,6 +55,9 @@ class PermissionsService
         $this->eventManager = $eventManager;
     }
 
+    /**
+     * @deprecated Use oat\taoDacSimple\model\ChangePermissionsService::change
+     */
     public function applyPermissions(ChangePermissionsCommand $command): void
     {
         $resources = $this->getResourcesToUpdate($command);
@@ -76,6 +82,7 @@ class PermissionsService
 
     /**
      * @deprecated Use applyPermissions() instead
+     * @deprecated Use oat\taoDacSimple\model\ChangePermissionsService::change
      * @see applyPermissions
      */
     public function saveResourcePermissionsRecursive(
@@ -96,6 +103,7 @@ class PermissionsService
 
     /**
      * @deprecated Use applyPermissions() instead
+     * @deprecated Use oat\taoDacSimple\model\ChangePermissionsService::change
      * @see applyPermissions
      */
     public function savePermissions(
@@ -118,6 +126,9 @@ class PermissionsService
         $this->applyPermissions($command);
     }
 
+    /**
+     * @deprecated This should be a private method, please use oat\taoDacSimple\model\ChangePermissionsService::change
+     */
     public function getPermissionsDelta(core_kernel_classes_Resource $resource, array $permissionsToSet): array
     {
         $currentPermissions = $this->dataBaseAccess->getResourcePermissions($resource->getUri());

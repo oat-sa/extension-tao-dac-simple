@@ -296,6 +296,11 @@ class DataBaseAccessTest extends TestCase
 
         return $resourceMock;
     }
+
+    public function sdsadsadsad()
+    {
+
+    }
 }
 
 /**

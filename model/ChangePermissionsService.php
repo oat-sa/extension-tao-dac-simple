@@ -62,7 +62,8 @@ class ChangePermissionsService
 
         $resources = $this->enrichWithAddRemoveActions($resources, $permissionsDelta);
         $this->dryRun($resources);
-        $this->wetRun($resources);
+
+        $this->dataBaseAccess->changeResourcePermissions($resources);
 
         $this->triggerEvents($command->getRoot(), $permissionsDelta, $command->isRecursive());
     }
@@ -183,12 +184,6 @@ class ChangePermissionsService
                 $resourceId
             )
         );
-    }
-
-    private function wetRun(array $resources): void
-    {
-        $this->dataBaseAccess->removeResourcesPermissions($resources);
-        $this->dataBaseAccess->addResourcesPermissions($resources);
     }
 
     private function triggerEvents(

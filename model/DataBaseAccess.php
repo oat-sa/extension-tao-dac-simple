@@ -70,6 +70,7 @@ class DataBaseAccess extends ConfigurableService
 
     public function getParentClassesIds(string $resourceUri): array
     {
+        //@TODO @FIXME Migrate method to generis
         $query = <<<'SQL'
 WITH RECURSIVE statements_tree AS (
     SELECT
@@ -110,6 +111,7 @@ SQL;
 
     public function getClassesResources(array $classesIds): array
     {
+        //@TODO @FIXME Migrate method to generis
         $inQuery = implode(',', array_fill(0, count($classesIds), '?'));
         $query = "SELECT subject, object FROM statements WHERE predicate IN (?, ?) AND object IN ($inQuery)";
 
@@ -134,6 +136,7 @@ SQL;
 
     public function getResourceTree(core_kernel_classes_Resource $resource): array
     {
+        //@TODO @FIXME Migrate method to generis
         $query = <<<'SQL'
 WITH RECURSIVE statements_tree AS (
     SELECT
@@ -198,9 +201,12 @@ SQL;
         return $data;
     }
 
-    public function addResourcesPermissions(array $resources): void
+    public function changeResourcePermissions(array $resources): void
     {
+        //@TODO Add a proper object as parameter rather than an array with unknown content
         $insert = [];
+        $groupedRemove = [];
+        $eventsData = [];
 
         foreach ($resources as $resource) {
             foreach ($resource['permissions']['add'] as $userId => $addPermissions) {
@@ -216,27 +222,7 @@ SQL;
                     ];
                 }
             }
-        }
 
-        $this->insertPermissions($insert);
-
-        foreach ($insert as $inserted) {
-            $this->getEventManager()->trigger(
-                new DacAddedEvent(
-                    $inserted[self::COLUMN_USER_ID],
-                    $inserted[self::COLUMN_RESOURCE_ID],
-                    (array) $inserted[self::COLUMN_PRIVILEGE]
-                )
-            );
-        }
-    }
-
-    public function removeResourcesPermissions(array $resources): void
-    {
-        $groupedRemove = [];
-        $eventsData = [];
-
-        foreach ($resources as $resource) {
             foreach ($resource['permissions']['remove'] as $userId => $removePermissions) {
                 if (empty($removePermissions)) {
                     continue;
@@ -253,6 +239,19 @@ SQL;
                     'privileges' => $removePermissions,
                 ];
             }
+        }
+
+        $this->insertPermissions($insert);
+
+        foreach ($insert as $inserted) {
+            //@TODO @FIXME Do a single event to add multiple event logs entries
+            $this->getEventManager()->trigger(
+                new DacAddedEvent(
+                    $inserted[self::COLUMN_USER_ID],
+                    $inserted[self::COLUMN_RESOURCE_ID],
+                    (array) $inserted[self::COLUMN_PRIVILEGE]
+                )
+            );
         }
 
         foreach ($groupedRemove as $userId => $priviligeGroups) {
@@ -278,6 +277,7 @@ SQL;
             }
         }
 
+        //@TODO @FIXME Do a single event to add multiple event logs entries
         foreach ($eventsData as $eventData) {
             $this->getEventManager()->trigger(new DacRemovedEvent(
                 $eventData['userId'],
