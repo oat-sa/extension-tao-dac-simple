@@ -215,7 +215,7 @@ SQL;
             }
         }
 
-        $resourceIds = $command->getResourceIdsToRevoke();
+        $resourceIds = $command->getResourceIdsToRemove();
 
         if (!empty($resourceIds)) {
             $persistence = $this->getPersistence();
@@ -223,7 +223,7 @@ SQL;
             try {
                 $persistence->transactional(static function () use ($resourceIds, $command, $persistence): void {
                     foreach ($resourceIds as $resourceId) {
-                        $usersIds = $command->getUserIdsToRevoke($resourceId);
+                        $usersIds = $command->getUserIdsToRemove($resourceId);
 
                         $persistence->exec(
                             sprintf(
