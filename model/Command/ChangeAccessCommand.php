@@ -25,6 +25,13 @@ namespace oat\taoDacSimple\model\Command;
 class ChangeAccessCommand
 {
     /**
+     * An array in the form ['userId' [ 'READ' => ['resource1', 'resource2']]]
+     *
+     * @var string[][][]
+     */
+    private array $userRevokedPermissions = [];
+
+    /**
      * An array in the form ['resourceId' [ 'READ' => ['userId1', 'userId2']]]
      *
      * @var string[][][]
@@ -73,10 +80,22 @@ class ChangeAccessCommand
                 [$userId]
             )
         );
+
+        $this->userRevokedPermissions[$userId] = $this->userRevokedPermissions[$userId] ?? [];
+        $this->userRevokedPermissions[$userId][$permission] = $this->userRevokedPermissions[$userId][$permission] ?? [];
+        $this->userRevokedPermissions[$userId][$permission][] = $resourceId;
     }
 
     public function removeRevokeResourceForUser(string $resourceId, string $permission, string $userId): void
     {
+        $this->userRevokedPermissions[$userId][$permission] = $this->userRevokedPermissions[$userId][$permission] ?? [];
+
+        $key = array_search($resourceId, $this->userRevokedPermissions[$userId][$permission]);
+
+        if ($key !== false) {
+            unset($this->userRevokedPermissions[$userId][$permission][$key]);
+        }
+
         $this->revokeAccessMap[$resourceId][$permission] = $this->revokeAccessMap[$resourceId][$permission] ?? [];
 
         $key = array_search($userId, $this->revokeAccessMap[$resourceId][$permission]);
@@ -96,5 +115,20 @@ class ChangeAccessCommand
     public function getUserIdsToRevoke(string $resourceId, string $permission): array
     {
         return $this->revokeAccessMap[$resourceId][$permission] ?? [];
+    }
+
+    public function getUserIdsToRevokedPermissions(): array
+    {
+        return array_keys($this->userRevokedPermissions);
+    }
+
+    public function getUserPermissionsToRevoke(string $userId): array
+    {
+        return array_keys($this->userRevokedPermissions[$userId]);
+    }
+
+    public function getResourceIdsByUserAndPermissionToRevoke(string $userId, string $permission): array
+    {
+        return $this->userRevokedPermissions[$userId][$permission] ?? [];
     }
 }

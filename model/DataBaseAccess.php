@@ -70,6 +70,9 @@ class DataBaseAccess extends ConfigurableService
 
     public function getPermissionsByUsersAndResources(array $userIds, array $resourceIds): array
     {
+        /**
+         * @TODO FIXME Lets see if we can make this methods return better contract or if it is still necessary
+         */
         // Permissions for an empty set of resources must be an empty array
         if (empty($resourceIds)) {
             return [];
@@ -100,159 +103,50 @@ SQL;
         return $data;
     }
 
-    public function changeResourcePermissions(array $resources): void
+    public function changeAccess(ChangeAccessCommand $command): void
     {
-        // @TODO Remove this method after it is not needed anymore
-        //@TODO Add a proper object as parameter rather than an array with unknown content
-        $inserts = [];
-        $groupedRemove = [];
-
-        $addEventsData = [];
-        $removeEventsData = [];
-
-        foreach ($resources as $resource) {
-            foreach ($resource['permissions']['add'] as $userId => $addPermissions) {
-                if (empty($addPermissions)) {
-                    continue;
-                }
-
-                foreach ($addPermissions as $permission) {
-                    $inserts[] = [
-                        self::COLUMN_USER_ID => $userId,
-                        self::COLUMN_RESOURCE_ID => $resource['id'],
-                        self::COLUMN_PRIVILEGE => $permission,
-                    ];
-                }
-
-                $addEventsData[] = [
-                    'userId' => $userId,
-                    'resourceId' => $resource['id'],
-                    'privileges' => $addPermissions,
-                ];
-            }
-
-            foreach ($resource['permissions']['remove'] as $userId => $removePermissions) {
-                if (empty($removePermissions)) {
-                    continue;
-                }
-
-                $idString = implode($removePermissions);
-
-                $groupedRemove[$userId][$idString]['resources'][] = $resource['id'];
-                $groupedRemove[$userId][$idString]['privileges'] = $removePermissions;
-
-                $removeEventsData[] = [
-                    'userId' => $userId,
-                    'resourceId' => $resource['id'],
-                    'privileges' => $removePermissions,
-                ];
-            }
-        }
-
         $persistence = $this->getPersistence();
+        $class = $this;
 
-        try {
-            $persistence->transactional(function () use ($inserts, $groupedRemove, $persistence) {
-                $this->insertPermissions($inserts, $persistence);
+        $persistence->transactional(static function () use ($command, $persistence, $class): void {
+            foreach ($command->getUserIdsToRevokedPermissions() as $userId) {
+                foreach ($command->getUserPermissionsToRevoke($userId) as $permission) {
+                    $resourceIds = $command->getResourceIdsByUserAndPermissionToRevoke($userId, $permission);
 
-                foreach ($groupedRemove as $userId => $privilegeGroups) {
-                    foreach ($privilegeGroups as $privilegeGroup) {
-                        $inQueryPrivilege = implode(',', array_fill(0, count($privilegeGroup['privileges']), ' ? '));
-                        $inQueryResources = implode(',', array_fill(0, count($privilegeGroup['resources']), ' ? '));
-
-                        $query = <<<SQL
-DELETE
-FROM data_privileges
-WHERE resource_id IN ($inQueryResources)
-  AND privilege IN ($inQueryPrivilege)
-  AND user_id = ?
-SQL;
-
-                        $params = array_merge(
-                            array_values($privilegeGroup['resources']),
-                            array_values($privilegeGroup['privileges']),
-                            [$userId]
+                    if (count($resourceIds) > 0) {
+                        $persistence->exec(
+                            sprintf(
+                                'DELETE FROM data_privileges WHERE user_id = ? AND privilege = ? AND resource_id IN (%s)',
+                                implode(',', array_fill(0, count($resourceIds), ' ? ')),
+                            ),
+                            array_merge([$userId, $permission], $resourceIds)
                         );
-
-                        $persistence->exec($query, $params);
                     }
                 }
-            });
-
-            if (!empty($addEventsData) || !empty($removeEventsData)) {
-                $this->getEventManager()->trigger(new DacChangedEvent($addEventsData, $removeEventsData));
             }
-        } catch (Throwable $exception) {
-            $this->logError('Error while changing resource permissions: ' . $exception->getMessage());
-        }
-    }
 
-    public function changeAccess(ChangeAccessCommand $command): bool
-    {
-        $resourceIds = $command->getResourceIdsToGrant();
+            $insert = [];
 
-        if (!empty($resourceIds)) {
-            $values = [];
+            foreach ($command->getResourceIdsToGrant() as $resourceId) {
+                foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
+                    $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
 
-            try {
-                foreach ($resourceIds as $resourceId) {
-                    foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
-                        $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
-
-                        foreach ($usersIds as $userId) {
-                            $values[] = [
-                                'user_id' => $userId,
-                                'resource_id' => $resourceId,
-                                'privilege' => $permission,
-                            ];
-                        }
+                    foreach ($usersIds as $userId) {
+                        $insert[] = [
+                            'user_id' => $userId,
+                            'resource_id' => $resourceId,
+                            'privilege' => $permission,
+                        ];
                     }
                 }
-
-                $persistence = $this->getPersistence();
-                $persistence->transactional(fn () => $this->insertPermissions($values, $persistence));
-            } catch (Throwable $exception) {
-                $this->logError('Error when adding permission access: ' . $exception->getMessage());
-
-                return false;
             }
-        }
 
-        //@TODO Group users per privilege per resource to reduce the amount of DELETE queries - Check this::changeResourcePermissions
-        //@TODO Call proper events
-        $resourceIds = $command->getResourceIdsToRevoke();
+            $class->insertPermissions($insert, $persistence);
 
-        if (!empty($resourceIds)) {
-            $persistence = $this->getPersistence();
-
-            try {
-                $persistence->transactional(static function () use ($resourceIds, $command, $persistence): void {
-                    foreach ($resourceIds as $resourceId) {
-                        foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
-                            $userIds = $command->getUserIdsToRevoke($resourceId, $permission);
-
-                            if (count($userIds) === 0) {
-                                continue;
-                            }
-
-                            $persistence->exec(
-                                sprintf(
-                                    'DELETE FROM data_privileges WHERE resource_id = ? AND privilege = ? AND user_id IN (%s)',
-                                    implode(',', array_fill(0, count($userIds), ' ? '))
-                                ),
-                                array_merge([$resourceId, $permission], array_values($userIds))
-                            );
-                        }
-                    }
-                });
-            } catch (Throwable $exception) {
-                $this->logError('Error when revoking access: ' . $exception->getMessage());
-
-                return false;
-            }
-        }
-
-        return true;
+            /**
+             * @TODO FIXME Call proper events here
+             */
+        });
     }
 
     /**
