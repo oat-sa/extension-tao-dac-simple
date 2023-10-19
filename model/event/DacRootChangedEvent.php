@@ -22,23 +22,24 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model\event;
 
+use core_kernel_classes_Resource;
 use JsonSerializable;
 use oat\oatbox\event\Event;
 
 class DacRootChangedEvent implements Event, JsonSerializable
 {
-    private string $resourceUri;
+    private core_kernel_classes_Resource $resource;
     private array $permissionsDelta;
 
-    public function __construct(string $resourceUri, array $permissionsDelta)
+    public function __construct(core_kernel_classes_Resource $resource, array $permissionsDelta)
     {
-        $this->resourceUri = $resourceUri;
+        $this->resource = $resource;
         $this->permissionsDelta = $permissionsDelta;
     }
 
-    public function getResourceUri(): string
+    public function getResource(): core_kernel_classes_Resource
     {
-        return $this->resourceUri;
+        return $this->resource;
     }
 
     public function getPermissionsDelta(): array
@@ -54,7 +55,7 @@ class DacRootChangedEvent implements Event, JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'resourceUri' => $this->resourceUri,
+            'resourceUri' => $this->getResource()->getUri(),
             'permissionsDelta' => $this->permissionsDelta,
         ];
     }

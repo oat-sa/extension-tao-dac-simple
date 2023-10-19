@@ -73,7 +73,7 @@ class ChangePermissionsService
         if ($isRecursive) {
             $resources = [];
 
-            foreach ($this->dataBaseAccess->getResourceTree($resource) as $result) {
+            foreach ($resource->getNestedResources() as $result) {
                 $resources[$result['id']] = $result;
             }
 
@@ -192,7 +192,7 @@ class ChangePermissionsService
         bool $isRecursive
     ): void {
         if (!empty($permissionsDelta['add']) || !empty($permissionsDelta['remove'])) {
-            $this->eventManager->trigger(new DacRootChangedEvent($resource->getUri(), $permissionsDelta));
+            $this->eventManager->trigger(new DacRootChangedEvent($resource, $permissionsDelta));
         }
 
         $this->eventManager->trigger(

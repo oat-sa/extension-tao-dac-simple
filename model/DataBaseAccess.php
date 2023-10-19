@@ -21,9 +21,6 @@
 namespace oat\taoDacSimple\model;
 
 use common_persistence_SqlPersistence;
-use core_kernel_classes_Resource;
-use oat\generis\model\OntologyRdf;
-use oat\generis\model\OntologyRdfs;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDacSimple\model\event\DacAddedEvent;
@@ -68,111 +65,6 @@ class DataBaseAccess extends ConfigurableService
         return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
     }
 
-    public function getParentClassesIds(string $resourceUri): array
-    {
-        //@TODO @FIXME Migrate method to generis
-        $query = <<<'SQL'
-WITH RECURSIVE statements_tree AS (
-    SELECT
-        r.object
-    FROM statements r
-    WHERE r.subject = ?
-      AND r.predicate IN (?, ?)
-      AND r.object != ?
-    UNION ALL
-    SELECT
-        s.object
-    FROM statements s
-        JOIN statements_tree st
-            ON s.subject = st.object
-                   AND s.predicate IN (?, ?)
-                   AND s.object NOT IN (?, ?, ?, ?)
-)
-SELECT object FROM statements_tree;
-SQL;
-
-        return array_column(
-            $this->fetchQuery(
-                $query,
-                [
-                    $resourceUri,
-                    OntologyRdfs::RDFS_SUBCLASSOF,
-                    OntologyRdf::RDF_TYPE,
-                    'http://www.tao.lu/Ontologies/TAO.rdf#AssessmentContentObject',
-                    OntologyRdfs::RDFS_SUBCLASSOF,
-                    OntologyRdf::RDF_TYPE,
-                    'http://www.tao.lu/Ontologies/TAO.rdf#AssessmentContentObject',
-                    'http://www.tao.lu/Ontologies/TAO.rdf#TAOObject',
-                    'http://www.tao.lu/Ontologies/generis.rdf#generis_Ressource',
-                    'http://www.w3.org/2000/01/rdf-schema#Resource',
-                ]
-            ),
-            'object'
-        );
-    }
-
-    public function getClassesResources(array $classesIds): array
-    {
-        //@TODO @FIXME Migrate method to generis
-        $inQuery = implode(',', array_fill(0, count($classesIds), '?'));
-        $query = "SELECT subject, object FROM statements WHERE predicate IN (?, ?) AND object IN ($inQuery)";
-
-        $results = $this->fetchQuery(
-            $query,
-            [
-                OntologyRdfs::RDFS_SUBCLASSOF,
-                OntologyRdf::RDF_TYPE,
-                ...$classesIds,
-            ]
-        );
-
-        $tree = [];
-
-        foreach ($classesIds as $classId) {
-            $resources = array_filter($results, static fn (array $result): bool => $result['object'] === $classId);
-            $tree[$classId] = array_column($resources, 'subject');
-        }
-
-        return $tree;
-    }
-
-    public function getResourceTree(core_kernel_classes_Resource $resource): array
-    {
-        //@TODO @FIXME Migrate method to generis
-        $query = <<<'SQL'
-WITH RECURSIVE statements_tree AS (
-    SELECT
-        r.subject,
-        r.predicate,
-        1 as level
-    FROM statements r
-    WHERE r.subject = ?
-      AND r.predicate IN (?, ?)
-    UNION ALL
-    SELECT
-        s.subject,
-        s.predicate,
-        level + 1
-    FROM statements s
-        JOIN statements_tree st
-            ON s.object = st.subject
-    WHERE s.predicate IN (?, ?)
-)
-SELECT subject as id, IF(predicate = ?, 1, 0) as isClass, level FROM statements_tree;
-SQL;
-
-        return $this->fetchQuery(
-            $query,
-            [
-                $resource->getUri(),
-                OntologyRdfs::RDFS_SUBCLASSOF,
-                OntologyRdf::RDF_TYPE,
-                OntologyRdfs::RDFS_SUBCLASSOF,
-                OntologyRdf::RDF_TYPE,
-                OntologyRdfs::RDFS_SUBCLASSOF,
-            ]
-        );
-    }
 
     public function getPermissionsByUsersAndResources(array $userIds, array $resourceIds): array
     {
