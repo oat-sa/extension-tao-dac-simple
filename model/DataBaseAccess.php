@@ -106,47 +106,63 @@ SQL;
     public function changeAccess(ChangeAccessCommand $command): void
     {
         $persistence = $this->getPersistence();
-        $class = $this;
 
-        $persistence->transactional(static function () use ($command, $persistence, $class): void {
-            foreach ($command->getUserIdsToRevokePermissions() as $userId) {
-                foreach ($command->getUserPermissionsToRevoke($userId) as $permission) {
-                    $resourceIds = $command->getResourceIdsByUserAndPermissionToRevoke($userId, $permission);
+        try {
+            $persistence->transactional(function () use ($command, $persistence): void {
+                $removed = [];
 
-                    if (count($resourceIds) > 0) {
-                        $persistence->exec(
-                            sprintf(
-                                'DELETE FROM data_privileges WHERE user_id = ? AND privilege = ? AND resource_id IN (%s)',
-                                implode(',', array_fill(0, count($resourceIds), ' ? ')),
-                            ),
-                            array_merge([$userId, $permission], $resourceIds)
-                        );
+                foreach ($command->getUserIdsToRevokePermissions() as $userId) {
+                    $permissions = $command->getUserPermissionsToRevoke($userId);
+
+                    foreach ($permissions as $permission) {
+                        $resourceIds = $command->getResourceIdsByUserAndPermissionToRevoke($userId, $permission);
+
+                        if (!empty($resourceIds)) {
+                            // phpcs:disable Generic.Files.LineLength
+                            $persistence->exec(
+                                sprintf(
+                                    'DELETE FROM data_privileges WHERE user_id = ? AND privilege = ? AND resource_id IN (%s)',
+                                    implode(',', array_fill(0, count($resourceIds), ' ? ')),
+                                ),
+                                array_merge([$userId, $permission], $resourceIds)
+                            );
+                            // phpcs:enable Generic.Files.LineLength
+
+                            foreach ($resourceIds as $resourceId) {
+                                $this->addEventValue($removed, $userId, $resourceId, $permission);
+                            }
+                        }
                     }
                 }
-            }
 
-            $insert = [];
+                $insert = [];
+                $added = [];
 
-            foreach ($command->getResourceIdsToGrant() as $resourceId) {
-                foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
-                    $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
+                foreach ($command->getResourceIdsToGrant() as $resourceId) {
+                    foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
+                        $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
 
-                    foreach ($usersIds as $userId) {
-                        $insert[] = [
-                            'user_id' => $userId,
-                            'resource_id' => $resourceId,
-                            'privilege' => $permission,
-                        ];
+                        foreach ($usersIds as $userId) {
+                            $insert[] = [
+                                'user_id' => $userId,
+                                'resource_id' => $resourceId,
+                                'privilege' => $permission,
+                            ];
+
+                            $this->addEventValue($added, $userId, $resourceId, $permission);
+                        }
                     }
                 }
-            }
 
-            $class->insertPermissions($insert, $persistence);
+                $this->insertPermissions($insert);
 
-            /**
-             * @TODO FIXME Call proper events here
-             */
-        });
+                if (!empty($added) || !empty($removed)) {
+                    $this->getEventManager()->trigger(new DacChangedEvent($added, $removed));
+                }
+            });
+        } catch (Throwable $exception) {
+            $this->logError('Error while changing access: ' . $exception->getMessage());
+        }
     }
 
     /**
@@ -282,8 +298,7 @@ SQL;
             }
         }
 
-        $persistence = $this->getPersistence();
-        $persistence->transactional(fn () => $this->insertPermissions($insert, $persistence));
+        $this->getPersistence()->transactional(fn () => $this->insertPermissions($insert));
 
         foreach ($insert as $inserted) {
             $this->getEventManager()->trigger(new DacAddedEvent(
@@ -530,7 +545,7 @@ SQL;
     /**
      * @throws Throwable
      */
-    private function insertPermissions(array $insert, common_persistence_SqlPersistence $persistence): void
+    private function insertPermissions(array $insert): void
     {
         if (empty($insert)) {
             return;
@@ -538,6 +553,7 @@ SQL;
 
         $logger = $this->getLogger();
         $insertCount = count($insert);
+        $persistence = $this->getPersistence();
 
         foreach (array_chunk($insert, $this->insertChunkSize) as $index => $batch) {
             $logger->debug(
@@ -551,5 +567,22 @@ SQL;
 
             $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
         }
+    }
+
+    private function addEventValue(array &$eventData, string $userId, string $resourceId, string $permission): void
+    {
+        $key = $userId . $resourceId;
+
+        if (array_key_exists($key, $eventData)) {
+            $eventData[$key]['privileges'][] = $permission;
+
+            return;
+        }
+
+        $eventData[] = [
+            'userId' => $userId,
+            'resourceId' => $resourceId,
+            'privileges' => [$permission],
+        ];
     }
 }

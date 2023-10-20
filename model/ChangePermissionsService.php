@@ -110,11 +110,9 @@ class ChangePermissionsService
         ChangeAccessCommand $command
     ): array {
         foreach ($resources as &$resource) {
-            $resource['permissions']['remove'] = array_unique(
-                $this->strategy->getPermissionsToRemove(
-                    $resource['permissions']['current'],
-                    $permissionsDelta
-                )
+            $resource['permissions']['remove'] = $this->strategy->getPermissionsToRemove(
+                $resource['permissions']['current'],
+                $permissionsDelta
             );
 
             foreach ($resource['permissions']['remove'] as $userId => $permissions) {
@@ -123,11 +121,9 @@ class ChangePermissionsService
                 }
             }
 
-            $resource['permissions']['add'] =  array_unique(
-                $this->strategy->getPermissionsToAdd(
-                    $resource['permissions']['current'],
-                    $permissionsDelta
-                )
+            $resource['permissions']['add'] =  $this->strategy->getPermissionsToAdd(
+                $resource['permissions']['current'],
+                $permissionsDelta
             );
 
             foreach ($resource['permissions']['add'] as $userId => $permissions) {
