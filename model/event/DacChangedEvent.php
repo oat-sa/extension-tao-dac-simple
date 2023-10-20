@@ -38,9 +38,12 @@ class DacChangedEvent implements BulkEvent, JsonSerializable
 
     public function getValues(): array
     {
+        $added = array_chunk($this->added, 100);
+        $removed = array_chunk($this->removed, 100);
+
         return array_merge(
-            $this->enrichWithActions($this->added, 'add'),
-            $this->enrichWithActions($this->removed, 'remove'),
+            $this->enrichWithActions($added, 'add'),
+            $this->enrichWithActions($removed, 'remove'),
         );
     }
 
