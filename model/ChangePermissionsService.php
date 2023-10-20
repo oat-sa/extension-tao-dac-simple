@@ -49,22 +49,16 @@ class ChangePermissionsService
     public function change(ChangePermissionsCommand $command): void
     {
         $resources = $this->getResourceToUpdate($command->getRoot(), $command->isRecursive());
-        $this->enrichWithPermissions($resources);
-        $rootResourcePermissions = $resources[$command->getRoot()->getUri()]['permissions'];
 
-        $permissionsDelta = $this->strategy->normalizeRequest(
-            $rootResourcePermissions['current'] ?? [],
-                $command->getPrivilegesPerUser()
-        );
+        $permissions = $this->dataBaseAccess->getResourcesPermissions(array_column($resources, 'id'));
+        $rootPermissions = $permissions[$command->getRoot()->getUri()];
+        $permissionsDelta = $this->strategy->normalizeRequest($rootPermissions, $command->getPrivilegesPerUser());
 
         if (empty($permissionsDelta['remove']) && empty($permissionsDelta['add'])) {
             return;
         }
 
-        $changeAccessCommand = new ChangeAccessCommand();
-        $resources = $this->enrichWithAddRemoveActions($resources, $permissionsDelta, $changeAccessCommand);
-        $this->dryRun($resources);
-
+        $changeAccessCommand = $this->calculateChanges($resources, $permissionsDelta, $permissions);
         $this->dataBaseAccess->changeAccess($changeAccessCommand);
 
         $this->triggerEvents($command->getRoot(), $permissionsDelta, $command->isRecursive());
@@ -91,90 +85,48 @@ class ChangePermissionsService
         ];
     }
 
-    private function enrichWithPermissions(array &$resources): void
-    {
-        if (empty($resources)) {
-            return;
-        }
-
-        $permissions = $this->dataBaseAccess->getResourcesPermissions(array_column($resources, 'id'));
-
-        foreach ($resources as &$resource) {
-            $resource['permissions']['current'] = $permissions[$resource['id']];
-        }
-    }
-
-    private function enrichWithAddRemoveActions(
+    private function calculateChanges(
         array $resources,
         array $permissionsDelta,
-        ChangeAccessCommand $command
-    ): array {
-        foreach ($resources as &$resource) {
-            $resource['permissions']['remove'] = $this->strategy->getPermissionsToRemove(
-                $resource['permissions']['current'],
-                $permissionsDelta
-            );
+        array $currentPermissions
+    ): ChangeAccessCommand {
+        $command = new ChangeAccessCommand();
 
-            foreach ($resource['permissions']['remove'] as $userId => $permissions) {
+        foreach ($resources as $resource) {
+            $resourcePermissions = $currentPermissions[$resource['id']];
+
+            $remove = $this->strategy->getPermissionsToRemove($resourcePermissions, $permissionsDelta);
+            $add = $this->strategy->getPermissionsToAdd($resourcePermissions, $permissionsDelta);
+
+            foreach ($remove as $userId => $permissions) {
+                $resourcePermissions[$userId] = array_diff($resourcePermissions[$userId] ?? [], $permissions);
+
                 foreach ($permissions as $permission) {
                     $command->revokeResourceForUser($resource['id'], $permission, $userId);
                 }
             }
 
-            $resource['permissions']['add'] =  $this->strategy->getPermissionsToAdd(
-                $resource['permissions']['current'],
-                $permissionsDelta
-            );
+            foreach ($add as $userId => $permissions) {
+                $resourcePermissions[$userId] = array_merge($resourcePermissions[$userId] ?? [], $permissions);
 
-            foreach ($resource['permissions']['add'] as $userId => $permissions) {
                 foreach ($permissions as $permission) {
                     $command->grantResourceForUser($resource['id'], $permission, $userId);
                 }
             }
+
+            $this->assertHasUserWithGrantPermission($resource['id'], $resourcePermissions);
         }
 
-        return $resources;
-    }
-
-    private function dryRun(array $resources): void
-    {
-        foreach ($resources as $resource) {
-            $newPermissions = $resource['permissions']['current'];
-
-            $this->dryRemove($resource, $newPermissions);
-            $this->dryAdd($resource, $newPermissions);
-
-            $this->assertHasUserWithGrantPermission($resource['id'], $newPermissions);
-        }
-    }
-
-    private function dryRemove(array $resource, array &$newPermissions): void
-    {
-        foreach ($resource['permissions']['remove'] as $user => $removePermissions) {
-            $newPermissions[$user] = array_diff(
-                $newPermissions[$user] ?? [],
-                $removePermissions
-            );
-        }
-    }
-
-    private function dryAdd(array $resource, array &$newPermissions): void
-    {
-        foreach ($resource['permissions']['add'] as $user => $addPermissions) {
-            $newPermissions[$user] = array_merge(
-                $resource['permissions']['current'][$user] ?? [],
-                $addPermissions
-            );
-        }
+        return $command;
     }
 
     /**
      * Checks if all resources after all actions are applied will have at least
      * one user with GRANT permission.
      */
-    private function assertHasUserWithGrantPermission(string $resourceId, array $newPermissions): void
+    private function assertHasUserWithGrantPermission(string $resourceId, array $resourcePermissions): void
     {
-        foreach ($newPermissions as $permissions) {
+        foreach ($resourcePermissions as $permissions) {
             if (in_array(PermissionProvider::PERMISSION_GRANT, $permissions, true)) {
                 return;
             }

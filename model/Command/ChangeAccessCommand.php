@@ -45,9 +45,6 @@ class ChangeAccessCommand
      */
     private array $revokeAccessMap = [];
 
-    public function __construct() {
-    }
-
     public function grantResourceForUser(string $resourceId, string $permission, string $userId): void
     {
         $this->giveAccessMap[$resourceId] = $this->giveAccessMap[$resourceId] ?? [];
