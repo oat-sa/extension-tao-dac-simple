@@ -15,10 +15,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014-2022 (original work) Open Assessment Technologies SA;
+ * Copyright (c) 2014-2023 (original work) Open Assessment Technologies SA;
  */
 
 use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
+use oat\taoDacSimple\model\ServiceProvider\PermissionsServiceProvider;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
 use oat\taoDacSimple\scripts\update\Updater;
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
@@ -65,6 +66,7 @@ return [
         'BASE_URL' => ROOT_URL . 'taoDacSimple/',
     ],
     'containerServiceProviders' => [
-        CopyServiceProvider::class
+        CopyServiceProvider::class,
+        PermissionsServiceProvider::class
     ]
 ];

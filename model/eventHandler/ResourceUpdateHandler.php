@@ -26,8 +26,8 @@ use Laminas\ServiceManager\ServiceLocatorAwareTrait;
 use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\service\ConfigurableService;
 use oat\tao\model\event\ResourceMovedEvent;
-use oat\taoDacSimple\model\PermissionsService;
-use oat\taoDacSimple\model\PermissionsServiceFactory;
+use oat\taoDacSimple\model\ChangePermissionsService;
+use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use oat\taoDacSimple\model\RolePrivilegeRetriever;
 
 class ResourceUpdateHandler extends ConfigurableService
@@ -53,18 +53,11 @@ class ResourceUpdateHandler extends ConfigurableService
             }
         }
 
-        $permissionService->saveResourcePermissionsRecursive(
-            $movedResource,
-            $rolePrivilegeList
-        );
+        $permissionService->change(new ChangePermissionsCommand($movedResource, $rolePrivilegeList, true));
 
         if (isset($itemPrivilegesMap)) {
             foreach ($itemPrivilegesMap as $uri => $itemPrivilege) {
-                $permissionService
-                    ->saveResourcePermissionsRecursive(
-                        $this->getResource($uri),
-                        $itemPrivilege
-                    );
+                $permissionService->change(new ChangePermissionsCommand($this->getResource($uri), $itemPrivilege, true));
             }
         }
     }
@@ -74,8 +67,8 @@ class ResourceUpdateHandler extends ConfigurableService
         return $this->getServiceLocator()->get(RolePrivilegeRetriever::class);
     }
 
-    private function getPermissionService(): PermissionsService
+    private function getPermissionService(): ChangePermissionsService
     {
-        return $this->getServiceLocator()->get(PermissionsServiceFactory::class)->create();
+        return $this->getServiceManager()->getContainer()->get(ChangePermissionsService::class);
     }
 }

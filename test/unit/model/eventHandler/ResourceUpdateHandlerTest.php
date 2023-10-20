@@ -30,8 +30,6 @@ use oat\generis\test\ServiceManagerMockTrait;
 use PHPUnit\Framework\TestCase;
 use oat\tao\model\event\ResourceMovedEvent;
 use oat\taoDacSimple\model\eventHandler\ResourceUpdateHandler;
-use oat\taoDacSimple\model\PermissionsService;
-use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\RolePrivilegeRetriever;
 
 class ResourceUpdateHandlerTest extends TestCase
@@ -40,12 +38,6 @@ class ResourceUpdateHandlerTest extends TestCase
 
     /** @var RolePrivilegeRetriever|MockObject */
     private $rolePrivilegeRetriever;
-
-    /** @var PermissionsService|MockObject */
-    private $permissionsServiceMock;
-
-    /** @var PermissionsServiceFactory|MockObject */
-    private $permissionsServiceFactory;
 
     /** @var ResourceMovedEvent|MockObject */
     private $eventMock;
@@ -61,9 +53,7 @@ class ResourceUpdateHandlerTest extends TestCase
 
     public function setUp(): void
     {
-        $this->permissionsServiceMock = $this->createMock(PermissionsService::class);
         $this->rolePrivilegeRetriever = $this->createMock(RolePrivilegeRetriever::class);
-        $this->permissionsServiceFactory = $this->createMock(PermissionsServiceFactory::class);
         $this->eventMock = $this->createMock(ResourceMovedEvent::class);
         $this->resourceMock = $this->createMock(core_kernel_classes_Resource::class);
         $this->classMock = $this->createMock(core_kernel_classes_Class::class);
@@ -77,10 +67,6 @@ class ResourceUpdateHandlerTest extends TestCase
             ->method('getUri')
             ->willReturn('destinationClassUri');
 
-        $this->permissionsServiceFactory
-            ->method('create')
-            ->willReturn($this->permissionsServiceMock);
-
         $this->subject = new ResourceUpdateHandler();
 
         $this->subject->setModel($this->ontoloigyModelMock);
@@ -88,7 +74,6 @@ class ResourceUpdateHandlerTest extends TestCase
             $this->getServiceManagerMock(
                 [
                     RolePrivilegeRetriever::class => $this->rolePrivilegeRetriever,
-                    PermissionsServiceFactory::class => $this->permissionsServiceFactory
                 ]
             )
         );
@@ -127,7 +112,7 @@ class ResourceUpdateHandlerTest extends TestCase
 
         $this->permissionsServiceMock
             ->expects($this->once())
-            ->method('saveResourcePermissionsRecursive')
+            ->method('change')
             ->with(
                 $this->eventMock->getMovedResource(),
                 [

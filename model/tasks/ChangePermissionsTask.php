@@ -32,7 +32,6 @@ use oat\taoDacSimple\model\ChangePermissionsService;
 use Exception;
 use JsonSerializable;
 use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
-use oat\taoDacSimple\model\PermissionsServiceFactory;
 
 /**
  * Class ChangePermissionsTask
@@ -60,14 +59,9 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         try {
             $command = new ChangePermissionsCommand(
                 $this->getResource($params[self::PARAM_RESOURCE]),
-                $params[self::PARAM_RESOURCE],
                 (array) $params[self::PARAM_PRIVILEGES],
-                []
+                filter_var($params[self::PARAM_RECURSIVE] ?? false, FILTER_VALIDATE_BOOL)
             );
-
-            if (filter_var($params[self::PARAM_RECURSIVE] ?? false, FILTER_VALIDATE_BOOL)) {
-                $command->withRecursion();
-            }
 
             $this->getChangePermissionsService()->change($command);
 
@@ -102,6 +96,6 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
 
     private function getChangePermissionsService(): ChangePermissionsService
     {
-        return $this->serviceLocator->get(PermissionsServiceFactory::class)->createChangePermissionsService();
+        return $this->getServiceManager()->getContainer()->get(ChangePermissionsService::class);
     }
 }

@@ -216,4 +216,40 @@ class ChangePermissionsService
             )
         );
     }
+
+//@TODO FIXME The events bellow were sent before and we need to make sure they are either not necessary anymore or still sent
+//    private function triggerEvents(
+//        string $resourceId,
+//        string $rootResourceId,
+//        array $addRemove,
+//        bool $isRecursive,
+//        bool $applyToNestedResources
+//    ): void {
+//        if (!empty($addRemove['add'])) {
+//            foreach ($addRemove['add'] as $userId => $rights) {
+//                $this->eventManager->trigger(new DacRootAddedEvent($userId, $resourceId, (array)$rights));
+//            }
+//        }
+//        if (!empty($addRemove['remove'])) {
+//            foreach ($addRemove['remove'] as $userId => $rights) {
+//                $this->eventManager->trigger(new DacRootRemovedEvent($userId, $resourceId, (array)$rights));
+//            }
+//        }
+//        $this->eventManager->trigger(
+//            new DacAffectedUsersEvent(
+//                array_keys($addRemove['add'] ?? []),
+//                array_keys($addRemove['remove'] ?? [])
+//            )
+//        );
+//
+//        $this->eventManager->trigger(
+//            new DataAccessControlChangedEvent(
+//                $resourceId,
+//                $addRemove,
+//                $isRecursive,
+//                $applyToNestedResources,
+//                $rootResourceId
+//            )
+//        );
+//    }
 }

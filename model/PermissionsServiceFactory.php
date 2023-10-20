@@ -15,8 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020 (original work) Open Assessment Technologies SA;
- *
+ * Copyright (c) 2020-2023 (original work) Open Assessment Technologies SA;
  */
 
 declare(strict_types=1);
@@ -30,24 +29,10 @@ use RuntimeException;
 class PermissionsServiceFactory extends ConfigurableService
 {
     public const SERVICE_ID = 'taoDacSimple/PermissionsService';
-
     public const OPTION_SAVE_STRATEGY = 'save_strategy';
-
     public const OPTION_RECURSIVE_BY_DEFAULT = 'recursive_by_default';
 
-    /**
-     * @return PermissionsService
-     */
-    public function create(): PermissionsService
-    {
-        return new PermissionsService(
-            $this->getDataBaseAccess(),
-            $this->getPermissionsStrategy(),
-            $this->getEventManager()
-        );
-    }
-
-    public function createChangePermissionsService(): ChangePermissionsService
+    public function create(): ChangePermissionsService
     {
         return new ChangePermissionsService(
             $this->getDataBaseAccess(),
