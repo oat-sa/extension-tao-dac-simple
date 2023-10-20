@@ -15,8 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014-2021 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2014-2023 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
+
+declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
@@ -96,9 +98,6 @@ SQL;
 
     /**
      * Allow to grant/revoke access for several users and resources
-     *
-     * @param ChangeAccessCommand $command
-     * @return void
      */
     public function changeAccess(ChangeAccessCommand $command): void
     {
@@ -383,36 +382,19 @@ SQL;
         return $existingUsers;
     }
 
-    private function getEventManager(): EventManager
+    public function removeTables(): void
     {
-        return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
-    }
-
-    /**
-     * @return common_persistence_SqlPersistence
-     */
-    private function getPersistence()
-    {
-        if (!$this->persistence) {
-            $this->persistence = $this->getServiceLocator()->get(PersistenceManager::SERVICE_ID)
-                ->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
+        $persistence = $this->getPersistence();
+        $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
+        $fromSchema = clone $schema;
+        $schema->dropTable(self::TABLE_PRIVILEGES_NAME);
+        $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
+        foreach ($queries as $query) {
+            $persistence->exec($query);
         }
-        return $this->persistence;
     }
 
-
-    /**
-     * @param string $query
-     * @param array $params
-     * @return array
-     */
-    private function fetchQuery($query, $params)
-    {
-        $statement = $this->getPersistence()->query($query, $params);
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function createTables()
+    public function createTables(): void
     {
         $schemaManager = $this->getPersistence()->getDriver()->getSchemaManager();
         $schema = $schemaManager->createSchema();
@@ -430,17 +412,28 @@ SQL;
         }
     }
 
-
-    public function removeTables()
+    private function getEventManager(): EventManager
     {
-        $persistence = $this->getPersistence();
-        $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
-        $fromSchema = clone $schema;
-        $table = $schema->dropTable(self::TABLE_PRIVILEGES_NAME);
-        $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
-        foreach ($queries as $query) {
-            $persistence->exec($query);
+        return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
+    }
+
+    /**
+     * @return common_persistence_SqlPersistence
+     */
+    private function getPersistence()
+    {
+        if (!$this->persistence) {
+            $this->persistence = $this->getServiceLocator()->get(PersistenceManager::SERVICE_ID)
+                ->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
         }
+        return $this->persistence;
+    }
+
+    private function fetchQuery(string $query, array $params): array
+    {
+        return $this->getPersistence()
+            ->query($query, $params)
+            ->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -480,7 +473,7 @@ SQL;
             return;
         }
 
-        $eventData[] = [
+        $eventData[$key] = [
             'userId' => $userId,
             'resourceId' => $resourceId,
             'privileges' => [$permission],
