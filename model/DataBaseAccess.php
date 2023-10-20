@@ -52,41 +52,42 @@ class DataBaseAccess extends ConfigurableService
     public const TABLE_PRIVILEGES_NAME = 'data_privileges';
     public const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
 
-    private $insertChunkSize = 20000;
+    private $writeChunkSize = 1000;
 
     private $persistence;
 
-    public function setInsertChunkSize(int $size): void
+    public function setWriteChunkSize(int $size): void
     {
-        $this->insertChunkSize = $size;
+        $this->writeChunkSize = $size;
     }
 
+    /**
+     * @return array [
+     *     '{resourceId}' => [
+     *          '{userId}' => ['GRANT'],
+     *     ]
+     * ]
+     */
     public function getPermissionsByUsersAndResources(array $userIds, array $resourceIds): array
     {
-        /**
-         * @TODO FIXME Lets see if we can make this methods return better contract or if it is still necessary
-         */
-        // Permissions for an empty set of resources must be an empty array
-        if (empty($resourceIds)) {
+        if (empty($resourceIds) || empty($userIds)) {
             return [];
         }
 
-        $inQueryResources = implode(',', array_fill(0, count($resourceIds), '?'));
-        $inQueryUsers = implode(',', array_fill(0, count($userIds), '?'));
+        // phpcs:disable Generic.Files.LineLength
+        $results = $this->fetchQuery(
+            sprintf(
+                'SELECT resource_id, user_id, privilege FROM data_privileges WHERE resource_id IN (%s) AND user_id IN (%s)',
+                implode(',', array_fill(0, count($resourceIds), '?')),
+                implode(',', array_fill(0, count($userIds), '?'))
+            ),
+            [
+                ...$resourceIds,
+                ...$userIds
+            ]
+        );
+        // phpcs:disable Generic.Files.LineLength
 
-        $query = <<<SQL
-SELECT
-    resource_id,
-    user_id,
-    privilege
-FROM data_privileges
-WHERE resource_id IN ($inQueryResources)
-  AND user_id IN ($inQueryUsers)
-SQL;
-
-        $results = $this->fetchQuery($query, [...$resourceIds, ...$userIds]);
-
-        // If resource doesn't have permission don't return null
         $data = array_fill_keys($resourceIds, []);
 
         foreach ($results as $result) {
@@ -103,62 +104,60 @@ SQL;
     {
         $persistence = $this->getPersistence();
 
-        try {
-            $persistence->transactional(function () use ($command, $persistence): void {
-                $removed = [];
+        $persistence->transactional(function () use ($command, $persistence): void {
+            $removed = [];
 
-                foreach ($command->getUserIdsToRevokePermissions() as $userId) {
-                    $permissions = $command->getUserPermissionsToRevoke($userId);
+            foreach ($command->getUserIdsToRevokePermissions() as $userId) {
+                $permissions = $command->getUserPermissionsToRevoke($userId);
 
-                    foreach ($permissions as $permission) {
-                        $resourceIds = $command->getResourceIdsByUserAndPermissionToRevoke($userId, $permission);
+                foreach ($permissions as $permission) {
+                    $resourceIds = $command->getResourceIdsByUserAndPermissionToRevoke($userId, $permission);
 
-                        if (!empty($resourceIds)) {
+                    if (!empty($resourceIds)) {
+                        foreach (array_chunk($resourceIds, $this->writeChunkSize) as $batch) {
                             // phpcs:disable Generic.Files.LineLength
                             $persistence->exec(
                                 sprintf(
                                     'DELETE FROM data_privileges WHERE user_id = ? AND privilege = ? AND resource_id IN (%s)',
-                                    implode(',', array_fill(0, count($resourceIds), ' ? ')),
+                                    implode(',', array_fill(0, count($batch), '?')),
                                 ),
-                                array_merge([$userId, $permission], $resourceIds)
+                                array_merge([$userId, $permission], $batch)
                             );
                             // phpcs:enable Generic.Files.LineLength
+                        }
 
-                            foreach ($resourceIds as $resourceId) {
-                                $this->addEventValue($removed, $userId, $resourceId, $permission);
-                            }
+                        foreach ($resourceIds as $resourceId) {
+                            $this->addEventValue($removed, $userId, $resourceId, $permission);
                         }
                     }
                 }
+            }
 
-                $insert = [];
-                $added = [];
+            $insert = [];
+            $added = [];
 
-                foreach ($command->getResourceIdsToGrant() as $resourceId) {
-                    foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
-                        $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
+            foreach ($command->getResourceIdsToGrant() as $resourceId) {
+                foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
+                    $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
 
-                        foreach ($usersIds as $userId) {
-                            $insert[] = [
-                                'user_id' => $userId,
-                                'resource_id' => $resourceId,
-                                'privilege' => $permission,
-                            ];
+                    foreach ($usersIds as $userId) {
+                        $insert[] = [
+                            'user_id' => $userId,
+                            'resource_id' => $resourceId,
+                            'privilege' => $permission,
+                        ];
 
-                            $this->addEventValue($added, $userId, $resourceId, $permission);
-                        }
+                        $this->addEventValue($added, $userId, $resourceId, $permission);
                     }
                 }
+            }
 
-                $this->insertPermissions($insert);
+            $this->insertPermissions($insert);
 
-                if (!empty($added) || !empty($removed)) {
-                    $this->getEventManager()->trigger(new DacChangedEvent($added, $removed));
-                }
-            });
-        } catch (Throwable $exception) {
-            $this->logError('Error while changing access: ' . $exception->getMessage());
-        }
+            if (!empty($added) || !empty($removed)) {
+                $this->getEventManager()->trigger(new DacChangedEvent($added, $removed));
+            }
+        });
     }
 
     /**
@@ -351,7 +350,7 @@ SQL;
     }
 
     /**
-     * Filter users\roles that have no permissions
+     * Filter users\roles that have permissions
      *
      * @return array [
      *     '{userId}' => '{userId}',
@@ -441,25 +440,12 @@ SQL;
      */
     private function insertPermissions(array $insert): void
     {
-        if (empty($insert)) {
-            return;
-        }
+        if (!empty($insert)) {
+            $persistence = $this->getPersistence();
 
-        $logger = $this->getLogger();
-        $insertCount = count($insert);
-        $persistence = $this->getPersistence();
-
-        foreach (array_chunk($insert, $this->insertChunkSize) as $index => $batch) {
-            $logger->debug(
-                sprintf(
-                    'Processing chunk %d/%d with %d ACL entries',
-                    $index + 1,
-                    ceil($insertCount / $this->insertChunkSize),
-                    count($batch),
-                )
-            );
-
-            $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
+            foreach (array_chunk($insert, $this->writeChunkSize) as $batch) {
+                $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
+            }
         }
     }
 

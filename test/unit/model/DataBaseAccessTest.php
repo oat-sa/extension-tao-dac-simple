@@ -63,7 +63,7 @@ class DataBaseAccessTest extends TestCase
 
         $this->sut = new DataBaseAccess();
         $this->sut->setLogger(new NullLogger());
-        $this->sut->setInsertChunkSize(self::INSERT_CHUNK_SIZE);
+        $this->sut->setWriteChunkSize(self::INSERT_CHUNK_SIZE);
         $this->sut->setServiceLocator(
             $this->getServiceManagerMock(
                 [
