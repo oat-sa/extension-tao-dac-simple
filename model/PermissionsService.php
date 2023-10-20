@@ -60,6 +60,7 @@ class PermissionsService
      */
     public function applyPermissions(ChangePermissionsCommand $command): void
     {
+        //@TODO FIXME Call ChangePermissionService::change($command);
         $resources = $this->getResourcesToUpdate($command);
         $currentPermissions = $this->getResourcesPermissions($resources);
 
@@ -131,6 +132,7 @@ class PermissionsService
      */
     public function getPermissionsDelta(core_kernel_classes_Resource $resource, array $permissionsToSet): array
     {
+        //@TODO FIXME Remove this method as it is used only here and we will change to call ChangePermissionsService::chage
         $currentPermissions = $this->dataBaseAccess->getResourcePermissions($resource->getUri());
 
         return $this->strategy->normalizeRequest($currentPermissions, $permissionsToSet);
