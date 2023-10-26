@@ -47,14 +47,12 @@ class ChangeAccessCommand
 
     public function grantResourceForUser(string $resourceId, string $permission, string $userId): void
     {
-        $this->giveAccessMap[$resourceId] = $this->giveAccessMap[$resourceId] ?? [];
-        $this->giveAccessMap[$resourceId][$permission] = $this->giveAccessMap[$resourceId][$permission] ?? [];
-        $this->giveAccessMap[$resourceId][$permission] = array_unique(
-            array_merge(
-                $this->giveAccessMap[$resourceId][$permission],
-                [$userId]
-            )
-        );
+        $this->giveAccessMap[$resourceId] ??= [];
+        $this->giveAccessMap[$resourceId][$permission] ??= [];
+
+        if (!in_array($userId, $this->giveAccessMap[$resourceId][$permission], true)) {
+            $this->giveAccessMap[$resourceId][$permission][] = $userId;
+        }
     }
 
     public function getResourceIdsToGrant(): array
@@ -69,23 +67,24 @@ class ChangeAccessCommand
 
     public function revokeResourceForUser(string $resourceId, string $permission, string $userId): void
     {
-        $this->revokeAccessMap[$resourceId] = $this->revokeAccessMap[$resourceId] ?? [];
-        $this->revokeAccessMap[$resourceId][$permission] = $this->revokeAccessMap[$resourceId][$permission] ?? [];
-        $this->revokeAccessMap[$resourceId][$permission] = array_unique(
-            array_merge(
-                $this->revokeAccessMap[$resourceId][$permission],
-                [$userId]
-            )
-        );
+        $this->revokeAccessMap[$resourceId] ??= [];
+        $this->revokeAccessMap[$resourceId][$permission] ??= [];
 
-        $this->userRevokedPermissions[$userId] = $this->userRevokedPermissions[$userId] ?? [];
-        $this->userRevokedPermissions[$userId][$permission] = $this->userRevokedPermissions[$userId][$permission] ?? [];
-        $this->userRevokedPermissions[$userId][$permission][] = $resourceId;
+        if (!in_array($userId, $this->revokeAccessMap[$resourceId][$permission], true)) {
+            $this->revokeAccessMap[$resourceId][$permission][] = $userId;
+        }
+
+        $this->userRevokedPermissions[$userId] ??= [];
+        $this->userRevokedPermissions[$userId][$permission] ??= [];
+
+        if (!in_array($resourceId, $this->userRevokedPermissions[$userId][$permission], true)) {
+            $this->userRevokedPermissions[$userId][$permission][] = $resourceId;
+        }
     }
 
     public function removeRevokeResourceForUser(string $resourceId, string $permission, string $userId): void
     {
-        $this->userRevokedPermissions[$userId][$permission] = $this->userRevokedPermissions[$userId][$permission] ?? [];
+        $this->userRevokedPermissions[$userId][$permission] ??= [];
 
         $key = array_search($resourceId, $this->userRevokedPermissions[$userId][$permission]);
 
@@ -93,7 +92,7 @@ class ChangeAccessCommand
             unset($this->userRevokedPermissions[$userId][$permission][$key]);
         }
 
-        $this->revokeAccessMap[$resourceId][$permission] = $this->revokeAccessMap[$resourceId][$permission] ?? [];
+        $this->revokeAccessMap[$resourceId][$permission] ??= [];
 
         $key = array_search($userId, $this->revokeAccessMap[$resourceId][$permission]);
 
