@@ -15,8 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2020 (original work) Open Assessment Technologies SA;
- *
+ * Copyright (c) 2020-2023 (original work) Open Assessment Technologies SA;
  */
 
 declare(strict_types=1);
@@ -30,31 +29,42 @@ use RuntimeException;
 class PermissionsServiceFactory extends ConfigurableService
 {
     public const SERVICE_ID = 'taoDacSimple/PermissionsService';
-
     public const OPTION_SAVE_STRATEGY = 'save_strategy';
-
     public const OPTION_RECURSIVE_BY_DEFAULT = 'recursive_by_default';
 
-    /**
-     * @return PermissionsService
-     */
-    public function create(): PermissionsService
+    public function create(): ChangePermissionsService
     {
-        if (!$this->hasOption(self::OPTION_SAVE_STRATEGY)) {
+        return new ChangePermissionsService(
+            $this->getDataBaseAccess(),
+            $this->getPermissionsStrategy(),
+            $this->getEventManager()
+        );
+    }
+
+    private function getDataBaseAccess(): DataBaseAccess
+    {
+        return $this->serviceLocator->get(DataBaseAccess::SERVICE_ID);
+    }
+
+    private function getPermissionsStrategy(): PermissionsStrategyInterface
+    {
+        $strategyClass = $this->getOption(self::OPTION_SAVE_STRATEGY);
+
+        if ($strategyClass === null) {
             throw new RuntimeException(
-                sprintf('Option %s is not configured. Please check %s', self::OPTION_SAVE_STRATEGY, self::SERVICE_ID)
+                sprintf(
+                    'Option %s is not configured. Please check %s',
+                    self::OPTION_SAVE_STRATEGY,
+                    self::SERVICE_ID
+                )
             );
         }
 
-        /** @var DataBaseAccess $dataBaseAccess */
-        $dataBaseAccess = $this->serviceLocator->get(DataBaseAccess::SERVICE_ID);
+        return new $strategyClass();
+    }
 
-        /** @var EventManager $eventManager */
-        $eventManager = $this->serviceLocator->get(EventManager::SERVICE_ID);
-
-        $strategyClass = $this->getOption(self::OPTION_SAVE_STRATEGY);
-        $permissionsStrategy = new $strategyClass();
-
-        return new PermissionsService($dataBaseAccess, $permissionsStrategy, $eventManager);
+    private function getEventManager(): EventManager
+    {
+        return $this->serviceLocator->get(EventManager::SERVICE_ID);
     }
 }

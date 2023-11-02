@@ -27,11 +27,11 @@ use core_kernel_classes_Resource;
 use oat\generis\model\data\Ontology;
 use oat\generis\test\MockObject;
 use oat\generis\test\ServiceManagerMockTrait;
+use oat\taoDacSimple\model\ChangePermissionsService;
+use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use PHPUnit\Framework\TestCase;
 use oat\tao\model\event\ResourceMovedEvent;
 use oat\taoDacSimple\model\eventHandler\ResourceUpdateHandler;
-use oat\taoDacSimple\model\PermissionsService;
-use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\RolePrivilegeRetriever;
 
 class ResourceUpdateHandlerTest extends TestCase
@@ -40,12 +40,6 @@ class ResourceUpdateHandlerTest extends TestCase
 
     /** @var RolePrivilegeRetriever|MockObject */
     private $rolePrivilegeRetriever;
-
-    /** @var PermissionsService|MockObject */
-    private $permissionsServiceMock;
-
-    /** @var PermissionsServiceFactory|MockObject */
-    private $permissionsServiceFactory;
 
     /** @var ResourceMovedEvent|MockObject */
     private $eventMock;
@@ -59,36 +53,36 @@ class ResourceUpdateHandlerTest extends TestCase
     /** @var ResourceUpdateHandler */
     private $subject;
 
+    /**
+     * @var ChangePermissionsService|MockObject
+     */
+    private $changePermissionsServiceMock;
+
     public function setUp(): void
     {
-        $this->permissionsServiceMock = $this->createMock(PermissionsService::class);
         $this->rolePrivilegeRetriever = $this->createMock(RolePrivilegeRetriever::class);
-        $this->permissionsServiceFactory = $this->createMock(PermissionsServiceFactory::class);
-        $this->eventMock = $this->createMock(ResourceMovedEvent::class);
         $this->resourceMock = $this->createMock(core_kernel_classes_Resource::class);
-        $this->classMock = $this->createMock(core_kernel_classes_Class::class);
         $this->ontoloigyModelMock = $this->createMock(Ontology::class);
 
-        $this->eventMock
-            ->method('getDestinationClass')
-            ->willReturn($this->classMock);
-
+        $this->classMock = $this->createMock(core_kernel_classes_Class::class);
         $this->classMock
             ->method('getUri')
             ->willReturn('destinationClassUri');
 
-        $this->permissionsServiceFactory
-            ->method('create')
-            ->willReturn($this->permissionsServiceMock);
+        $this->eventMock = $this->createMock(ResourceMovedEvent::class);
+        $this->eventMock
+            ->method('getDestinationClass')
+            ->willReturn($this->classMock);
+
+        $this->changePermissionsServiceMock = $this->createMock(ChangePermissionsService::class);
 
         $this->subject = new ResourceUpdateHandler();
-
         $this->subject->setModel($this->ontoloigyModelMock);
         $this->subject->setServiceLocator(
             $this->getServiceManagerMock(
                 [
                     RolePrivilegeRetriever::class => $this->rolePrivilegeRetriever,
-                    PermissionsServiceFactory::class => $this->permissionsServiceFactory
+                    ChangePermissionsService::class => $this->changePermissionsServiceMock,
                 ]
             )
         );
@@ -125,18 +119,21 @@ class ResourceUpdateHandlerTest extends TestCase
                 ]
             );
 
-        $this->permissionsServiceMock
+        $this->changePermissionsServiceMock
             ->expects($this->once())
-            ->method('saveResourcePermissionsRecursive')
+            ->method('change')
             ->with(
-                $this->eventMock->getMovedResource(),
-                [
-                    'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => [
-                        'GRANT',
-                        'READ',
-                        'WRITE'
+                new ChangePermissionsCommand(
+                    $this->eventMock->getMovedResource(),
+                    [
+                        'http://www.tao.lu/Ontologies/TAO.rdf#BackOfficeRole' => [
+                            'GRANT',
+                            'READ',
+                            'WRITE'
+                        ],
                     ],
-                ]
+                    true
+                )
             );
 
         $this->subject->catchResourceUpdated($this->eventMock);

@@ -47,7 +47,8 @@ class SyncPermissionsStrategyTest extends TestCase
                     'p1' => ['READ', 'WRITE'],
                     'p2' => ['READ'],
                     'p3' => ['READ', 'WRITE'],
-                ]
+                ],
+                'remove' => [],
             ],
             $result
         );
