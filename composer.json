@@ -21,8 +21,8 @@
     "minimum-stability": "dev",
     "require": {
         "oat-sa/oatbox-extension-installer": "~1.1||dev-master",
-        "oat-sa/generis": "dev-feature/adf-1590/optimize-permissions-task-queue as 99.99",
-        "oat-sa/tao-core": "dev-feature/adf-1590/optimize-permissions-task-queue as 99.99",
+        "oat-sa/generis": ">=15.32.0",
+        "oat-sa/tao-core": ">=53.11.4",
         "oat-sa/extension-tao-backoffice": ">=6.0.0",
         "oat-sa/extension-tao-item": ">=11.3"
     },
