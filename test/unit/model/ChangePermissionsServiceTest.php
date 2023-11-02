@@ -23,8 +23,13 @@ declare(strict_types=1);
 namespace oat\taoDacSimple\test\unit\model;
 
 use oat\oatbox\event\EventManager;
+use oat\tao\model\event\DataAccessControlChangedEvent;
 use oat\taoDacSimple\model\ChangePermissionsService;
+use oat\taoDacSimple\model\Command\ChangeAccessCommand;
+use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 use oat\taoDacSimple\model\DataBaseAccess;
+use oat\taoDacSimple\model\event\DacAffectedUsersEvent;
+use oat\taoDacSimple\model\event\DacRootChangedEvent;
 use oat\taoDacSimple\model\PermissionsStrategyInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -39,26 +44,101 @@ class ChangePermissionsServiceTest extends TestCase
     private $strategy;
     /** @var MockObject|EventManager */
     private $eventManager;
-    private ChangePermissionsService $service;
+    private ChangePermissionsService $sut;
 
     protected function setUp(): void
     {
         $this->eventManager = $this->createMock(EventManager::class);
         $this->databaseAccess = $this->createMock(DataBaseAccess::class);
         $this->strategy = $this->createMock(PermissionsStrategyInterface::class);
-        $this->service = new ChangePermissionsService(
-            $this->databaseAccess,
-            $this->strategy,
-            $this->eventManager
-        );
 
-        $this->service->setLogger($this->createMock(LoggerInterface::class));
+        $this->sut = new ChangePermissionsService($this->databaseAccess, $this->strategy, $this->eventManager);
     }
 
     public function testChange(): void
     {
-        //@TODO Complete test before release this code
+        $root = $this->createMock(\core_kernel_classes_Resource::class);
+        $root
+            ->expects($this->never())
+            ->method('getNestedResources');
+        $root
+            ->method('getUri')
+            ->willReturn('rootUri');
+        $root
+            ->method('isClass')
+            ->willReturn(true);
 
-        $this->markTestIncomplete();
+        $privilegesPerUser = [
+            'user1' => ['READ', 'WRITE', 'GRANT'],
+            'user2' => ['READ', 'WRITE'],
+        ];
+
+        $changePermissionsCommand = $this->createMock(ChangePermissionsCommand::class);
+        $changePermissionsCommand
+            ->method('getRoot')
+            ->willReturn($root);
+        $changePermissionsCommand
+            ->method('isRecursive')
+            ->willReturn(false);
+        $changePermissionsCommand
+            ->method('getPrivilegesPerUser')
+            ->willReturn($privilegesPerUser);
+
+        $rootPermissions = [
+            'user1' => ['READ'],
+            'user2' => ['READ', 'WRITE', 'GRANT'],
+        ];
+
+        $changeAccessCommand = new ChangeAccessCommand();
+        $changeAccessCommand->revokeResourceForUser('rootUri', 'GRANT', 'user2');
+        $changeAccessCommand->grantResourceForUser('rootUri', 'WRITE', 'user1');
+        $changeAccessCommand->grantResourceForUser('rootUri', 'GRANT', 'user1');
+
+        $this->databaseAccess
+            ->expects($this->once())
+            ->method('getResourcesPermissions')
+            ->with(['rootUri'])
+            ->willReturn([
+                'rootUri' => $rootPermissions,
+            ]);
+        $this->databaseAccess
+            ->expects($this->once())
+            ->method('changeAccess')
+            ->with($changeAccessCommand);
+
+        $permissionsDelta = [
+            'remove' => [
+                'user2' => ['GRANT'],
+            ],
+            'add' => [
+                'user1' => ['WRITE', 'GRANT'],
+            ],
+        ];
+
+        $this->strategy
+            ->expects($this->once())
+            ->method('normalizeRequest')
+            ->with($rootPermissions, $privilegesPerUser)
+            ->willReturn($permissionsDelta);
+        $this->strategy
+            ->expects($this->once())
+            ->method('getPermissionsToRemove')
+            ->with($rootPermissions, $permissionsDelta)
+            ->willReturn(['user2' => ['GRANT']]);
+        $this->strategy
+            ->expects($this->once())
+            ->method('getPermissionsToAdd')
+            ->with($rootPermissions, $permissionsDelta)
+            ->willReturn(['user1' => ['WRITE', 'GRANT']]);
+
+        $this->eventManager
+            ->method('trigger')
+            ->withConsecutive(
+                [new DacRootChangedEvent($root, $permissionsDelta)],
+                [new DataAccessControlChangedEvent('rootUri', $permissionsDelta, false)],
+                [new DacAffectedUsersEvent(['user1'], ['user2'])],
+            );
+
+        $this->sut->change($changePermissionsCommand);
     }
 }
