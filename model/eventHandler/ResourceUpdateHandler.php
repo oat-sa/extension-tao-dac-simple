@@ -57,7 +57,13 @@ class ResourceUpdateHandler extends ConfigurableService
 
         if (isset($itemPrivilegesMap)) {
             foreach ($itemPrivilegesMap as $uri => $itemPrivilege) {
-                $permissionService->change(new ChangePermissionsCommand($this->getResource($uri), $itemPrivilege, true));
+                $permissionService->change(
+                    new ChangePermissionsCommand(
+                        $this->getResource($uri),
+                        $itemPrivilege,
+                        true
+                    )
+                );
             }
         }
     }

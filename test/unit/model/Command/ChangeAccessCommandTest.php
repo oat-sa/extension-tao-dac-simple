@@ -79,13 +79,31 @@ class ChangeAccessCommandTest extends TestCase
         $this->assertSame(['r1', 'r2'], $this->sut->getResourceIdsToRevoke());
         $this->assertSame(['u1', 'u2'], $this->sut->getUserIdsToRevokePermissions());
 
-        $this->assertSame(['r1', 'r2'], $this->sut->getResourceIdsByUserAndPermissionToRevoke('u1', PermissionProvider::PERMISSION_READ));
-        $this->assertSame(['r1', 'r2'], $this->sut->getResourceIdsByUserAndPermissionToRevoke('u1', PermissionProvider::PERMISSION_WRITE));
-        $this->assertSame(['r1', 'r2'], $this->sut->getResourceIdsByUserAndPermissionToRevoke('u1', PermissionProvider::PERMISSION_GRANT));
+        $this->assertSame(
+            ['r1', 'r2'],
+            $this->sut->getResourceIdsByUserAndPermissionToRevoke('u1', PermissionProvider::PERMISSION_READ)
+        );
+        $this->assertSame(
+            ['r1', 'r2'],
+            $this->sut->getResourceIdsByUserAndPermissionToRevoke('u1', PermissionProvider::PERMISSION_WRITE)
+        );
+        $this->assertSame(
+            ['r1', 'r2'],
+            $this->sut->getResourceIdsByUserAndPermissionToRevoke('u1', PermissionProvider::PERMISSION_GRANT)
+        );
 
-        $this->assertSame(['r2'], $this->sut->getResourceIdsByUserAndPermissionToRevoke('u2', PermissionProvider::PERMISSION_READ));
-        $this->assertSame(['r2'], $this->sut->getResourceIdsByUserAndPermissionToRevoke('u2', PermissionProvider::PERMISSION_WRITE));
-        $this->assertSame([], $this->sut->getResourceIdsByUserAndPermissionToRevoke('u2', PermissionProvider::PERMISSION_GRANT));
+        $this->assertSame(
+            ['r2'],
+            $this->sut->getResourceIdsByUserAndPermissionToRevoke('u2', PermissionProvider::PERMISSION_READ)
+        );
+        $this->assertSame(
+            ['r2'],
+            $this->sut->getResourceIdsByUserAndPermissionToRevoke('u2', PermissionProvider::PERMISSION_WRITE)
+        );
+        $this->assertSame(
+            [],
+            $this->sut->getResourceIdsByUserAndPermissionToRevoke('u2', PermissionProvider::PERMISSION_GRANT)
+        );
 
         $this->assertSame(
             [
