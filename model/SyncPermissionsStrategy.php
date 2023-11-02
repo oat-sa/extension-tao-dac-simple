@@ -29,7 +29,8 @@ class SyncPermissionsStrategy extends PermissionsStrategyAbstract
     {
         // we are going to add everything what current item has and remove the rest
         return [
-            'add' => $privilegesToSet
+            'add' => $privilegesToSet,
+            'remove' => [],
         ];
     }
 

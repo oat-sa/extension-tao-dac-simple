@@ -23,20 +23,15 @@ declare(strict_types=1);
 namespace oat\taoDacSimple\model\tasks;
 
 use common_exception_MissingParameter;
-use common_report_Report as Report;
-use core_kernel_classes_Class;
-use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\extension\AbstractAction;
-use oat\tao\model\taskQueue\QueueDispatcher;
-use oat\tao\model\taskQueue\QueueDispatcherInterface;
+use oat\oatbox\reporting\Report;
 use oat\tao\model\taskQueue\Task\TaskAwareInterface;
 use oat\tao\model\taskQueue\Task\TaskAwareTrait;
-use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
-use oat\taoDacSimple\model\PermissionsService;
-use oat\taoDacSimple\model\PermissionsServiceFactory;
+use oat\taoDacSimple\model\ChangePermissionsService;
 use Exception;
 use JsonSerializable;
+use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
 
 /**
  * Class ChangePermissionsTask
@@ -51,9 +46,6 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public const PARAM_RESOURCE = 'resource';
     public const PARAM_PRIVILEGES = 'privileges';
     public const PARAM_RECURSIVE = 'recursive';
-    public const PARAM_NESTED_RESOURCES = 'nested_resources';
-    public const PARAM_REQUEST_ROOT = 'request_root';
-    public const PARAM_PERMISSIONS_DELTA = 'permissions_delta';
 
     private const MANDATORY_PARAMS = [
         self::PARAM_RESOURCE,
@@ -65,105 +57,21 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
         $this->validateParams($params);
 
         try {
-            return $this->doHandle(
-                $this->getClass($params[self::PARAM_RESOURCE]),
-                ($params[self::PARAM_REQUEST_ROOT] ?? $params[self::PARAM_RESOURCE]),
+            $command = new ChangePermissionsCommand(
+                $this->getResource($params[self::PARAM_RESOURCE]),
                 (array) $params[self::PARAM_PRIVILEGES],
-                (bool) ($params[self::PARAM_RECURSIVE] ?? false),
-                (bool) ($params[self::PARAM_NESTED_RESOURCES] ?? false),
-                $params[self::PARAM_PERMISSIONS_DELTA] ?? null
+                filter_var($params[self::PARAM_RECURSIVE] ?? false, FILTER_VALIDATE_BOOL)
             );
+
+            $this->getChangePermissionsService()->change($command);
+
+            return Report::createSuccess('Permissions saved');
         } catch (Exception $e) {
             $errMessage = sprintf('Saving permissions failed: %s', $e->getMessage());
-
             $this->getLogger()->error($errMessage);
-            return Report::createFailure($errMessage);
+
+            return Report::createError($errMessage);
         }
-    }
-
-    private function doHandle(
-        core_kernel_classes_Class $root,
-        string $requestRoot,
-        array $privileges,
-        bool $isRecursive,
-        bool $withNestedResources,
-        ?array $permissionsDelta
-    ): Report {
-        $permissionService = $this->getPermissionService();
-        $permissionsDelta ??= $permissionService->getPermissionsDelta($root, $privileges);
-
-        if ($withNestedResources) {
-            $message = sprintf(
-                "Permissions saved for resources under subclass %s [%s]",
-                $this->formatLabel($root),
-                $root->getUri()
-            );
-
-            $command = new ChangePermissionsCommand($root, $requestRoot, $privileges, $permissionsDelta);
-            $command->withNestedResources();
-
-            $this->getPermissionService()->applyPermissions($command);
-        } elseif ($isRecursive) {
-            $message = 'Starting recursive permissions update';
-
-            $this->createSubtasksForClasses(
-                array_merge([$root], $root->getSubClasses(true)),
-                $requestRoot,
-                $privileges,
-                $permissionsDelta
-            );
-        } else {
-            $message = 'Permissions saved';
-
-            $this->getPermissionService()->applyPermissions(
-                new ChangePermissionsCommand($root, $requestRoot, $privileges, $permissionsDelta)
-            );
-        }
-
-        return Report::createSuccess($message);
-    }
-
-    private function createSubtasksForClasses(
-        array $allClasses,
-        string $requestRoot,
-        array $privileges,
-        array $permissionsDelta
-    ): void {
-        foreach ($allClasses as $oneClass) {
-            $this->getDispatcher()->createTask(
-                new self(),
-                [
-                    self::PARAM_RESOURCE => $oneClass->getUri(),
-                    self::PARAM_REQUEST_ROOT => $requestRoot,
-                    self::PARAM_PRIVILEGES => $privileges,
-                    self::PARAM_RECURSIVE => false,
-                    self::PARAM_NESTED_RESOURCES => true,
-                    self::PARAM_PERMISSIONS_DELTA => $permissionsDelta,
-                ],
-                sprintf(
-                    'Processing permissions for class %s [%s]',
-                    $this->formatLabel($oneClass),
-                    $oneClass->getUri()
-                )
-            );
-        }
-    }
-
-    protected function formatLabel(core_kernel_classes_Resource $resource): string
-    {
-        return strlen($resource->getLabel()) > 128
-            ? '...' . substr($resource->getLabel(), -128)
-            : $resource->getLabel();
-    }
-
-    private function getDispatcher(): QueueDispatcher
-    {
-        return $this->serviceLocator->get(QueueDispatcherInterface::SERVICE_ID);
-    }
-
-    private function getPermissionService(): PermissionsService
-    {
-        return $this->serviceLocator->get(PermissionsServiceFactory::SERVICE_ID)->create();
     }
 
     private function validateParams(array $params): void
@@ -184,5 +92,10 @@ class ChangePermissionsTask extends AbstractAction implements TaskAwareInterface
     public function jsonSerialize(): string
     {
         return __CLASS__;
+    }
+
+    private function getChangePermissionsService(): ChangePermissionsService
+    {
+        return $this->getServiceManager()->getContainer()->get(ChangePermissionsService::class);
     }
 }

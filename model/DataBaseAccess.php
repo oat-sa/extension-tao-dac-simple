@@ -15,15 +15,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2014-2021 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
+ * Copyright (c) 2014-2023 (original work) Open Assessment Technologies SA (under the project TAO-PRODUCT);
  */
+
+declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
 use common_persistence_SqlPersistence;
 use oat\oatbox\event\EventManager;
 use oat\oatbox\service\ConfigurableService;
+use oat\taoDacSimple\model\Command\ChangeAccessCommand;
 use oat\taoDacSimple\model\event\DacAddedEvent;
+use oat\taoDacSimple\model\event\DacChangedEvent;
 use oat\taoDacSimple\model\event\DacRemovedEvent;
 use oat\generis\persistence\PersistenceManager;
 use PDO;
@@ -48,30 +52,126 @@ class DataBaseAccess extends ConfigurableService
     public const TABLE_PRIVILEGES_NAME = 'data_privileges';
     public const INDEX_RESOURCE_ID = 'data_privileges_resource_id_index';
 
-    private $insertChunkSize = 20000;
+    private $writeChunkSize = 1000;
 
     private $persistence;
 
-    public function setInsertChunkSize(int $size): void
+    public function setWriteChunkSize(int $size): void
     {
-        $this->insertChunkSize = $size;
+        $this->writeChunkSize = $size;
     }
 
     /**
-     * @return EventManager
+     * @return array [
+     *     '{resourceId}' => [
+     *          '{userId}' => ['GRANT'],
+     *     ]
+     * ]
      */
-    protected function getEventManager()
+    public function getPermissionsByUsersAndResources(array $userIds, array $resourceIds): array
     {
-        return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
+        if (empty($resourceIds) || empty($userIds)) {
+            return [];
+        }
+
+        // phpcs:disable Generic.Files.LineLength
+        $results = $this->fetchQuery(
+            sprintf(
+                'SELECT resource_id, user_id, privilege FROM data_privileges WHERE resource_id IN (%s) AND user_id IN (%s)',
+                implode(',', array_fill(0, count($resourceIds), '?')),
+                implode(',', array_fill(0, count($userIds), '?'))
+            ),
+            [
+                ...$resourceIds,
+                ...$userIds
+            ]
+        );
+        // phpcs:disable Generic.Files.LineLength
+
+        $data = array_fill_keys($resourceIds, []);
+
+        foreach ($results as $result) {
+            $data[$result[self::COLUMN_RESOURCE_ID]][$result[self::COLUMN_USER_ID]][] = $result[self::COLUMN_PRIVILEGE];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Allow to grant/revoke access for several users and resources
+     */
+    public function changeAccess(ChangeAccessCommand $command): void
+    {
+        $persistence = $this->getPersistence();
+
+        $persistence->transactional(function () use ($command, $persistence): void {
+            $removed = [];
+
+            foreach ($command->getUserIdsToRevokePermissions() as $userId) {
+                $permissions = $command->getUserPermissionsToRevoke($userId);
+
+                foreach ($permissions as $permission) {
+                    $resourceIds = $command->getResourceIdsByUserAndPermissionToRevoke($userId, $permission);
+
+                    if (!empty($resourceIds)) {
+                        foreach (array_chunk($resourceIds, $this->writeChunkSize) as $batch) {
+                            // phpcs:disable Generic.Files.LineLength
+                            $persistence->exec(
+                                sprintf(
+                                    'DELETE FROM data_privileges WHERE user_id = ? AND privilege = ? AND resource_id IN (%s)',
+                                    implode(',', array_fill(0, count($batch), '?')),
+                                ),
+                                array_merge([$userId, $permission], $batch)
+                            );
+                            // phpcs:enable Generic.Files.LineLength
+                        }
+
+                        foreach ($resourceIds as $resourceId) {
+                            $this->addEventValue($removed, $userId, $resourceId, $permission);
+                        }
+                    }
+                }
+            }
+
+            $insert = [];
+            $added = [];
+
+            foreach ($command->getResourceIdsToGrant() as $resourceId) {
+                foreach (PermissionProvider::ALLOWED_PERMISSIONS as $permission) {
+                    $usersIds = $command->getUserIdsToGrant($resourceId, $permission);
+
+                    foreach ($usersIds as $userId) {
+                        $insert[] = [
+                            'user_id' => $userId,
+                            'resource_id' => $resourceId,
+                            'privilege' => $permission,
+                        ];
+
+                        $this->addEventValue($added, $userId, $resourceId, $permission);
+                    }
+                }
+            }
+
+            $this->insertPermissions($insert);
+
+            if (!empty($added) || !empty($removed)) {
+                $this->getEventManager()->trigger(new DacChangedEvent($added, $removed));
+            }
+        });
     }
 
     /**
      * Retrieve info on users having privileges on a set of resources
      *
-     * @param array $resourceIds IDs of resources to fetch privileges for
-     * @return array A list of rows containing resource ID, user ID and privilege name
+     * @return array [
+     *     [
+     *         '{resourceId}',
+     *         '{userId}',
+     *         '{privilege}'
+     *     ]
+     * ]
      */
-    public function getUsersWithPermissions($resourceIds)
+    public function getUsersWithPermissions(array $resourceIds): array
     {
         $inQuery = implode(',', array_fill(0, count($resourceIds), '?'));
         $query = sprintf(
@@ -90,10 +190,9 @@ class DataBaseAccess extends ConfigurableService
     /**
      * Get the permissions for a list of resources and users
      *
-     * @access public
-     * @param array $userIds
-     * @param array $resourceIds
-     * @return array
+     * @return array [
+     *      '{resourceId}' => ['READ', 'WRITE'],
+     *  ]
      */
     public function getPermissions(array $userIds, array $resourceIds): array
     {
@@ -127,9 +226,15 @@ class DataBaseAccess extends ConfigurableService
         return $returnValue;
     }
 
-    public function getResourcesPermissions(array $resourceIds)
+    /**
+     * @return array [
+     *     '{resourceId}' => [
+     *         '{userId}' => ['READ', 'WRITE'],
+     *     ]
+     * ]
+     */
+    public function getResourcesPermissions(array $resourceIds): array
     {
-        // Return an empty array for resources not having permissions data
         $grants = array_fill_keys($resourceIds, []);
 
         foreach ($this->getUsersWithPermissions($resourceIds) as $entry) {
@@ -143,16 +248,10 @@ class DataBaseAccess extends ConfigurableService
     /**
      * Add permissions of a user to a resource
      *
-     * @access public
-     * @param string $user
-     * @param string $resourceId
-     * @param array $rights
-     *
-     * @return bool
+     * @deprecated Please use $this::changeAccess()
      */
-    public function addPermissions($user, $resourceId, $rights)
+    public function addPermissions(string $user, string $resourceId, array $rights): void
     {
-        // Add an ACL item for each user URI, resource ID and privilege combination
         foreach ($rights as $privilege) {
             $this->getPersistence()->insert(
                 self::TABLE_PRIVILEGES_NAME,
@@ -169,54 +268,19 @@ class DataBaseAccess extends ConfigurableService
             $resourceId,
             (array)$rights
         ));
-
-        return true;
-    }
-
-    /**
-     * Add batch permissions
-     *
-     * @access public
-     * @param array $permissionData
-     * @return void
-     * @throws Throwable
-     */
-    public function addMultiplePermissions(array $permissionData)
-    {
-        $insert = [];
-        foreach ($permissionData as $permissionItem) {
-            foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
-                if (!empty($privilegeIds)) {
-                    foreach ($privilegeIds as $privilegeId) {
-                        $insert [] = [
-                            self::COLUMN_USER_ID     => $userId,
-                            self::COLUMN_RESOURCE_ID => $permissionItem['resource']->getUri(),
-                            self::COLUMN_PRIVILEGE   => $privilegeId
-                        ];
-                    }
-                }
-            }
-        }
-
-        $this->insertPermissions($insert);
-
-        foreach ($insert as $inserted) {
-            $this->getEventManager()->trigger(new DacAddedEvent(
-                $inserted[self::COLUMN_USER_ID],
-                $inserted[self::COLUMN_RESOURCE_ID],
-                (array)$inserted[self::COLUMN_PRIVILEGE]
-            ));
-        }
     }
 
     /**
      * Get the permissions to resource
      *
-     * @access public
-     * @param string $resourceId
-     * @return array
+     * @return array [
+     *     '{userId}' => [
+     *          'READ',
+     *          'WRITE',
+     *     ]
+     * ]
      */
-    public function getResourcePermissions($resourceId)
+    public function getResourcePermissions(string $resourceId): array
     {
         $grants = [];
         $query = sprintf(
@@ -237,13 +301,9 @@ class DataBaseAccess extends ConfigurableService
     /**
      * remove permissions to a resource for a user
      *
-     * @access public
-     * @param string $user
-     * @param string $resourceId
-     * @param array $rights
-     * @return boolean
+     * @deprecated Please use $this::changeAccess()
      */
-    public function removePermissions($user, $resourceId, $rights)
+    public function removePermissions(string $user, string $resourceId, array $rights): void
     {
         //get all entries that match (user,resourceId) and remove them
         $inQueryPrivilege = implode(',', array_fill(0, count($rights), ' ? '));
@@ -264,79 +324,14 @@ class DataBaseAccess extends ConfigurableService
             $resourceId,
             $rights
         ));
-
-        return true;
     }
 
     /**
-     * Remove batch permissions
+     * Completely remove all permissions to any user for the resourceIds
      *
-     * @access public
-     * @param array $data
-     * @return void
+     * @deprecated Please use $this::changeAccess()
      */
-    public function removeMultiplePermissions(array $data)
-    {
-        $groupedRemove = [];
-        $eventsData = [];
-        foreach ($data as $permissionItem) {
-            $resource = &$permissionItem['resource'];
-            foreach ($permissionItem['permissions'] as $userId => $privilegeIds) {
-                if (!empty($privilegeIds)) {
-                    $idString = implode($privilegeIds);
-
-                    $groupedRemove[$userId][$idString]['resources'][] = $resource->getUri();
-                    $groupedRemove[$userId][$idString]['privileges'] = $privilegeIds;
-
-                    $eventsData[] = [
-                        'userId' => $userId,
-                        'resourceId' => $resource->getUri(),
-                        'privileges' => $privilegeIds
-                    ];
-                }
-            }
-        }
-        foreach ($groupedRemove as $userId => $resources) {
-            foreach ($resources as $permissions) {
-                $inQueryPrivilege = implode(',', array_fill(0, count($permissions['privileges']), ' ? '));
-                $inQueryResources = implode(',', array_fill(0, count($permissions['resources']), ' ? '));
-                $query = sprintf(
-                    'DELETE FROM %s WHERE %s IN (%s) AND %s IN (%s) AND %s = ?',
-                    self::TABLE_PRIVILEGES_NAME,
-                    self::COLUMN_RESOURCE_ID,
-                    $inQueryResources,
-                    self::COLUMN_PRIVILEGE,
-                    $inQueryPrivilege,
-                    self::COLUMN_USER_ID
-                );
-
-                $params = array_merge(
-                    array_values($permissions['resources']),
-                    array_values($permissions['privileges']),
-                    [$userId]
-                );
-
-                $this->getPersistence()->exec($query, $params);
-            }
-        }
-
-        foreach ($eventsData as $eventData) {
-            $this->getEventManager()->trigger(new DacRemovedEvent(
-                $eventData['userId'],
-                $eventData['resourceId'],
-                $eventData['privileges']
-            ));
-        }
-    }
-
-    /**
-     * Remove all permissions from a resource
-     *
-     * @access public
-     * @param array $resourceIds
-     * @return boolean
-     */
-    public function removeAllPermissions($resourceIds)
+    public function removeAllPermissions(array $resourceIds): void
     {
         //get all entries that match (resourceId) and remove them
         $inQuery = implode(',', array_fill(0, count($resourceIds), ' ? '));
@@ -348,20 +343,21 @@ class DataBaseAccess extends ConfigurableService
         );
 
         $this->getPersistence()->exec($query, $resourceIds);
+
         foreach ($resourceIds as $resourceId) {
             $this->getEventManager()->trigger(new DacRemovedEvent('-', $resourceId, ['-']));
         }
-        return true;
     }
 
     /**
-     * Filter users\roles that have no permissions
+     * Filter users\roles that have permissions
      *
-     * @access public
-     * @param array $userIds
-     * @return array
+     * @return array [
+     *     '{userId}' => '{userId}',
+     *     '{userId}' => '{userId}',
+     * ]
      */
-    public function checkPermissions($userIds)
+    public function checkPermissions(array $userIds): array
     {
         $chunks = array_chunk($userIds, $this->getOption(self::OPTION_FETCH_USER_PERMISSIONS_CHUNK_SIZE, 20));
         $existingUsers = [];
@@ -385,31 +381,19 @@ class DataBaseAccess extends ConfigurableService
         return $existingUsers;
     }
 
-    /**
-     * @return common_persistence_SqlPersistence
-     */
-    private function getPersistence()
+    public function removeTables(): void
     {
-        if (!$this->persistence) {
-            $this->persistence = $this->getServiceLocator()->get(PersistenceManager::SERVICE_ID)
-                ->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
+        $persistence = $this->getPersistence();
+        $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
+        $fromSchema = clone $schema;
+        $schema->dropTable(self::TABLE_PRIVILEGES_NAME);
+        $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
+        foreach ($queries as $query) {
+            $persistence->exec($query);
         }
-        return $this->persistence;
     }
 
-
-    /**
-     * @param string $query
-     * @param array $params
-     * @return array
-     */
-    private function fetchQuery($query, $params)
-    {
-        $statement = $this->getPersistence()->query($query, $params);
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function createTables()
+    public function createTables(): void
     {
         $schemaManager = $this->getPersistence()->getDriver()->getSchemaManager();
         $schema = $schemaManager->createSchema();
@@ -427,17 +411,28 @@ class DataBaseAccess extends ConfigurableService
         }
     }
 
-
-    public function removeTables()
+    private function getEventManager(): EventManager
     {
-        $persistence = $this->getPersistence();
-        $schema = $persistence->getDriver()->getSchemaManager()->createSchema();
-        $fromSchema = clone $schema;
-        $table = $schema->dropTable(self::TABLE_PRIVILEGES_NAME);
-        $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);
-        foreach ($queries as $query) {
-            $persistence->exec($query);
+        return $this->getServiceLocator()->get(EventManager::SERVICE_ID);
+    }
+
+    /**
+     * @return common_persistence_SqlPersistence
+     */
+    private function getPersistence()
+    {
+        if (!$this->persistence) {
+            $this->persistence = $this->getServiceLocator()->get(PersistenceManager::SERVICE_ID)
+                ->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
         }
+        return $this->persistence;
+    }
+
+    private function fetchQuery(string $query, array $params): array
+    {
+        return $this->getPersistence()
+            ->query($query, $params)
+            ->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -445,27 +440,29 @@ class DataBaseAccess extends ConfigurableService
      */
     private function insertPermissions(array $insert): void
     {
-        if (empty($insert)) {
+        if (!empty($insert)) {
+            $persistence = $this->getPersistence();
+
+            foreach (array_chunk($insert, $this->writeChunkSize) as $batch) {
+                $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
+            }
+        }
+    }
+
+    private function addEventValue(array &$eventData, string $userId, string $resourceId, string $permission): void
+    {
+        $key = $userId . $resourceId;
+
+        if (array_key_exists($key, $eventData)) {
+            $eventData[$key]['privileges'][] = $permission;
+
             return;
         }
 
-        $logger = $this->getLogger();
-        $insertCount = count($insert);
-        $persistence = $this->getPersistence();
-
-        $persistence->transactional(function () use ($insert, $logger, $insertCount, $persistence) {
-            foreach (array_chunk($insert, $this->insertChunkSize) as $index => $batch) {
-                $logger->debug(
-                    'Processing chunk {index}/{total} with {items} ACL entries',
-                    [
-                        'index' => $index + 1,
-                        'total' => ceil($insertCount / $this->insertChunkSize),
-                        'items' => count($batch)
-                    ]
-                );
-
-                $persistence->insertMultiple(self::TABLE_PRIVILEGES_NAME, $batch);
-            }
-        });
+        $eventData[$key] = [
+            'userId' => $userId,
+            'resourceId' => $resourceId,
+            'privileges' => [$permission],
+        ];
     }
 }

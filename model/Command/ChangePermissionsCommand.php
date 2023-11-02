@@ -37,31 +37,23 @@ class ChangePermissionsCommand
 {
     private core_kernel_classes_Resource $root;
 
-    private string $masterRequest;
-
     /**
-     * An array in the form ['userId' => ['READ', 'WRITE], ...]
+     * An array in the form ['userId' => ['READ', 'WRITE'], ...]
      *
      * @var string[]
      */
     private array $privilegesPerUser;
 
-    private bool $isRecursive = false;
+    private bool $isRecursive;
 
-    private bool $applyToNestedResources = false;
-
-    private array $permissionsDelta;
-
-    public function __construct(
-        core_kernel_classes_Resource $root,
-        string $masterRequest,
-        array $privileges,
-        array $permissionsDelta
-    ) {
+    /**
+     * @param array $privilegesPerUser An array in the form ['userId' => ['READ', 'WRITE'], ...]
+     */
+    public function __construct(core_kernel_classes_Resource $root, array $privilegesPerUser, bool $isRecursive = false)
+    {
         $this->root = $root;
-        $this->masterRequest = $masterRequest;
-        $this->privilegesPerUser = $privileges;
-        $this->permissionsDelta = $permissionsDelta;
+        $this->privilegesPerUser = $privilegesPerUser;
+        $this->isRecursive = $isRecursive;
     }
 
     /**
@@ -80,28 +72,9 @@ class ChangePermissionsCommand
         $this->isRecursive = true;
     }
 
-    /**
-     * Sets the applyToNestedResources flag for the command.
-     *
-     * For commands having a class as the root AND not having the recursion
-     * flag set, setting the nested resources flag makes PermissionsService to
-     * update permissions for the class and all instances of that class, but
-     * skips all nested classes and instances of them (i.e. does not go down
-     * into nested levels of the resource tree).
-     */
-    public function withNestedResources(): void
-    {
-        $this->applyToNestedResources = true;
-    }
-
     public function getRoot(): core_kernel_classes_Resource
     {
         return $this->root;
-    }
-
-    public function getMasterRequest(): string
-    {
-        return $this->masterRequest;
     }
 
     public function getPrivilegesPerUser(): array
@@ -109,18 +82,8 @@ class ChangePermissionsCommand
         return $this->privilegesPerUser;
     }
 
-    public function getPermissionsDelta(): array
-    {
-        return $this->permissionsDelta;
-    }
-
     public function isRecursive(): bool
     {
         return $this->isRecursive;
-    }
-
-    public function applyToNestedResources(): bool
-    {
-        return $this->applyToNestedResources;
     }
 }
