@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-06-07 08:22\n"
+"PO-Revision-Date: 2023-12-04 16:21\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: ar\n"
@@ -21,74 +21,74 @@ msgstr ""
 "Language-Team: Arabic\n"
 
 msgid "%s classes and instances have been updated"
-msgstr ""
+msgstr "تم تحديث الأقسام والحالات %s"
 
 msgid "Access control"
-msgstr ""
+msgstr "التحكم في الولوج"
 
 msgid "Access Permissions for"
-msgstr ""
+msgstr "رُخَصُ الْوُلُوج ل"
 
 msgid "Actions"
-msgstr ""
+msgstr "إجراءات"
 
 msgid "Add role(s)"
-msgstr ""
+msgstr "أضف دور (أدوار)"
 
 msgid "Add user(s)"
-msgstr ""
+msgstr "أضف مستخدم (مستخدمين)"
 
 msgid "Error"
-msgstr ""
+msgstr "خطأ"
 
 msgid "grant"
-msgstr ""
+msgstr "منح"
 
 msgid "Name"
-msgstr ""
+msgstr "الاسم"
 
 msgid "Permissions saved"
-msgstr ""
+msgstr "الرخص محفوظة"
 
 msgid "read"
-msgstr ""
+msgstr "قراءة"
 
 msgid "Recursive"
-msgstr ""
+msgstr "متكرر"
 
 msgid "Remove"
-msgstr ""
+msgstr "إزالة"
 
 msgid "role"
-msgstr ""
+msgstr "دور"
 
 msgid "Roles"
-msgstr ""
+msgstr "أدوار"
 
 msgid "Save"
-msgstr ""
+msgstr "حفظ"
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
-msgstr ""
+msgstr "حدث خطأ ما خلال إلغاء تثبيت taoDacSimple\n"
 
 msgid "taoDacSimple extension correctly uninstalled"
-msgstr ""
+msgstr "تم إلغاء تثبيت ملحق taoDacSimple بشكل صحيح"
 
 msgid "Type"
-msgstr ""
+msgstr "نوع"
 
 msgid "Unable to process your request"
-msgstr ""
+msgstr "غير قادر على معالجة طلبك"
 
 msgid "user"
-msgstr ""
+msgstr "مستعمل"
 
 msgid "Users"
-msgstr ""
+msgstr "المستخدمون"
 
 msgid "write"
-msgstr ""
+msgstr "اكتب"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr ""
+msgstr "يجب أن يكون لديك دور واحد أو مستخدم لديه رخصة إدارة هذا العنصر."
 
