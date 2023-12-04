@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-06-07 08:22\n"
+"PO-Revision-Date: 2023-12-04 16:21\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: de\n"
@@ -21,74 +21,74 @@ msgstr ""
 "Language-Team: German\n"
 
 msgid "%s classes and instances have been updated"
-msgstr ""
+msgstr "%s Klassen und Instanzen wurden aktualisiert"
 
 msgid "Access control"
-msgstr ""
+msgstr "Zugriffskontrolle"
 
 msgid "Access Permissions for"
-msgstr ""
+msgstr "Zugriffsberechtigungen für"
 
 msgid "Actions"
-msgstr ""
+msgstr "Aktionen"
 
 msgid "Add role(s)"
-msgstr ""
+msgstr "Rolle(n) hinzufügen"
 
 msgid "Add user(s)"
-msgstr ""
+msgstr "Benutzer hinzufügen"
 
 msgid "Error"
-msgstr ""
+msgstr "Fehlermeldung"
 
 msgid "grant"
-msgstr ""
+msgstr "Zugriff gewähren"
 
 msgid "Name"
-msgstr ""
+msgstr "Name"
 
 msgid "Permissions saved"
-msgstr ""
+msgstr "Berechtigungen gespeichert"
 
 msgid "read"
-msgstr ""
+msgstr "lesen"
 
 msgid "Recursive"
-msgstr ""
+msgstr "Rekursiv"
 
 msgid "Remove"
-msgstr ""
+msgstr "Entfernen"
 
 msgid "role"
-msgstr ""
+msgstr "Rolle"
 
 msgid "Roles"
-msgstr ""
+msgstr "Rollen"
 
 msgid "Save"
-msgstr ""
+msgstr "Speichern"
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
-msgstr ""
+msgstr "während der Deinstallation von taoDacSimple ist ein Fehler aufgetreten\n"
 
 msgid "taoDacSimple extension correctly uninstalled"
-msgstr ""
+msgstr "Die taoDacSimple-Erweiterung wurde erfolgreich deinstalliert."
 
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 msgid "Unable to process your request"
-msgstr ""
+msgstr "Ihre Anfrage konnte nicht verarbeitet werden"
 
 msgid "user"
-msgstr ""
+msgstr "Benutzer"
 
 msgid "Users"
-msgstr ""
+msgstr "Nutzer"
 
 msgid "write"
-msgstr ""
+msgstr "schreiben"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr ""
+msgstr "Sie müssen eine Rolle oder einen Benutzer haben, der die Berechtigung zur Verwaltung dieses Elements hat."
 
