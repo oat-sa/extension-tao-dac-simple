@@ -4,7 +4,7 @@ msgstr ""
 "PO-Revision-Date: 2023-12-04 16:21\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: de\n"
+"Language: he\n"
 "sourceLanguage: en-US\n"
 "targetLanguage: en-US\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,83 +12,83 @@ msgstr ""
 "X-Poedit-Basepath: ../../\n"
 "X-Poedit-KeywordsList: __\n"
 "X-Poedit-SearchPath-0: .\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3;\n"
 "X-Crowdin-Project: tao-open-source\n"
 "X-Crowdin-Project-ID: 590867\n"
-"X-Crowdin-Language: de\n"
+"X-Crowdin-Language: he\n"
 "X-Crowdin-File: /[oat-sa.extension-tao-dac-simple] develop/locales/en-US/messages.po\n"
 "X-Crowdin-File-ID: 511\n"
-"Language-Team: German\n"
+"Language-Team: Hebrew\n"
 
 msgid "%s classes and instances have been updated"
-msgstr "%s Klassen und Instanzen wurden aktualisiert"
+msgstr ""
 
 msgid "Access control"
-msgstr "Zugriffskontrolle"
+msgstr ""
 
 msgid "Access Permissions for"
-msgstr "Zugriffsberechtigungen für"
+msgstr ""
 
 msgid "Actions"
-msgstr "Aktionen"
+msgstr ""
 
 msgid "Add role(s)"
-msgstr "Rolle(n) hinzufügen"
+msgstr ""
 
 msgid "Add user(s)"
-msgstr "Benutzer hinzufügen"
+msgstr ""
 
 msgid "Error"
-msgstr "Fehlermeldung"
+msgstr ""
 
 msgid "grant"
-msgstr "Zugriff gewähren"
+msgstr ""
 
 msgid "Name"
-msgstr "Name"
+msgstr ""
 
 msgid "Permissions saved"
-msgstr "Berechtigungen gespeichert"
+msgstr ""
 
 msgid "read"
-msgstr "lesen"
+msgstr ""
 
 msgid "Recursive"
-msgstr "Rekursiv"
+msgstr ""
 
 msgid "Remove"
-msgstr "Entfernen"
+msgstr ""
 
 msgid "role"
-msgstr "Rolle"
+msgstr ""
 
 msgid "Roles"
-msgstr "Rollen"
+msgstr ""
 
 msgid "Save"
-msgstr "Speichern"
+msgstr ""
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
-msgstr "während der Deinstallation von taoDacSimple ist ein Fehler aufgetreten\n"
+msgstr ""
 
 msgid "taoDacSimple extension correctly uninstalled"
-msgstr "Die taoDacSimple-Erweiterung wurde erfolgreich deinstalliert."
+msgstr ""
 
 msgid "Type"
-msgstr "Typ"
+msgstr ""
 
 msgid "Unable to process your request"
-msgstr "Ihre Anfrage konnte nicht verarbeitet werden"
+msgstr ""
 
 msgid "user"
-msgstr "Benutzer"
+msgstr ""
 
 msgid "Users"
-msgstr "Nutzer"
+msgstr ""
 
 msgid "write"
-msgstr "schreiben"
+msgstr ""
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr "Sie müssen eine Rolle oder einen Benutzer haben, der die Berechtigung zur Verwaltung dieses Elements hat."
+msgstr ""
 

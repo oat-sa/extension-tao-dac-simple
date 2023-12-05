@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-06-07 08:22\n"
+"PO-Revision-Date: 2023-12-04 16:22\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: no\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-Project-ID: 590867\n"
 "X-Crowdin-Language: no\n"
 "X-Crowdin-File: /[oat-sa.extension-tao-dac-simple] develop/locales/en-US/dac.rdf.po\n"
-"X-Crowdin-File-ID: 509\n"
+"X-Crowdin-File-ID: 974\n"
 "Language-Team: Norwegian\n"
 
 # http://www.tao.lu/Ontologies/TAO.rdf#DacAdministrator
