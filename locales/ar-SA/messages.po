@@ -1,10 +1,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-12-05 09:23\n"
+"PO-Revision-Date: 2023-12-04 16:21\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: lt\n"
+"Language: ar\n"
 "sourceLanguage: en-US\n"
 "targetLanguage: en-US\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,83 +12,83 @@ msgstr ""
 "X-Poedit-Basepath: ../../\n"
 "X-Poedit-KeywordsList: __\n"
 "X-Poedit-SearchPath-0: .\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && (n%100>19 || n%100<11) ? 0 : (n%10>=2 && n%10<=9) && (n%100>19 || n%100<11) ? 1 : n%1!=0 ? 2: 3);\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
 "X-Crowdin-Project: tao-open-source\n"
 "X-Crowdin-Project-ID: 590867\n"
-"X-Crowdin-Language: lt\n"
+"X-Crowdin-Language: ar\n"
 "X-Crowdin-File: /[oat-sa.extension-tao-dac-simple] develop/locales/en-US/messages.po\n"
 "X-Crowdin-File-ID: 511\n"
-"Language-Team: Lithuanian\n"
+"Language-Team: Arabic\n"
 
 msgid "%s classes and instances have been updated"
-msgstr ""
+msgstr "تم تحديث الأقسام والحالات %s"
 
 msgid "Access control"
-msgstr "Prieigos valdymas"
+msgstr "التحكم في الولوج"
 
 msgid "Access Permissions for"
-msgstr "Prieigos Leidimas"
+msgstr "رُخَصُ الْوُلُوج ل"
 
 msgid "Actions"
-msgstr "Veiksmai"
+msgstr "إجراءات"
 
 msgid "Add role(s)"
-msgstr "Pridėti rolę(–es)"
+msgstr "أضف دور (أدوار)"
 
 msgid "Add user(s)"
-msgstr "Pridėti vartotoją(–us)"
+msgstr "أضف مستخدم (مستخدمين)"
 
 msgid "Error"
-msgstr ""
+msgstr "خطأ"
 
 msgid "grant"
-msgstr "suteikti"
+msgstr "منح"
 
 msgid "Name"
-msgstr "Pavadinimas"
+msgstr "الاسم"
 
 msgid "Permissions saved"
-msgstr "Leidimai išsaugoti"
+msgstr "الرخص محفوظة"
 
 msgid "read"
-msgstr "skaityti"
+msgstr "قراءة"
 
 msgid "Recursive"
-msgstr "Rekursyvus"
+msgstr "متكرر"
 
 msgid "Remove"
-msgstr "Ištrinti"
+msgstr "إزالة"
 
 msgid "role"
-msgstr "rolė"
+msgstr "دور"
 
 msgid "Roles"
-msgstr "Rolės"
+msgstr "أدوار"
 
 msgid "Save"
-msgstr "Išsaugoti"
+msgstr "حفظ"
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
-msgstr ""
+msgstr "حدث خطأ ما خلال إلغاء تثبيت taoDacSimple\n"
 
 msgid "taoDacSimple extension correctly uninstalled"
-msgstr ""
+msgstr "تم إلغاء تثبيت ملحق taoDacSimple بشكل صحيح"
 
 msgid "Type"
-msgstr "Tipas"
+msgstr "نوع"
 
 msgid "Unable to process your request"
-msgstr ""
+msgstr "غير قادر على معالجة طلبك"
 
 msgid "user"
-msgstr "vartotojas"
+msgstr "مستعمل"
 
 msgid "Users"
-msgstr "Vartotojai"
+msgstr "المستخدمون"
 
 msgid "write"
-msgstr "įrašymas"
+msgstr "اكتب"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr "Jūs privalote turėti bent vieną rolę arba vartotoją, kuris tvarkymo leidimą šiam elementui."
+msgstr "يجب أن يكون لديك دور واحد أو مستخدم لديه رخصة إدارة هذا العنصر."
 

@@ -1,10 +1,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-12-05 09:23\n"
+"PO-Revision-Date: 2023-06-07 08:22\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
-"Language: lt\n"
+"Language: de_LU\n"
 "sourceLanguage: en-US\n"
 "targetLanguage: en-US\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,61 +12,61 @@ msgstr ""
 "X-Poedit-Basepath: ../../\n"
 "X-Poedit-KeywordsList: __\n"
 "X-Poedit-SearchPath-0: .\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && (n%100>19 || n%100<11) ? 0 : (n%10>=2 && n%10<=9) && (n%100>19 || n%100<11) ? 1 : n%1!=0 ? 2: 3);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Crowdin-Project: tao-open-source\n"
 "X-Crowdin-Project-ID: 590867\n"
-"X-Crowdin-Language: lt\n"
+"X-Crowdin-Language: de-LU\n"
 "X-Crowdin-File: /[oat-sa.extension-tao-dac-simple] develop/locales/en-US/messages.po\n"
 "X-Crowdin-File-ID: 511\n"
-"Language-Team: Lithuanian\n"
+"Language-Team: German, Luxembourg\n"
 
 msgid "%s classes and instances have been updated"
 msgstr ""
 
 msgid "Access control"
-msgstr "Prieigos valdymas"
+msgstr ""
 
 msgid "Access Permissions for"
-msgstr "Prieigos Leidimas"
+msgstr ""
 
 msgid "Actions"
-msgstr "Veiksmai"
+msgstr ""
 
 msgid "Add role(s)"
-msgstr "Pridėti rolę(–es)"
+msgstr ""
 
 msgid "Add user(s)"
-msgstr "Pridėti vartotoją(–us)"
+msgstr ""
 
 msgid "Error"
 msgstr ""
 
 msgid "grant"
-msgstr "suteikti"
+msgstr ""
 
 msgid "Name"
-msgstr "Pavadinimas"
+msgstr ""
 
 msgid "Permissions saved"
-msgstr "Leidimai išsaugoti"
+msgstr ""
 
 msgid "read"
-msgstr "skaityti"
+msgstr ""
 
 msgid "Recursive"
-msgstr "Rekursyvus"
+msgstr ""
 
 msgid "Remove"
-msgstr "Ištrinti"
+msgstr ""
 
 msgid "role"
-msgstr "rolė"
+msgstr ""
 
 msgid "Roles"
-msgstr "Rolės"
+msgstr ""
 
 msgid "Save"
-msgstr "Išsaugoti"
+msgstr ""
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
 msgstr ""
@@ -75,20 +75,20 @@ msgid "taoDacSimple extension correctly uninstalled"
 msgstr ""
 
 msgid "Type"
-msgstr "Tipas"
+msgstr ""
 
 msgid "Unable to process your request"
 msgstr ""
 
 msgid "user"
-msgstr "vartotojas"
+msgstr ""
 
 msgid "Users"
-msgstr "Vartotojai"
+msgstr ""
 
 msgid "write"
-msgstr "įrašymas"
+msgstr ""
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr "Jūs privalote turėti bent vieną rolę arba vartotoją, kuris tvarkymo leidimą šiam elementui."
+msgstr ""
 
