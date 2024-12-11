@@ -117,4 +117,8 @@ class AdminAction implements MenuAction, PhpSerializable
             'id' => 'GRANT'
         ];
     }
+    public function getWeight()
+    {
+        return self::WEIGHT_DEFAULT;
+    }
 }
