@@ -50,7 +50,7 @@ class CopyServiceProvider implements ContainerServiceProviderInterface
             )
             ->tag('tao.copier.permissions');
 
-        $parameters->set('ACL_TRANSFER_MODE', ResourceTransferCommand::ACL_KEEP_ORIGINAL);
+        $parameters->set('ACL_TRANSFER_MODE', ResourceTransferCommand::ACL_USE_DESTINATION);
 
         $services
             ->get(ClientConfigStorage::class)
