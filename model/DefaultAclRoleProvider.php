@@ -26,7 +26,7 @@ use oat\generis\model\GenerisRdf;
 use oat\oatbox\service\ConfigurableService;
 use oat\tao\model\accessControl\AclRoleProvider;
 
-class DefaultAclRoleProvider extends ConfigurableService
+class DefaultAclRoleProvider extends ConfigurableService implements AclRoleProvider
 {
     public function get(): string
     {
