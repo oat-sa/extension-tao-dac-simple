@@ -21,6 +21,7 @@
 use oat\taoDacSimple\model\Copy\ServiceProvider\CopyServiceProvider;
 use oat\taoDacSimple\model\ServiceProvider\PermissionsServiceProvider;
 use oat\taoDacSimple\scripts\install\AttachEventHandler;
+use oat\taoDacSimple\scripts\install\RegisterAclRoleProviderService;
 use oat\taoDacSimple\scripts\update\Updater;
 use oat\taoDacSimple\scripts\install\SetupDataAccess;
 use oat\taoDacSimple\scripts\install\RegisterAction;
@@ -43,7 +44,8 @@ return [
         'php' => [
             SetupDataAccess::class,
             RegisterAction::class,
-            AttachEventHandler::class
+            AttachEventHandler::class,
+            RegisterAclRoleProviderService::class
         ],
         'rdf' => [
             __DIR__ . '/model/ontology/dac.rdf',

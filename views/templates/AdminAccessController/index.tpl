@@ -76,7 +76,7 @@
                             <div id="add-role-wrapper">
                                 <input type="text" id="add-role" style="width:100%" placeholder="<?= __('Add role(s)') ?>"
                                     data-url="<?= _url('search', 'Search', 'tao') ?>"
-                                    data-ontology="http://www.tao.lu/Ontologies/generis.rdf#ClassRole"
+                                    data-ontology=<?= $aclRolesSource ?>
                                     data-params-root="params" />
                             </div>
                         </div>
