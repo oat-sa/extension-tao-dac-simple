@@ -29,6 +29,7 @@ use oat\oatbox\log\LoggerAwareTrait;
 use oat\oatbox\user\UserService;
 use oat\tao\model\taskQueue\QueueDispatcher;
 use oat\tao\model\taskQueue\TaskLogActionTrait;
+use oat\tao\model\accessControl\AclRoleProvider;
 use oat\taoDacSimple\model\AdminService;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\PermissionsServiceException;
@@ -91,6 +92,7 @@ class AdminAccessController extends tao_actions_CommonModule
         }
         $this->setData('users', $users);
         $this->setData('roles', $roles);
+        $this->setData('aclRolesSource', $this->getAclRoleProvider()->get());
         $this->setData('isClass', $resource->isClass());
 
         $permissionsServiceFactory = $this->getServiceLocator()->get(PermissionsServiceFactory::SERVICE_ID);
@@ -200,5 +202,10 @@ class AdminAccessController extends tao_actions_CommonModule
         }
 
         return $resourceId;
+    }
+
+    private function getAclRoleProvider(): AclRoleProvider
+    {
+        return $this->getPsrContainer()->get(AclRoleProvider::class);
     }
 }
