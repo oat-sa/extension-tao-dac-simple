@@ -27,9 +27,8 @@ use core_kernel_classes_Resource;
 use oat\generis\test\ServiceManagerMockTrait;
 use PHPUnit\Framework\TestCase;
 use oat\oatbox\event\EventManager;
+use Doctrine\DBAL\Result;
 use oat\taoDacSimple\model\DataBaseAccess;
-use PDO;
-use PDOStatement;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use ReflectionProperty;
@@ -92,11 +91,9 @@ class DataBaseAccessTest extends TestCase
     {
         $userIds = ['a', 'b', 'c'];
 
-        $statementMock = $this->createMock(PDOStatement::class);
-
-        $statementMock->expects($this->once())
-            ->method('fetchAll')
-            ->with(PDO::FETCH_ASSOC)
+        $resultMock = $this->createMock(Result::class);
+        $resultMock->expects($this->once())
+            ->method('fetchAllAssociative')
             ->willReturn(
                 [
                     [
@@ -111,7 +108,7 @@ class DataBaseAccessTest extends TestCase
                 'SELECT user_id FROM data_privileges WHERE user_id IN ( ? , ? , ? ) GROUP BY user_id',
                 $userIds
             )
-            ->willReturn($statementMock);
+            ->willReturn($resultMock);
 
         $this->assertSame(
             [
@@ -140,17 +137,15 @@ class DataBaseAccessTest extends TestCase
             ['fixture']
         ];
 
-        $statementMock = $this->createMock(PDOStatement::class);
-
-        $statementMock->expects($this->once())
-            ->method('fetchAll')
-            ->with(PDO::FETCH_ASSOC)
+        $resultMock = $this->createMock(Result::class);
+        $resultMock->expects($this->once())
+            ->method('fetchAllAssociative')
             ->willReturn($resultFixture);
 
         $this->persistenceMock
             ->method('query')
             ->with($queryFixture, $resourceIds)
-            ->willReturn($statementMock);
+            ->willReturn($resultMock);
 
         $this->assertSame($resultFixture, $this->sut->getUsersWithPermissions($resourceIds));
     }
@@ -190,17 +185,15 @@ class DataBaseAccessTest extends TestCase
             3 => ['create', 'delete']
         ];
 
-        $statementMock = $this->createMock(PDOStatement::class);
-
-        $statementMock->expects($this->once())
-            ->method('fetchAll')
-            ->with(PDO::FETCH_ASSOC)
+        $resultMock = $this->createMock(Result::class);
+        $resultMock->expects($this->once())
+            ->method('fetchAllAssociative')
             ->willReturn($fetchResultFixture);
 
         $this->persistenceMock
             ->method('query')
             ->with($query, array_merge($resourceIds, $userIds))
-            ->willReturn($statementMock);
+            ->willReturn($resultMock);
 
         $this->assertEquals($resultFixture, $this->sut->getPermissions($userIds, $resourceIds));
         $this->assertEquals([], $this->sut->getPermissions($userIds, []));
