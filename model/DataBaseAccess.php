@@ -432,7 +432,7 @@ class DataBaseAccess extends ConfigurableService
     {
         return $this->getPersistence()
             ->query($query, $params)
-            ->fetchAll(PDO::FETCH_ASSOC);
+            ->fetchAllAssociative();
     }
 
     /**
