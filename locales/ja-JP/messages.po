@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-12-04 16:21\n"
+"PO-Revision-Date: 2026-07-03 14:38\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: ja\n"
@@ -63,7 +63,7 @@ msgid "role"
 msgstr "ロール"
 
 msgid "Roles"
-msgstr "権限"
+msgstr "ロール"
 
 msgid "Save"
 msgstr "保存"
