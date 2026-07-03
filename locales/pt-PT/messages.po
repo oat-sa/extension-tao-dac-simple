@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-06-07 08:22\n"
+"PO-Revision-Date: 2026-07-03 14:38\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: pt\n"
@@ -21,74 +21,74 @@ msgstr ""
 "Language-Team: Portuguese\n"
 
 msgid "%s classes and instances have been updated"
-msgstr ""
+msgstr "Classes e instâncias %s foram atualizadas"
 
 msgid "Access control"
-msgstr ""
+msgstr "Controle de Acesso"
 
 msgid "Access Permissions for"
-msgstr ""
+msgstr "Permissões de Acesso para"
 
 msgid "Actions"
 msgstr "Ações"
 
 msgid "Add role(s)"
-msgstr ""
+msgstr "Adicionar funções"
 
 msgid "Add user(s)"
-msgstr ""
+msgstr "Adicionar usuário(s)"
 
 msgid "Error"
-msgstr ""
+msgstr "ERRO"
 
 msgid "grant"
-msgstr ""
+msgstr "conceder"
 
 msgid "Name"
-msgstr ""
+msgstr "Nome:"
 
 msgid "Permissions saved"
-msgstr ""
+msgstr "Permissões salvas"
 
 msgid "read"
-msgstr ""
+msgstr "lidos"
 
 msgid "Recursive"
-msgstr ""
+msgstr "Recursiva"
 
 msgid "Remove"
-msgstr ""
+msgstr "Excluir"
 
 msgid "role"
-msgstr ""
+msgstr "Função"
 
 msgid "Roles"
-msgstr ""
+msgstr "Papéis"
 
 msgid "Save"
-msgstr ""
+msgstr "Guardar"
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
-msgstr ""
+msgstr "algo deu errado durante a desinstalação taoDacSimple\n"
 
 msgid "taoDacSimple extension correctly uninstalled"
-msgstr ""
+msgstr "extensão taoDacSimple desinstalada corretamente"
 
 msgid "Type"
-msgstr ""
+msgstr "tipo"
 
 msgid "Unable to process your request"
-msgstr ""
+msgstr "Não foi possível processar sua solicitação"
 
 msgid "user"
-msgstr ""
+msgstr "usuário"
 
 msgid "Users"
-msgstr ""
+msgstr "Utilizadores"
 
 msgid "write"
-msgstr ""
+msgstr "escrever"
 
 msgid "You must have one role or user that have the manage permission on this element."
-msgstr ""
+msgstr "Você deve ter uma função ou usuário que tenha a permissão de gerenciar este elemento."
 

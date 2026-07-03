@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: tao-open-source\n"
-"PO-Revision-Date: 2023-06-07 08:22\n"
+"PO-Revision-Date: 2026-07-03 14:38\n"
 "Last-Translator: TAO Translation Team <translation@tao.lu>\n"
 "MIME-Version: 1.0\n"
 "Language: nl\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Language-Team: Dutch\n"
 
 msgid "%s classes and instances have been updated"
-msgstr ""
+msgstr "%s klassen en instanties zijn bijgewerkt"
 
 msgid "Access control"
 msgstr "Toegangscontrole"
@@ -39,7 +39,7 @@ msgid "Add user(s)"
 msgstr "Voeg gebruiker(s) toe"
 
 msgid "Error"
-msgstr ""
+msgstr "Foutmelding"
 
 msgid "grant"
 msgstr "geven"
@@ -69,16 +69,16 @@ msgid "Save"
 msgstr "Opslaan"
 
 msgid "something went wrong during taoDacSimple uninstallation\n"
-msgstr ""
+msgstr "er ging iets mis tijdens de taoDacSimple deïnstallatie\n"
 
 msgid "taoDacSimple extension correctly uninstalled"
-msgstr ""
+msgstr "taoDacSimple extensie correct verwijderd"
 
 msgid "Type"
-msgstr ""
+msgstr "Type"
 
 msgid "Unable to process your request"
-msgstr ""
+msgstr "Kan uw verzoek niet verwerken"
 
 msgid "user"
 msgstr "gebruiker"
