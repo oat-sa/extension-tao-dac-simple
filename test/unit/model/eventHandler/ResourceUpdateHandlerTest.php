@@ -25,7 +25,7 @@ namespace oat\taoDacSimple\test\unit\model\eventHandler;
 use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use oat\generis\model\data\Ontology;
-use oat\generis\test\MockObject;
+use PHPUnit\Framework\MockObject\MockObject;
 use oat\generis\test\ServiceManagerMockTrait;
 use oat\taoDacSimple\model\ChangePermissionsService;
 use oat\taoDacSimple\model\Command\ChangePermissionsCommand;
@@ -38,46 +38,33 @@ class ResourceUpdateHandlerTest extends TestCase
 {
     use ServiceManagerMockTrait;
 
-    /** @var RolePrivilegeRetriever|MockObject */
-    private $rolePrivilegeRetriever;
-
-    /** @var ResourceMovedEvent|MockObject */
-    private $eventMock;
-
-    /** @var core_kernel_classes_Resource|MockObject */
-    private $resourceMock;
-
-    /** @var core_kernel_classes_Class|MockObject */
-    private $classMock;
-
-    /** @var ResourceUpdateHandler */
-    private $subject;
-
-    /**
-     * @var ChangePermissionsService|MockObject
-     */
-    private $changePermissionsServiceMock;
+    private RolePrivilegeRetriever|MockObject $rolePrivilegeRetriever;
+    private ResourceMovedEvent|MockObject $eventMock;
+    private core_kernel_classes_Resource|MockObject $resourceMock;
+    private ChangePermissionsService|MockObject $changePermissionsServiceMock;
+    private Ontology|MockObject $ontologyModelMock;
+    private ResourceUpdateHandler $subject;
 
     public function setUp(): void
     {
         $this->rolePrivilegeRetriever = $this->createMock(RolePrivilegeRetriever::class);
         $this->resourceMock = $this->createMock(core_kernel_classes_Resource::class);
-        $this->ontoloigyModelMock = $this->createMock(Ontology::class);
+        $this->ontologyModelMock = $this->createMock(Ontology::class);
 
-        $this->classMock = $this->createMock(core_kernel_classes_Class::class);
-        $this->classMock
+        $classMock = $this->createMock(core_kernel_classes_Class::class);
+        $classMock
             ->method('getUri')
             ->willReturn('destinationClassUri');
 
         $this->eventMock = $this->createMock(ResourceMovedEvent::class);
         $this->eventMock
             ->method('getDestinationClass')
-            ->willReturn($this->classMock);
+            ->willReturn($classMock);
 
         $this->changePermissionsServiceMock = $this->createMock(ChangePermissionsService::class);
 
         $this->subject = new ResourceUpdateHandler();
-        $this->subject->setModel($this->ontoloigyModelMock);
+        $this->subject->setModel($this->ontologyModelMock);
         $this->subject->setServiceLocator(
             $this->getServiceManagerMock(
                 [
@@ -144,7 +131,7 @@ class ResourceUpdateHandlerTest extends TestCase
         $classMock = $this->createMock(core_kernel_classes_Class::class);
         $classResourceMock = $this->createMock(core_kernel_classes_Resource::class);
 
-        $this->ontoloigyModelMock
+        $this->ontologyModelMock
             ->expects(self::exactly(2))
             ->method('getResource')
             ->willReturn($this->resourceMock);

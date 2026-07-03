@@ -37,8 +37,7 @@ use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\tasks\ChangePermissionsTask;
 use tao_actions_CommonModule;
 use tao_models_classes_RoleService;
-
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\Psr7\Utils;
 
 /**
  * This controller is used to manage permission administration
@@ -135,7 +134,7 @@ class AdminAccessController extends tao_actions_CommonModule
         } catch (PermissionsServiceException $e) {
             $this->response = $this->getPsrResponse()
                 ->withStatus(400, $e->getMessage())
-                ->withBody(stream_for(json_encode(['success' => false, 'message' => $e->getMessage()])))
+                ->withBody(Utils::streamFor(json_encode(['success' => false, 'message' => $e->getMessage()])))
                 ->withHeader('Content-Type', 'application/json');
         } catch (Exception $e) {
             $this->logError($e->getMessage());

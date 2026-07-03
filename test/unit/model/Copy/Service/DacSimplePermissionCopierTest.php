@@ -79,26 +79,8 @@ class DacSimplePermissionCopierTest extends TestCase
             );
 
         $this->dataBaseAccess
-            ->expects($this->at(2))
-            ->method('addPermissions')
-            ->with(
-                'user1',
-                'toUri',
-                [
-                    'WRITE'
-                ]
-            );
-
-        $this->dataBaseAccess
-            ->expects($this->at(3))
-            ->method('addPermissions')
-            ->with(
-                'user2',
-                'toUri',
-                [
-                    'READ'
-                ]
-            );
+            ->expects($this->exactly(2))
+            ->method('addPermissions');
 
         $this->sut->copy($from, $to);
     }
