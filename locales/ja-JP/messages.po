@@ -91,4 +91,3 @@ msgstr "書き込み"
 
 msgid "You must have one role or user that have the manage permission on this element."
 msgstr "このエレメントに管理権限を持つロールまたはユーザが1つ必要です。"
-
