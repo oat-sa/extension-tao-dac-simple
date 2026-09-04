@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2023 (original work) Open Assessment Technologies SA.
+ * Copyright (c) 2023-2026 (original work) Open Assessment Technologies SA.
  *
  * @author Gabriel Felipe Soares <gabriel.felipe.soares@taotesting.com>
  */
@@ -24,10 +24,15 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model\ServiceProvider;
 
-use oat\taoDacSimple\model\ChangePermissionsService;
+use oat\generis\model\data\Ontology;
 use oat\generis\model\DependencyInjection\ContainerServiceProviderInterface;
+use oat\taoDacSimple\model\ChangePermissionsService;
+use oat\taoDacSimple\model\Comment\DacMentionEligibleUsersProvider;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
+use oat\taoDacSimple\model\RolePrivilegeRetriever;
+use oat\taoItems\model\Comment\MentionEligibleUsersProviderInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use tao_models_classes_UserService;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
@@ -45,5 +50,22 @@ class PermissionsServiceProvider implements ContainerServiceProviderInterface
                     'create'
                 ]
             );
+
+        $services
+            ->set(RolePrivilegeRetriever::class, RolePrivilegeRetriever::class)
+            ->public();
+
+        $services
+            ->set(DacMentionEligibleUsersProvider::class, DacMentionEligibleUsersProvider::class)
+            ->public()
+            ->args([
+                service(RolePrivilegeRetriever::class),
+                service(Ontology::SERVICE_ID),
+                service(tao_models_classes_UserService::SERVICE_ID),
+            ]);
+
+        $services
+            ->alias(MentionEligibleUsersProviderInterface::class, DacMentionEligibleUsersProvider::class)
+            ->public();
     }
 }
