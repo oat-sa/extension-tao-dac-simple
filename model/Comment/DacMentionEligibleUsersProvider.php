@@ -25,9 +25,9 @@ namespace oat\taoDacSimple\model\Comment;
 use core_kernel_classes_Resource;
 use oat\generis\model\data\Ontology;
 use oat\generis\model\GenerisRdf;
+use oat\tao\model\user\MentionEligibleUsersProviderInterface;
 use oat\taoDacSimple\model\PermissionProvider;
 use oat\taoDacSimple\model\RolePrivilegeRetriever;
-use oat\taoItems\model\Comment\MentionEligibleUsersProviderInterface;
 use tao_models_classes_UserService;
 
 /**
