@@ -26,11 +26,11 @@ namespace oat\taoDacSimple\model\ServiceProvider;
 
 use oat\generis\model\data\Ontology;
 use oat\generis\model\DependencyInjection\ContainerServiceProviderInterface;
+use oat\tao\model\user\MentionEligibleUsersProviderInterface;
 use oat\taoDacSimple\model\ChangePermissionsService;
 use oat\taoDacSimple\model\Comment\DacMentionEligibleUsersProvider;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
 use oat\taoDacSimple\model\RolePrivilegeRetriever;
-use oat\taoItems\model\Comment\MentionEligibleUsersProviderInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use tao_models_classes_UserService;
 
