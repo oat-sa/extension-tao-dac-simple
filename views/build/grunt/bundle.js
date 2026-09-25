@@ -29,6 +29,7 @@ module.exports = function(grunt) {
                 options : {
                     extension : 'taoDacSimple',
                     outputDir : 'loader',
+                    babelPreTransform: { enabled: true },
                     bundles : [{
                         name : 'taoDacSimple',
                         default : true,
