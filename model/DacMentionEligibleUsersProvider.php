@@ -24,25 +24,105 @@ namespace oat\taoDacSimple\model;
 
 use core_kernel_classes_Resource;
 use oat\tao\model\user\MentionEligibleUsersProviderInterface;
+use tao_models_classes_RoleService;
+use tao_models_classes_UserService;
 
 class DacMentionEligibleUsersProvider implements MentionEligibleUsersProviderInterface
 {
     private RolePrivilegeRetriever $rolePrivilegeRetriever;
-    private \tao_models_classes_RoleService $roleService;
+    private tao_models_classes_RoleService $roleService;
+    private DataBaseAccess $dataBaseAccess;
+    private tao_models_classes_UserService $userService;
+    /** @var array<string, list<string>> */
+    private array $eligibleUsersByResource = [];
 
     public function __construct(
         RolePrivilegeRetriever $rolePrivilegeRetriever,
-        ?\tao_models_classes_RoleService $roleService = null
+        tao_models_classes_RoleService $roleService,
+        DataBaseAccess $dataBaseAccess,
+        tao_models_classes_UserService $userService
     ) {
         $this->rolePrivilegeRetriever = $rolePrivilegeRetriever;
-        $this->roleService = $roleService ?? \tao_models_classes_RoleService::singleton();
+        $this->roleService = $roleService;
+        $this->dataBaseAccess = $dataBaseAccess;
+        $this->userService = $userService;
+    }
+
+    /**
+     * @param list<array{id: string, login: string, displayName: string}> $candidates
+     * @return list<array{id: string, login: string, displayName: string}>
+     */
+    public function filterCandidatesForResource(string $resourceUri, array $candidates): array
+    {
+        if ($candidates === []) {
+            return [];
+        }
+
+        $identityUris = [];
+        $identityUrisPerUser = [];
+
+        foreach ($candidates as $candidate) {
+            $userUri = isset($candidate['id']) ? trim((string) $candidate['id']) : '';
+            if ($userUri === '' || isset($identityUrisPerUser[$userUri])) {
+                continue;
+            }
+
+            $candidateIdentityUris = [$userUri => true];
+
+            foreach ($this->userService->getUserRoles(new core_kernel_classes_Resource($userUri)) as $roleResource) {
+                if (!$roleResource instanceof core_kernel_classes_Resource) {
+                    continue;
+                }
+
+                $candidateIdentityUris[$roleResource->getUri()] = true;
+            }
+
+            $identityUrisPerUser[$userUri] = array_keys($candidateIdentityUris);
+
+            foreach ($identityUrisPerUser[$userUri] as $identityUri) {
+                $identityUris[$identityUri] = true;
+            }
+        }
+
+        if ($identityUris === []) {
+            return [];
+        }
+
+        $permissionsByResource = $this->dataBaseAccess->getPermissionsByUsersAndResources(
+            array_keys($identityUris),
+            [$resourceUri]
+        );
+        $permissionsByIdentity = $permissionsByResource[$resourceUri] ?? [];
+
+        $filtered = [];
+        foreach ($candidates as $candidate) {
+            $userUri = isset($candidate['id']) ? trim((string) $candidate['id']) : '';
+            if ($userUri === '' || !isset($identityUrisPerUser[$userUri])) {
+                continue;
+            }
+
+            foreach ($identityUrisPerUser[$userUri] as $identityUri) {
+                if (isset($permissionsByIdentity[$identityUri])) {
+                    $filtered[] = $candidate;
+                    break;
+                }
+            }
+        }
+
+        return $filtered;
     }
 
     public function getEligibleUserUris(string $resourceUri): ?array
     {
+        if (array_key_exists($resourceUri, $this->eligibleUsersByResource)) {
+            return $this->eligibleUsersByResource[$resourceUri];
+        }
+
         $accessRights = $this->rolePrivilegeRetriever->retrieveByResourceIds([$resourceUri]);
 
         if ($accessRights === []) {
+            $this->eligibleUsersByResource[$resourceUri] = [];
+
             return [];
         }
 
@@ -62,6 +142,8 @@ class DacMentionEligibleUsersProvider implements MentionEligibleUsersProviderInt
             $eligibleUsers[$identityUri] = true;
         }
 
-        return array_keys($eligibleUsers);
+        $this->eligibleUsersByResource[$resourceUri] = array_keys($eligibleUsers);
+
+        return $this->eligibleUsersByResource[$resourceUri];
     }
 }
