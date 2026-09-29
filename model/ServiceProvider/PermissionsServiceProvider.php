@@ -30,9 +30,7 @@ use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\DacMentionEligibleUsersProvider;
 use oat\generis\model\DependencyInjection\ContainerServiceProviderInterface;
 use oat\taoDacSimple\model\PermissionsServiceFactory;
-use oat\taoDacSimple\model\RolePrivilegeRetriever;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use tao_models_classes_RoleService;
 use tao_models_classes_UserService;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -55,8 +53,6 @@ class PermissionsServiceProvider implements ContainerServiceProviderInterface
         $services->set(DacMentionEligibleUsersProvider::class)
             ->public()
             ->args([
-                service(RolePrivilegeRetriever::class),
-                service(tao_models_classes_RoleService::class),
                 service(DataBaseAccess::SERVICE_ID),
                 service(tao_models_classes_UserService::SERVICE_ID),
             ]);

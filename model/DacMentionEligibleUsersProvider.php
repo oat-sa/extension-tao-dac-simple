@@ -22,28 +22,20 @@ declare(strict_types=1);
 
 namespace oat\taoDacSimple\model;
 
+use common_Logger;
 use core_kernel_classes_Resource;
 use oat\tao\model\user\MentionEligibleUsersProviderInterface;
-use tao_models_classes_RoleService;
 use tao_models_classes_UserService;
 
 class DacMentionEligibleUsersProvider implements MentionEligibleUsersProviderInterface
 {
-    private RolePrivilegeRetriever $rolePrivilegeRetriever;
-    private tao_models_classes_RoleService $roleService;
     private DataBaseAccess $dataBaseAccess;
     private tao_models_classes_UserService $userService;
-    /** @var array<string, list<string>> */
-    private array $eligibleUsersByResource = [];
 
     public function __construct(
-        RolePrivilegeRetriever $rolePrivilegeRetriever,
-        tao_models_classes_RoleService $roleService,
         DataBaseAccess $dataBaseAccess,
         tao_models_classes_UserService $userService
     ) {
-        $this->rolePrivilegeRetriever = $rolePrivilegeRetriever;
-        $this->roleService = $roleService;
         $this->dataBaseAccess = $dataBaseAccess;
         $this->userService = $userService;
     }
@@ -54,7 +46,14 @@ class DacMentionEligibleUsersProvider implements MentionEligibleUsersProviderInt
      */
     public function filterCandidatesForResource(string $resourceUri, array $candidates): array
     {
+        common_Logger::d(sprintf(
+            '[DacMentionEligibleUsersProvider] Start filter: resource=%s candidates=%d',
+            $resourceUri,
+            count($candidates)
+        ));
+
         if ($candidates === []) {
+            common_Logger::d('[DacMentionEligibleUsersProvider] Filter result: candidates=0, allowed=0');
             return [];
         }
 
@@ -85,6 +84,7 @@ class DacMentionEligibleUsersProvider implements MentionEligibleUsersProviderInt
         }
 
         if ($identityUris === []) {
+            common_Logger::d('[DacMentionEligibleUsersProvider] Filter result: identities=0, allowed=0');
             return [];
         }
 
@@ -93,6 +93,11 @@ class DacMentionEligibleUsersProvider implements MentionEligibleUsersProviderInt
             [$resourceUri]
         );
         $permissionsByIdentity = $permissionsByResource[$resourceUri] ?? [];
+        common_Logger::d(sprintf(
+            '[DacMentionEligibleUsersProvider] ACL lookup: identities=%d matched-identities=%d',
+            count($identityUris),
+            count($permissionsByIdentity)
+        ));
 
         $filtered = [];
         foreach ($candidates as $candidate) {
@@ -109,41 +114,12 @@ class DacMentionEligibleUsersProvider implements MentionEligibleUsersProviderInt
             }
         }
 
+        common_Logger::d(sprintf(
+            '[DacMentionEligibleUsersProvider] Filter result: candidates=%d allowed=%d',
+            count($candidates),
+            count($filtered)
+        ));
+
         return $filtered;
-    }
-
-    public function getEligibleUserUris(string $resourceUri): ?array
-    {
-        if (array_key_exists($resourceUri, $this->eligibleUsersByResource)) {
-            return $this->eligibleUsersByResource[$resourceUri];
-        }
-
-        $accessRights = $this->rolePrivilegeRetriever->retrieveByResourceIds([$resourceUri]);
-
-        if ($accessRights === []) {
-            $this->eligibleUsersByResource[$resourceUri] = [];
-
-            return [];
-        }
-
-        $eligibleUsers = [];
-
-        foreach (array_keys($accessRights) as $identityUri) {
-            $usersFromRole = $this->roleService->getUsers(new core_kernel_classes_Resource($identityUri));
-
-            if ($usersFromRole !== []) {
-                foreach ($usersFromRole as $userUri) {
-                    $eligibleUsers[$userUri] = true;
-                }
-
-                continue;
-            }
-
-            $eligibleUsers[$identityUri] = true;
-        }
-
-        $this->eligibleUsersByResource[$resourceUri] = array_keys($eligibleUsers);
-
-        return $this->eligibleUsersByResource[$resourceUri];
     }
 }

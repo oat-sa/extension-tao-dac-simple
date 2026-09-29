@@ -25,114 +25,19 @@ namespace oat\taoDacSimple\test\unit\model;
 use core_kernel_classes_Resource;
 use oat\taoDacSimple\model\DataBaseAccess;
 use oat\taoDacSimple\model\DacMentionEligibleUsersProvider;
-use oat\taoDacSimple\model\RolePrivilegeRetriever;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use tao_models_classes_UserService;
 
 class DacMentionEligibleUsersProviderTest extends TestCase
 {
-    private RolePrivilegeRetriever|MockObject $rolePrivilegeRetriever;
-    private \tao_models_classes_RoleService|MockObject $roleService;
     private DataBaseAccess|MockObject $dataBaseAccess;
     private tao_models_classes_UserService|MockObject $userService;
 
     protected function setUp(): void
     {
-        $this->rolePrivilegeRetriever = $this->createMock(RolePrivilegeRetriever::class);
-        $this->roleService = $this->createMock(\tao_models_classes_RoleService::class);
         $this->dataBaseAccess = $this->createMock(DataBaseAccess::class);
         $this->userService = $this->createMock(tao_models_classes_UserService::class);
-    }
-
-    public function testReturnsEmptyWhenNoAclEntriesExist(): void
-    {
-        $this->rolePrivilegeRetriever
-            ->method('retrieveByResourceIds')
-            ->with(['http://example.test/resource#1'])
-            ->willReturn([]);
-
-        $this->roleService->expects($this->never())->method('getUsers');
-
-        $provider = new DacMentionEligibleUsersProvider(
-            $this->rolePrivilegeRetriever,
-            $this->roleService,
-            $this->dataBaseAccess,
-            $this->userService
-        );
-
-        $this->assertSame([], $provider->getEligibleUserUris('http://example.test/resource#1'));
-    }
-
-    public function testExpandsRolesAndKeepsDirectUsersInEligibleList(): void
-    {
-        $this->rolePrivilegeRetriever
-            ->method('retrieveByResourceIds')
-            ->with(['http://example.test/resource#2'])
-            ->willReturn([
-                'http://example.test/role#author' => ['READ'],
-                'http://example.test/user#direct' => ['READ'],
-                'http://example.test/role#reviewer' => ['WRITE'],
-            ]);
-
-        $this->roleService
-            ->method('getUsers')
-            ->willReturnCallback(static function (core_kernel_classes_Resource $identity): array {
-                if ($identity->getUri() === 'http://example.test/role#author') {
-                    return ['http://example.test/user#alice', 'http://example.test/user#bob'];
-                }
-
-                if ($identity->getUri() === 'http://example.test/role#reviewer') {
-                    return ['http://example.test/user#bob'];
-                }
-
-                return [];
-            });
-
-        $provider = new DacMentionEligibleUsersProvider(
-            $this->rolePrivilegeRetriever,
-            $this->roleService,
-            $this->dataBaseAccess,
-            $this->userService
-        );
-
-        $this->assertSame(
-            [
-                'http://example.test/user#alice',
-                'http://example.test/user#bob',
-                'http://example.test/user#direct',
-            ],
-            $provider->getEligibleUserUris('http://example.test/resource#2')
-        );
-    }
-
-    public function testCachesEligibleUsersPerResourceWithinProviderInstance(): void
-    {
-        $this->rolePrivilegeRetriever
-            ->expects($this->once())
-            ->method('retrieveByResourceIds')
-            ->with(['http://example.test/resource#3'])
-            ->willReturn([
-                'http://example.test/role#author' => ['READ'],
-            ]);
-
-        $this->roleService
-            ->expects($this->once())
-            ->method('getUsers')
-            ->willReturn(['http://example.test/user#alice']);
-
-        $provider = new DacMentionEligibleUsersProvider(
-            $this->rolePrivilegeRetriever,
-            $this->roleService,
-            $this->dataBaseAccess,
-            $this->userService
-        );
-
-        $first = $provider->getEligibleUserUris('http://example.test/resource#3');
-        $second = $provider->getEligibleUserUris('http://example.test/resource#3');
-
-        $this->assertSame(['http://example.test/user#alice'], $first);
-        $this->assertSame($first, $second);
     }
 
     public function testFilterCandidatesForResourceUsesUserAndRoleIdentities(): void
@@ -173,8 +78,6 @@ class DacMentionEligibleUsersProviderTest extends TestCase
             ]);
 
         $provider = new DacMentionEligibleUsersProvider(
-            $this->rolePrivilegeRetriever,
-            $this->roleService,
             $this->dataBaseAccess,
             $this->userService
         );
